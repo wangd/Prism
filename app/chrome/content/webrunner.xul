@@ -1,0 +1,103 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is WebRunner.
+   -
+   - The Initial Developer of the Original Code is Mozilla Corporation
+   - Portions created by the Initial Developer are Copyright (C) 2007
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -    Mark Finkle, <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://webrunner/locale/webrunner.dtd">
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="webrunner"
+        windowtype="webrunner:main"
+        title="&webrunner.title;"
+        width="750" height="550"
+        screenX="10" screenY="10"
+        persist="width,height,screenX,screenY,sizemode">
+
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
+  <script type="application/x-javascript" src="chrome://webrunner/content/paramParser.js"/>
+  <script type="application/x-javascript" src="chrome://webrunner/content/webrunner.js"/>
+
+  <commandset>
+    <command id="cmd_cut" label="&cut.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_copy" label="&copy.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_paste" label="&paste.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_delete" label="&delete.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_selectAll" label="&selectAll.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_print" label="&print.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_pageSetup" label="&pageSetup.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_about" label="&about.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_back" label="&back.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_forward" label="&forward.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_home" label="&home.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_close" label="&close.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_quit" label="&quit.label;" oncommand="WebRunner.doCommand(this.id);"/>
+  </commandset>
+
+  <keyset>
+    <key class="nav" modifiers="alt" keycode="VK_LEFT" command="cmd_back"/>
+    <key class="nav" modifiers="alt" keycode="VK_RIGHT" command="cmd_forward"/>
+    <key class="nav" modifiers="alt" keycode="VK_HOME" command="cmd_home"/>
+    <key modifiers="accel" key="W" command="cmd_close"/>
+    <key modifiers="accel" key="q" command="cmd_quit"/>
+  </keyset>
+
+  <popupset>
+    <popup id="main-popup">
+      <menuitem id="cut-menuitem" command="cmd_cut"/>
+      <menuitem id="copy-menuitem" command="cmd_copy"/>
+      <menuitem id="paste-menuitem" command="cmd_paste"/>
+      <menuitem id="delete-menuitem" command="cmd_delete"/>
+      <menuseparator/>
+      <menuitem id="selectall-menuitem" command="cmd_selectAll"/>
+      <menuseparator/>
+      <menuitem id="print-menuitem" command="cmd_print"/>
+      <menuseparator/>
+      <menuitem id="about-menuitem" command="cmd_about"/>
+    </popup>
+  </popupset>
+
+  <toolbox>
+    <menubar>
+      <menu id="menu_file" label="&file.label;">
+        <menupopup>
+          <menuitem id="menu_FileQuitItem" label="&quit.label;" oncommand="WebRunner.doCOmmand('cmd_quit');"/>
+        </menupopup>
+      </menu>
+    </menubar>
+    <toolbar id="locationbar">
+      <textbox id="location" flex="1" readonly="true"/>
+    </toolbar>
+  </toolbox>
+
+  <browser id="main-browser" flex="1" type="content-primary" context="main-popup"/>
+
+  <statusbar id="statusbar">
+    <statusbarpanel id="status" label="" crop="end" flex="1"/>
+    <progressmeter id="progress" mode="determined" value="0" hidden="true"/>
+    <statusbarpanel id="security" label="" hidden="true"/>
+  </statusbar>
+
+</window>

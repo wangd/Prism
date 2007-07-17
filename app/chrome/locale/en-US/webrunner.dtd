@@ -1,0 +1,16 @@
+<!ENTITY webrunner.title     "WebRunner">
+
+<!ENTITY file.label          "File">
+<!ENTITY cut.label           "Cut">
+<!ENTITY copy.label          "Copy">
+<!ENTITY paste.label         "Paste">
+<!ENTITY delete.label        "Delete">
+<!ENTITY selectAll.label     "Select All">
+<!ENTITY print.label         "Print...">
+<!ENTITY pageSetup.label     "Page Setup...">
+<!ENTITY back.label          "Back">
+<!ENTITY forward.label       "Forward">
+<!ENTITY home.label          "Home">
+<!ENTITY close.label         "Close">
+<!ENTITY quit.label          "Quit WebRunner">
+<!ENTITY about.label         "About WebRunner">

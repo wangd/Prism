@@ -1,0 +1,6 @@
+[Parameters]
+uri=http://docs.google.com/
+icon=gdocs
+showstatus=yes
+showlocation=no
+enablenavigation=no

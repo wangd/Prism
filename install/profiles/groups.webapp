@@ -1,0 +1,6 @@
+[Parameters]
+uri=http://groups.google.com/groups/favorites
+icon=groups
+showstatus=yes
+showlocation=yes
+enablenavigation=yes

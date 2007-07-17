@@ -1,0 +1,6 @@
+[Parameters]
+uri=http://calendar.google.com/
+icon=gcalendar
+showstatus=yes
+showlocation=no
+enablenavigation=no

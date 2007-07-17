@@ -1,0 +1,6 @@
+[Parameters]
+uri=http://mail.google.com/
+icon=gmail
+showstatus=yes
+showlocation=no
+enablenavigation=no

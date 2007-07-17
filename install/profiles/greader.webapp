@@ -1,0 +1,6 @@
+[Parameters]
+uri=http://www.google.com/reader
+icon=googlereader
+showstatus=yes
+showlocation=no
+enablenavigation=yes

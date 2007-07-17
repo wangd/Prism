@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://webrunner/skin/about.css" type="text/css"?>
+
+<dialog id="about" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="About" buttons="accept" width="300" height="200">
+    
+  <script type="application/x-javascript" src="chrome://webrunner/content/about.js"/>
+
+  <vbox flex="1">
+    <label id="version"/>
+    <textbox id="useragent" multiline="true" readonly="true" flex="1"/>
+  </vbox>
+</dialog>
+
