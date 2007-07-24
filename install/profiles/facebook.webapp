@@ -1,0 +1,6 @@
+[Parameters]
+uri=http://www.facebook.com/
+icon=facebook
+showstatus=yes
+showlocation=no
+enablenavigation=no

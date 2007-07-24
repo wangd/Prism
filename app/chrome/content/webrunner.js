@@ -19,9 +19,11 @@
  *
  * Contributor(s):
  *   Mark Finkle, <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
+ *   Wladimir Palant <trev@adblockplus.org>
  *
  * ***** END LICENSE BLOCK ***** */
 
+const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 window.addEventListener("load", function() { WebRunner.startup(); }, false);
@@ -30,6 +32,7 @@ window.addEventListener("unload", function() { WebRunner.shutdown(); }, false);
 
 var WebRunner = {
   _params : null,
+  _ios : null,
 
   _getBrowser : function() {
     return document.getElementById('main-browser');
@@ -56,20 +59,29 @@ var WebRunner = {
   },
 
   _domTitleChanged : function(aEvent) {
-    if (aEvent.target != window.contentDocument)
+    if (aEvent.target != this._getBrowser().contentDocument)
       return;
   
     document.title = aEvent.target.title;
+  },
+
+  _isLinkExternal : function(link) {
+    if (link instanceof HTMLAnchorElement) {
+      if (link.target == "" || link.target == "_self" || link.target == "_top")
+        return false;
+
+      var currentURL = this._ios.newURI(link.href, null, null).QueryInterface(Ci.nsIURL);
+      var commonBase = currentURL.getCommonBaseSpec(this._getBrowser().currentURI);
+      return (commonBase.length == 0);
+    }
+    return true;
   },
   
   _domClick : function(aEvent)
   {
     var link = aEvent.target;
   
-    if (link instanceof HTMLAnchorElement && 
-        link.target != "" &&
-        link.target != "_self" &&
-        link.target != "_top") {
+    if (link instanceof HTMLAnchorElement && this._isLinkExternal(link)) {
       aEvent.stopPropagation();
     }
   },
@@ -78,20 +90,12 @@ var WebRunner = {
   {
     var link = aEvent.target;
   
-    if (link instanceof HTMLAnchorElement && 
-        link.target != "" &&
-        link.target != "_self" &&
-        link.target != "_top") {
-  
+    if (link instanceof HTMLAnchorElement && this._isLinkExternal(link)) {
       // We don't want to open external links in this process: do so in the
       // default browser.
-      var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                          .getService(Ci.nsIIOService);
+      var resolvedURI = this._ios.newURI(link.href, null, null);
   
-      var resolvedURI = ios.newURI(link.href, null, null);
-  
-      var extps = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
-                            .getService(Ci.nsIExternalProtocolService);
+      var extps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService);
   
       extps.loadURI(resolvedURI, null);
       aEvent.preventDefault();
@@ -101,18 +105,21 @@ var WebRunner = {
 
   startup : function()
   {
+    this._ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+
     if (window.arguments && window.arguments[0])
-      params = new Params(window.arguments[0].QueryInterface(Ci.nsICommandLine));
+      this._params = new Params(window.arguments[0].QueryInterface(Ci.nsICommandLine));
     else
-      params = new Params(null);
+      this._params = new Params(null);
   
     // Process parameters
-    document.documentElement.setAttribute("id", params.icon);
+    document.documentElement.setAttribute("id", this._params.icon);
   
-    document.getElementById("statusbar").hidden = !params.showstatus;
-    document.getElementById("locationbar").hidden = !params.showlocation;
+    document.getElementById("statusbar").hidden = !this._params.showstatus;
+    document.getElementById("locationbar").hidden = !this._params.showlocation;
   
-    if (!params.enablenavigation) {
+    if (!this._params.enablenavigation) {
+      // remove navigation key from the document
       var keys = document.getElementsByTagName("key");
       for (var i = keys.length - 1; i >= 0; i--)
         if (keys[i].className == "nav")
@@ -131,12 +138,12 @@ var WebRunner = {
     var self = this;
     
     var browser = this._getBrowser();
-    browser.addEventListener("DOMTitleChanged", function(aEvent) { self._domTitleChanged(aEvent); }, false)
+    browser.addEventListener("DOMTitleChanged", function(aEvent) { self._domTitleChanged(aEvent); }, true)
     browser.webProgress.addProgressListener(BrowserProgressListener, Ci.nsIWebProgress.NOTIFY_ALL);
-    browser.loadURI(params.uri, null, null);
+    browser.loadURI(this._params.uri, null, null);
   
     var browserContext = document.getElementById("main-popup");
-    browserContext.addEventListener("popupshowing", function(aEvent) { self._popupShowing(aEvent); }, false);
+    browserContext.addEventListener("popupshowing", self._popupShowing, false);
     
     var fileMenu = document.getElementById("menu_file");
     if (fileMenu)
@@ -184,8 +191,9 @@ var WebRunner = {
   },
   
   attachDocument : function(doc) {
-    doc.addEventListener("click", WebRunner._domClick, true);
-    doc.addEventListener("DOMActivate", WebRunner._domActivate, true);
+    var self = this;
+    doc.addEventListener("click", function(aEvent) { self._domClick(aEvent); }, true);
+    doc.addEventListener("DOMActivate", function(aEvent) { self._domActivate(aEvent); }, true);
   }
 };
 
