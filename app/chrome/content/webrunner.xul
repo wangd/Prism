@@ -31,7 +31,7 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="webrunner"
-        windowtype="webrunner:main"
+        windowtype="webrunner"
         title="&webrunner.title;"
         width="750" height="550"
         screenX="10" screenY="10"

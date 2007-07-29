@@ -20,6 +20,7 @@
  * Contributor(s):
  *   Mark Finkle, <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
  *   Wladimir Palant <trev@adblockplus.org>
+ *   Sylvain Pasche <sylvain.pasche@gmail.com>
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -67,7 +68,7 @@ var WebRunner = {
 
   _isLinkExternal : function(link) {
     if (link instanceof HTMLAnchorElement) {
-      if (link.target == "" || link.target == "_self" || link.target == "_top")
+      if (link.target == "_self" || link.target == "_top")
         return false;
 
       var currentURL = this._ios.newURI(link.href, null, null).QueryInterface(Ci.nsIURL);
@@ -102,19 +103,35 @@ var WebRunner = {
       aEvent.stopPropagation();
     }
   },
+  
+  get params() {
+    return this._params;
+  },
 
   startup : function()
   {
     this._ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
-    if (window.arguments && window.arguments[0])
+    if (window.arguments && window.arguments[0]) {
       this._params = new Params(window.arguments[0].QueryInterface(Ci.nsICommandLine));
-    else
-      this._params = new Params(null);
+
+      // Set the windowtype attribute here, so we always know which window is the main window
+      document.documentElement.setAttribute("windowtype", "webrunner:main");
+    }
+    else {
+      var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+      var win = wm.getMostRecentWindow("webrunner:main");
+      if (win && win.WebRunner) {
+        this._params = win.WebRunner.params;
+        this._params.uri = null;
+      }
+      else {
+        this._params = new Params(null);
+      }
+    }
   
-    // Process parameters
+    // process commandline parameters
     document.documentElement.setAttribute("id", this._params.icon);
-  
     document.getElementById("statusbar").hidden = !this._params.showstatus;
     document.getElementById("locationbar").hidden = !this._params.showlocation;
   
@@ -140,7 +157,9 @@ var WebRunner = {
     var browser = this._getBrowser();
     browser.addEventListener("DOMTitleChanged", function(aEvent) { self._domTitleChanged(aEvent); }, true)
     browser.webProgress.addProgressListener(BrowserProgressListener, Ci.nsIWebProgress.NOTIFY_ALL);
-    browser.loadURI(this._params.uri, null, null);
+    
+    if (this._params.uri)
+      browser.loadURI(this._params.uri, null, null);
   
     var browserContext = document.getElementById("main-popup");
     browserContext.addEventListener("popupshowing", self._popupShowing, false);

@@ -1,0 +1,6 @@
+[Parameters]
+uri=http://www.twitter.com/
+icon=twitter
+showstatus=yes
+showlocation=no
+enablenavigation=no
