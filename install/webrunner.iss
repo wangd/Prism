@@ -40,6 +40,8 @@ Source: .\profiles\gmail.webapp; DestDir: {app}; Components: main; Flags: ignore
 Source: .\profiles\gdocs.webapp; DestDir: {app}; Components: main; Flags: ignoreversion
 Source: .\profiles\gcalendar.webapp; DestDir: {app}; Components: main; Flags: ignoreversion
 Source: .\profiles\groups.webapp; DestDir: {app}; Components: main; Flags: ignoreversion
+Source: .\profiles\facebook.webapp; DestDir: {app}; Components: main; Flags: ignoreversion
+Source: .\profiles\twitter.webapp; DestDir: {app}; Components: main; Flags: ignoreversion
 
 [Icons]
 Name: {group}\{cm:UninstallProgram,WebRunner}; Filename: {uninstallexe}

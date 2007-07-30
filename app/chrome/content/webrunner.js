@@ -36,7 +36,7 @@ var WebRunner = {
   _ios : null,
 
   _getBrowser : function() {
-    return document.getElementById('main-browser');
+    return document.getElementById("browser_main");
   },
   
   _popupShowing : function(aEvent) {
@@ -138,7 +138,7 @@ var WebRunner = {
     if (!this._params.enablenavigation) {
       // remove navigation key from the document
       var keys = document.getElementsByTagName("key");
-      for (var i = keys.length - 1; i >= 0; i--)
+      for (var i=keys.length - 1; i>=0; i--)
         if (keys[i].className == "nav")
           keys[i].parentNode.removeChild(keys[i]);
     }
@@ -161,7 +161,7 @@ var WebRunner = {
     if (this._params.uri)
       browser.loadURI(this._params.uri, null, null);
   
-    var browserContext = document.getElementById("main-popup");
+    var browserContext = document.getElementById("popup_main");
     browserContext.addEventListener("popupshowing", self._popupShowing, false);
     
     var fileMenu = document.getElementById("menu_file");
