@@ -1,6 +1,6 @@
 [Setup]
 AppName=WebRunner
-AppVerName=WebRunner 0.5
+AppVerName=WebRunner 0.6
 AppPublisher=Mozilla
 AppPublisherURL=http://www.starkravingfinkle.org
 AppSupportURL=http://www.starkravingfinkle.org
@@ -27,6 +27,8 @@ Name: gmaildesktopicon; Description: Add GMail web app icon to desktop
 Name: gcaldesktopicon; Description: Add Google Calendar web app icon to desktop
 Name: gdocsdesktopicon; Description: Add Google Docs && Spreadsheets web app icon to desktop
 Name: groupsdesktopicon; Description: Add Google Groups web app icon to desktop
+Name: twitterdesktopicon; Description: Add Twitter web app icon to desktop
+Name: facebookdesktopicon; Description: Add Facebook web app icon to desktop
 
 [Files]
 Source: ..\app\webrunner.exe; DestDir: {app}; Components: main; Flags: ignoreversion
@@ -45,6 +47,8 @@ Name: {userdesktop}\GMail; Filename: {app}\webrunner.exe; Tasks: gmaildesktopico
 Name: {userdesktop}\Google Calendar; Filename: {app}\webrunner.exe; Tasks: gcaldesktopicon; Parameters: "-webapp ""{app}\gcalendar.webapp"""; IconFilename: {app}\chrome\icons\default\gcalendar.ico
 Name: {userdesktop}\Google Docs & Spreadsheets; Filename: {app}\webrunner.exe; Tasks: gdocsdesktopicon; Parameters: "-webapp ""{app}\gdocs.webapp"""; IconFilename: {app}\chrome\icons\default\gdocs.ico
 Name: {userdesktop}\Google Groups; Filename: {app}\webrunner.exe; Tasks: groupsdesktopicon; Parameters: "-webapp ""{app}\groups.webapp"""; IconFilename: {app}\chrome\icons\default\groups.ico
+Name: {userdesktop}\Twitter; Filename: {app}\webrunner.exe; Tasks: twitterdesktopicon; Parameters: "-webapp ""{app}\twitter.webapp"""; IconFilename: {app}\chrome\icons\default\twitter.ico
+Name: {userdesktop}\Facebook; Filename: {app}\webrunner.exe; Tasks: facebookdesktopicon; Parameters: "-webapp ""{app}\facebook.webapp"""; IconFilename: {app}\chrome\icons\default\facebook.ico
 
 [Registry]
 Root: HKCR; Subkey: ".webapp"; ValueType: string; ValueName: ""; ValueData: "WebRunner.App"; Tasks: fileassoc; Flags: uninsdeletevalue

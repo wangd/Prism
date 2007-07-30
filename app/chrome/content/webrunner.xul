@@ -85,7 +85,7 @@
     <menubar>
       <menu id="menu_file" label="&file.label;">
         <menupopup>
-          <menuitem id="menu_FileQuitItem" label="&quit.label;" oncommand="WebRunner.doCOmmand('cmd_quit');"/>
+          <menuitem id="menu_FileQuitItem" label="&quit.label;" oncommand="WebRunner.doCommand('cmd_quit');"/>
         </menupopup>
       </menu>
     </menubar>

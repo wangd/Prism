@@ -204,7 +204,7 @@ var WebRunner = {
         close();
         break;
       case "cmd_quit":
-        doQuitApplication();
+        goQuitApplication();
         break;
     }
   },
