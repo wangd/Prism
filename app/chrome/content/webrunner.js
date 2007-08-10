@@ -30,29 +30,49 @@ const Ci = Components.interfaces;
 window.addEventListener("load", function() { WebRunner.startup(); }, false);
 window.addEventListener("unload", function() { WebRunner.shutdown(); }, false);
 
+/**
+ * Simple host API exposed to the web application script files.
+ */
+var HostUI = {
+    getBrowser : function() {
+      return document.getElementById("browser_main");
+    },
 
+    showAlert : function(title, message) {
+      var alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+      alerts.showAlertNotification("chrome://mozapps/skin/downloads/downloadIcon.png",
+                                    title, message, false, "", null);
+      var sound = Cc["@mozilla.org/sound;1"].createInstance(Ci.nsISound);
+      sound.beep();
+    }
+};
+
+
+/**
+ * Main application code.
+ */
 var WebRunner = {
-  _params : null,
+  _profile : null,
   _ios : null,
 
   _getBrowser : function() {
     return document.getElementById("browser_main");
   },
-  
+
   _popupShowing : function(aEvent) {
     var cut = document.getElementById("cmd_cut");
     var copy = document.getElementById("cmd_copy");
     var paste = document.getElementById("cmd_paste");
     var del = document.getElementById("cmd_delete");
-  
+
     var isContentSelected = !document.commandDispatcher.focusedWindow.getSelection().isCollapsed;
-  
+
     var target = document.popupNode;
     var isTextField = target instanceof HTMLTextAreaElement;
     if (target instanceof HTMLInputElement && (target.type == "text" || target.type == "password"))
       isTextField = true;
     var isTextSelectied= (isTextField && target.selectionStart != target.selectionEnd);
-  
+
     cut.setAttribute("disabled", ((!isTextField || !isTextSelectied) ? "true" : "false"));
     copy.setAttribute("disabled", (((!isTextField || !isTextSelectied) && !isContentSelected) ? "true" : "false"));
     paste.setAttribute("disabled", (!isTextField ? "true" : "false"));
@@ -62,7 +82,7 @@ var WebRunner = {
   _domTitleChanged : function(aEvent) {
     if (aEvent.target != this._getBrowser().contentDocument)
       return;
-  
+
     document.title = aEvent.target.title;
   },
 
@@ -77,35 +97,35 @@ var WebRunner = {
     }
     return true;
   },
-  
+
   _domClick : function(aEvent)
   {
     var link = aEvent.target;
-  
+
     if (link instanceof HTMLAnchorElement && this._isLinkExternal(link)) {
       aEvent.stopPropagation();
     }
   },
-  
+
   _domActivate : function(aEvent)
   {
     var link = aEvent.target;
-  
+
     if (link instanceof HTMLAnchorElement && this._isLinkExternal(link)) {
       // We don't want to open external links in this process: do so in the
       // default browser.
       var resolvedURI = this._ios.newURI(link.href, null, null);
-  
+
       var extps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService);
-  
+
       extps.loadURI(resolvedURI, null);
       aEvent.preventDefault();
       aEvent.stopPropagation();
     }
   },
-  
-  get params() {
-    return this._params;
+
+  get profile() {
+    return this._profile;
   },
 
   startup : function()
@@ -113,7 +133,7 @@ var WebRunner = {
     this._ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
     if (window.arguments && window.arguments[0]) {
-      this._params = new Params(window.arguments[0].QueryInterface(Ci.nsICommandLine));
+      this._profile = new Profile(window.arguments[0].QueryInterface(Ci.nsICommandLine));
 
       // Set the windowtype attribute here, so we always know which window is the main window
       document.documentElement.setAttribute("windowtype", "webrunner:main");
@@ -122,27 +142,27 @@ var WebRunner = {
       var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
       var win = wm.getMostRecentWindow("webrunner:main");
       if (win && win.WebRunner) {
-        this._params = win.WebRunner.params;
-        this._params.uri = null;
+        this._profile = win.WebRunner.profile;
+        this._profile.uri = null;
       }
       else {
-        this._params = new Params(null);
+        this._profile = new Profile(null);
       }
     }
-  
+
     // process commandline parameters
-    document.documentElement.setAttribute("id", this._params.icon);
-    document.getElementById("statusbar").hidden = !this._params.showstatus;
-    document.getElementById("locationbar").hidden = !this._params.showlocation;
-  
-    if (!this._params.enablenavigation) {
+    document.documentElement.setAttribute("id", this._profile.icon);
+    document.getElementById("statusbar").hidden = !this._profile.showstatus;
+    document.getElementById("locationbar").hidden = !this._profile.showlocation;
+
+    if (!this._profile.enablenavigation) {
       // remove navigation key from the document
       var keys = document.getElementsByTagName("key");
       for (var i=keys.length - 1; i>=0; i--)
         if (keys[i].className == "nav")
           keys[i].parentNode.removeChild(keys[i]);
     }
-  
+
     // hookup the browser window callbacks
     window.QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIWebNavigation)
@@ -151,28 +171,34 @@ var WebRunner = {
           .QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIXULWindow)
           .XULBrowserWindow = BrowserWindow;
-  
+
     var self = this;
-    
+
     var browser = this._getBrowser();
     browser.addEventListener("DOMTitleChanged", function(aEvent) { self._domTitleChanged(aEvent); }, true)
     browser.webProgress.addProgressListener(BrowserProgressListener, Ci.nsIWebProgress.NOTIFY_ALL);
-    
-    if (this._params.uri)
-      browser.loadURI(this._params.uri, null, null);
-  
+
+    if (this._profile.uri)
+      browser.loadURI(this._profile.uri, null, null);
+
     var browserContext = document.getElementById("popup_main");
     browserContext.addEventListener("popupshowing", self._popupShowing, false);
-    
+
     var fileMenu = document.getElementById("menu_file");
     if (fileMenu)
       fileMenu.hidden = true;
+
+    this._profile.script["host"] = HostUI;
+    if (this._profile.script.startup)
+      this._profile.script.startup();
   },
-  
+
   shutdown : function()
   {
+    if (this._profile.script.shutdown)
+      this._profile.script.shutdown();
   },
-  
+
   doCommand : function(cmd) {
     switch (cmd) {
       case "cmd_cut":
@@ -198,7 +224,7 @@ var WebRunner = {
         this._getBrowser().goForward();
         break;
       case "cmd_home":
-        this._getBrowser().loadURI(this._params.uri, null, null);
+        this._getBrowser().loadURI(this._profile.uri, null, null);
         break;
       case "cmd_close":
         close();
@@ -206,9 +232,12 @@ var WebRunner = {
       case "cmd_quit":
         goQuitApplication();
         break;
+      case "cmd_console":
+        window.open("chrome://global/content/console.xul", "_blank", "chrome,extrachrome,dependent,menubar,resizable,scrollbars,status,toolbar");
+        break;
     }
   },
-  
+
   attachDocument : function(doc) {
     var self = this;
     doc.addEventListener("click", function(aEvent) { self._domClick(aEvent); }, true);
@@ -249,7 +278,7 @@ var BrowserProgressListener = {
         iid.equals(Ci.nsISupportsWeakReference) ||
         iid.equals(Ci.nsISupports))
       return this;
-    
+
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
 
@@ -262,7 +291,7 @@ var BrowserProgressListener = {
       else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         this._requestsFinished++;
       }
-      
+
       if (this._requestsStarted > 1) {
         var value = (100 * this._requestsFinished) / this._requestsStarted;
         var progress = document.getElementById("progress");
@@ -280,9 +309,9 @@ var BrowserProgressListener = {
         progress.hidden = true;
         this.onStatusChange(aWebProgress, aRequest, 0, "Done");
         this._requestsStarted = this._requestsFinished = 0;
-      }      
+      }
     }
-    
+
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         var domDocument = aWebProgress.DOMWindow.document;

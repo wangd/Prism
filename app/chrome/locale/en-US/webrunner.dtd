@@ -12,5 +12,7 @@
 <!ENTITY forward.label       "Forward">
 <!ENTITY home.label          "Home">
 <!ENTITY close.label         "Close">
+<!ENTITY app.label           "WebRunner">
 <!ENTITY quit.label          "Quit WebRunner">
 <!ENTITY about.label         "About WebRunner">
+<!ENTITY console.label       "Error Console">

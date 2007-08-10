@@ -39,10 +39,10 @@
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
-  <script type="application/x-javascript" src="chrome://webrunner/content/paramParser.js"/>
+  <script type="application/x-javascript" src="chrome://webrunner/content/profile.js"/>
   <script type="application/x-javascript" src="chrome://webrunner/content/webrunner.js"/>
 
-  <commandset>
+  <commandset id="cmdset_app">
     <command id="cmd_cut" label="&cut.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_copy" label="&copy.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_paste" label="&paste.label;" oncommand="WebRunner.doCommand(this.id);"/>
@@ -56,9 +56,10 @@
     <command id="cmd_home" label="&home.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_close" label="&close.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_quit" label="&quit.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_console" label="&console.label;" oncommand="WebRunner.doCommand(this.id);"/>
   </commandset>
 
-  <keyset>
+  <keyset id="keyset_app">
     <key id="key_back" class="nav" modifiers="alt" keycode="VK_LEFT" command="cmd_back"/>
     <key id="key_forward" class="nav" modifiers="alt" keycode="VK_RIGHT" command="cmd_forward"/>
     <key id="key_home" class="nav" modifiers="alt" keycode="VK_HOME" command="cmd_home"/>
@@ -77,7 +78,13 @@
       <menuseparator/>
       <menuitem id="menuitem_print" command="cmd_print"/>
       <menuseparator/>
-      <menuitem id="menuitem_about" command="cmd_about"/>
+      <menu id="menu_app" label="&app.label;">
+        <menupopup id="popup_app">
+          <menuitem id="menuitem_console" command="cmd_console"/>
+          <menuseparator/>
+          <menuitem id="menuitem_about" command="cmd_about"/>
+        </menupopup>
+      </menu>
     </popup>
   </popupset>
 
