@@ -25,9 +25,6 @@
 
 /**
  * Constructs an nsISimpleEnumerator for the given array of items.
- *
- * @param items
- *   the array of items, which must all implement nsISupports
  */
 function ArrayEnumerator(items) {
   this._items = items;
@@ -57,7 +54,7 @@ ArrayEnumerator.prototype = {
 };
 
 /**
- * helper object that provides access to external chrome icons
+ * Directory provider that provides access to external chrome icons
  */
 const NS_APP_CHROME_DIR_LIST = "AChromDL";
 
@@ -72,10 +69,8 @@ IconProvider.prototype = {
 
   getFiles: function(prop, persistent) {
     if (prop == NS_APP_CHROME_DIR_LIST) {
-      Components.utils.reportError(prop);
       return new ArrayEnumerator([this._folder]);
     }
-      Components.utils.reportError(prop);
     throw Components.results.NS_ERROR_FAILURE;
   },
 
