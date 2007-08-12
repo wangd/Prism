@@ -31,7 +31,7 @@ pref("browser.download.manager.flashCount", 2);
 /* download alerts */
 pref("alerts.slideIncrement", 1);
 pref("alerts.slideIncrementTime", 10);
-pref("alerts.totalOpenTime", 4000);
+pref("alerts.totalOpenTime", 6000);
 pref("alerts.height", 50);
 
 /* password manager */
