@@ -34,17 +34,27 @@ window.addEventListener("unload", function() { WebRunner.shutdown(); }, false);
  * Simple host API exposed to the web application script files.
  */
 var HostUI = {
-    getBrowser : function() {
-      return document.getElementById("browser_main");
-    },
+  log : function(aMsg) {
+    var console = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
+    console.logStringMessage(aMsg);
+  },
 
-    showAlert : function(title, message) {
-      var alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-      alerts.showAlertNotification("chrome://mozapps/skin/downloads/downloadIcon.png",
-                                    title, message, false, "", null);
-      var sound = Cc["@mozilla.org/sound;1"].createInstance(Ci.nsISound);
-      sound.beep();
-    }
+  getBrowser : function() {
+    return document.getElementById("browser_main");
+  },
+
+  showAlert : function(aImage, aTitle, aMsg) {
+    var alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+    alerts.showAlertNotification(aImage, aTitle, aMsg, false, "", null);
+
+    var sound = Cc["@mozilla.org/sound;1"].createInstance(Ci.nsISound);
+    sound.beep();
+  },
+  
+  getResource : function(aResource) {
+    var resourceSpec = "chrome://webrunner/skin/resources/" + aResource;
+    return resourceSpec;
+  }
 };
 
 
@@ -86,12 +96,12 @@ var WebRunner = {
     document.title = aEvent.target.title;
   },
 
-  _isLinkExternal : function(link) {
-    if (link instanceof HTMLAnchorElement) {
-      if (link.target == "_self" || link.target == "_top")
+  _isLinkExternal : function(aLink) {
+    if (aLink instanceof HTMLAnchorElement) {
+      if (aLink.target == "_self" || aLink.target == "_top")
         return false;
 
-      var currentURL = this._ios.newURI(link.href, null, null).QueryInterface(Ci.nsIURL);
+      var currentURL = this._ios.newURI(aLink.href, null, null).QueryInterface(Ci.nsIURL);
       var commonBase = currentURL.getCommonBaseSpec(this._getBrowser().currentURI);
       return (commonBase.length == 0);
     }
@@ -199,14 +209,14 @@ var WebRunner = {
       this._profile.script.shutdown();
   },
 
-  doCommand : function(cmd) {
-    switch (cmd) {
+  doCommand : function(aCmd) {
+    switch (aCmd) {
       case "cmd_cut":
       case "cmd_copy":
       case "cmd_paste":
       case "cmd_delete":
       case "cmd_selectAll":
-        goDoCommand(cmd);
+        goDoCommand(aCmd);
         break;
       case "cmd_print":
         PrintUtils.print();
@@ -238,10 +248,10 @@ var WebRunner = {
     }
   },
 
-  attachDocument : function(doc) {
+  attachDocument : function(aDocument) {
     var self = this;
-    doc.addEventListener("click", function(aEvent) { self._domClick(aEvent); }, true);
-    doc.addEventListener("DOMActivate", function(aEvent) { self._domActivate(aEvent); }, true);
+    aDocument.addEventListener("click", function(aEvent) { self._domClick(aEvent); }, true);
+    aDocument.addEventListener("DOMActivate", function(aEvent) { self._domActivate(aEvent); }, true);
   }
 };
 

@@ -26,8 +26,8 @@
 /**
  * Constructs an nsISimpleEnumerator for the given array of items.
  */
-function ArrayEnumerator(items) {
-  this._items = items;
+function ArrayEnumerator(aItems) {
+  this._items = aItems;
   this._nextIndex = 0;
 }
 
@@ -58,8 +58,8 @@ ArrayEnumerator.prototype = {
  */
 const NS_APP_CHROME_DIR_LIST = "AChromDL";
 
-function IconProvider(folder) {
-  this._folder = folder;
+function IconProvider(aFolder) {
+  this._folder = aFolder;
 }
 
 IconProvider.prototype = {
@@ -91,33 +91,33 @@ IconProvider.prototype = {
  * It handles unpacking the bundle to the profile folder. Then it parses
  * the parameters and loads the script.
  */
-function Profile(cl)
+function Profile(aCmdLine)
 {
-  if (!cl)
+  if (!aCmdLine)
     return;
 
   // check for a webapp profile
-  var file = cl.handleFlagWithParam("webapp", false);
+  var file = aCmdLine.handleFlagWithParam("webapp", false);
   if (file)
-    file = cl.resolveFile(file);
+    file = aCmdLine.resolveFile(file);
 
   // check for an OSX launch
   if (!file) {
-    var uri = cl.handleFlagWithParam("url", false);
+    var uri = aCmdLine.handleFlagWithParam("url", false);
     if (uri) {
-      uri = cl.resolveURI(uri);
+      uri = aCmdLine.resolveURI(uri);
       file = uri.QueryInterface(Ci.nsIFileURL).file;
     }
   }
 
   if (file) {
     // store variants of the profile location
-    this.location = cl.resolveURI(file.path);
+    this.location = aCmdLine.resolveURI(file.path);
 
     this.readFile(file);
   }
 
-  this.readCommandLine(cl);
+  this.readCommandLine(aCmdLine);
 }
 
 Profile.prototype = {
@@ -129,26 +129,26 @@ Profile.prototype = {
   showlocation : false,
   enablenavigation : true,
 
-  setParameter: function(name, value) {
-    if (["uri", "icon", "showstatus", "showlocation", "enablenavigation"].indexOf(name) == -1)
+  setParameter: function(aName, aValue) {
+    if (["uri", "icon", "showstatus", "showlocation", "enablenavigation"].indexOf(aName) == -1)
       return;
 
-    if (typeof this[name] != "string" && typeof this[name] != "boolean")
+    if (typeof this[aName] != "string" && typeof this[aName] != "boolean")
       return;
 
-    if (typeof this[name] == "boolean")
-      value = (value.toLowerCase() == "true" || value.toLowerCase() == "yes");
+    if (typeof this[aName] == "boolean")
+      aValue = (aValue.toLowerCase() == "true" || aValue.toLowerCase() == "yes");
 
-    this[name] = value;
+    this[aName] = aValue;
   },
 
-  readFile: function(file)
+  readFile: function(aFile)
   {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
     try {
       var reader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
-      reader.open(file);
+      reader.open(aFile);
       reader.test(null);
 
       var appINI = dirSvc.get("ProfD", Ci.nsIFile);
@@ -219,10 +219,10 @@ Profile.prototype = {
     }
   },
 
-  readCommandLine: function(cl)
+  readCommandLine: function(aCmdLine)
   {
     for (var key in this) {
-      var value = cl.handleFlagWithParam(key, false);
+      var value = aCmdLine.handleFlagWithParam(key, false);
       if (value != null)
         this.setParameter(key, value);
     }
