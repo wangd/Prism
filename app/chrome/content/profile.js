@@ -110,7 +110,7 @@ function Profile(aCmdLine)
     }
   }
 
-  if (file) {
+  if (file && file.exists()) {
     // store variants of the profile location
     this.location = aCmdLine.resolveURI(file.path);
 

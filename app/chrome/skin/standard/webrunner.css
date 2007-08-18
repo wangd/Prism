@@ -1,0 +1,20 @@
+#security {
+  list-style-image: none;
+  min-width: 20px;
+  -moz-box-direction: reverse;
+  display: none;
+}
+
+#security[level="high"], #security[level="med"], #security[level="low"] {
+  list-style-image: url("chrome://webrunner/skin/images/secure.png");
+  display: -moz-box;
+}
+
+#security[level="broken"] {
+  list-style-image: url("chrome://webrunner/skin/images/secure-broken.png");
+  display: -moz-box;
+}
+
+#security > label:not([value]) {
+  display: none;
+}

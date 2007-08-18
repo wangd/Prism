@@ -361,17 +361,21 @@ var BrowserProgressListener = {
   // This method is called when the security state of the browser changes.
   onSecurityChange: function(aWebProgress, aRequest, aState) {
     var security = document.getElementById("security");
+    var browser = document.getElementById("browser_main");
 
-    var level = "unknown";
+    security.removeAttribute("label");
     switch (aState) {
       case Ci.nsIWebProgressListener.STATE_IS_SECURE | Ci.nsIWebProgressListener.STATE_SECURE_HIGH:
         security.setAttribute("level", "high");
+        security.setAttribute("label", browser.contentWindow.location.host);
         break;
       case Ci.nsIWebProgressListener.STATE_IS_SECURE | Ci.nsIWebProgressListener.STATE_SECURE_MEDIUM:
         security.setAttribute("level", "med");
+        security.setAttribute("label", browser.contentWindow.location.host);
         break;
       case Ci.nsIWebProgressListener.STATE_IS_SECURE | Ci.nsIWebProgressListener.STATE_SECURE_LOW:
         security.setAttribute("level", "low");
+        security.setAttribute("label", browser.contentWindow.location.host);
         break;
       case Ci.nsIWebProgressListener.STATE_IS_BROKEN:
         security.setAttribute("level", "broken");
