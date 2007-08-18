@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://explorer/skin/explorer.css" type="text/css"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://inspector/locale/tasksOverlay.dtd" >
+
+<overlay id="overlay_inspector" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript" src="chrome://inspector/content/hooks.js"/>
+
+  <commandset id="cmdset_app">
+    <command id="cmd_inspector" label="&inspectorTaskCmd.label;" oncommand="inspectDOMDocument(content.document);"/>
+  </commandset>
+
+  <keyset id="keyset_app">
+    <key id="key_inspector" key="&inspectorTaskCmd.commandkey;" modifiers="accel,shift"  command="cmd_inspector"/>
+  </keyset>
+
+  <menupopup id="popup_app">
+    <menuitem id="menuitem_inspector" class="menuitem-iconic" accesskey="&inspectorTaskCmd.accesskey.ff;" command="cmd_inspector" key="key_inspector" insertafter="menuitem_console"/>
+  </menupopup>
+
+</overlay>
