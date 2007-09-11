@@ -1,0 +1,7 @@
+<!ENTITY dialog.title        "Install Shortcut">
+
+<!ENTITY dialog.hint         "Create a shortcut to the web application">
+<!ENTITY name.label          "Type the name of the shortcut:">
+<!ENTITY location.hint       "Where do you want to create the shortcut?">
+<!ENTITY desktop.label       "Desktop">
+<!ENTITY quicklaunch.label   "Quick Launch bar">

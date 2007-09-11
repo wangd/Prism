@@ -96,10 +96,23 @@ function Profile(aCmdLine)
   if (!aCmdLine)
     return;
 
+  var file = null;
+
   // check for a webapp profile
-  var file = aCmdLine.handleFlagWithParam("webapp", false);
-  if (file)
-    file = aCmdLine.resolveFile(file);
+  var webapp = aCmdLine.handleFlagWithParam("webapp", false);
+  if (webapp) {
+    // check for a bundle first
+    file = aCmdLine.resolveFile(webapp);
+    if (!file || !file.exists()) {
+      // not a bundle. look for an installed webapp
+      var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+      var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
+      appSandbox.append("webapps");
+      appSandbox.append(webapp);
+      if (appSandbox.exists())
+        file = appSandbox.clone();
+    }
+  }
 
   // check for an OSX launch
   if (!file) {
@@ -111,26 +124,29 @@ function Profile(aCmdLine)
   }
 
   if (file && file.exists()) {
-    // store variants of the profile location
-    this.location = aCmdLine.resolveURI(file.path);
+    // bundles are files and need to be installed
+    if (!file.isDirectory())
+      this.install(file);
 
-    this.readFile(file);
+    this.init(file);
   }
 
   this.readCommandLine(aCmdLine);
 }
 
 Profile.prototype = {
-  location : null,
   script : {},
+  id : "",
+  fileTypes : [],
   uri : "chrome://webrunner/locale/welcome.html",
   icon : "webrunner",
-  showstatus : true,
-  showlocation : false,
-  enablenavigation : true,
+  status : true,
+  location : false,
+  sidebar : false,
+  navigation : true,
 
   setParameter: function(aName, aValue) {
-    if (["uri", "icon", "showstatus", "showlocation", "enablenavigation"].indexOf(aName) == -1)
+    if (["id", "uri", "icon", "status", "location", "sidebar", "navigation"].indexOf(aName) == -1)
       return;
 
     if (typeof this[aName] != "string" && typeof this[aName] != "boolean")
@@ -142,8 +158,60 @@ Profile.prototype = {
     this[aName] = aValue;
   },
 
-  readFile: function(aFile)
-  {
+  readINI : function(aFile) {
+    var iniFactory = Components.manager.getClassObjectByContractID("@mozilla.org/xpcom/ini-parser-factory;1", Ci.nsIINIParserFactory);
+    var iniParser = iniFactory.createINIParser(aFile);
+
+    var keys = iniParser.getKeys("Parameters");
+    while (keys.hasMore()) {
+      var key = keys.getNext();
+      var value = iniParser.getString("Parameters", key);
+      this.setParameter(key.toLowerCase(), value);
+    }
+
+    keys = iniParser.getKeys("FileTypes");
+    while (keys.hasMore()) {
+      var key = keys.getNext();
+      var value = iniParser.getString("Parameters", key);
+      var values = value.split(";");
+      if (values.length == 4) {
+        var type = {};
+        type.name = values[0];
+        type.extension = values[1];
+        type.description = values[2];
+        type.contentType = values[3];
+        this.fileTypes.push(type);
+      }
+    }
+  },
+
+  init : function(aFile) {
+    var appSandbox = aFile.clone();
+
+    // read the INI settings
+    var appINI = appSandbox.clone();
+    appINI.append("webapp.ini");
+    if (appINI.exists())
+      this.readINI(appINI);
+
+    // load the application script
+    var appScript = appSandbox.clone();
+    appScript.append("webapp.js");
+    if (appScript.exists()) {
+      var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+      var appScriptURI = ios.newFileURI(appScript);
+
+      var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
+      scriptLoader.loadSubScript(appScriptURI.spec, this.script);
+    }
+
+    // initialize the icon provider
+    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+    var iconProvider = new IconProvider(appSandbox);
+    dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(iconProvider);
+  },
+
+  install : function(aFile) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
     try {
@@ -151,66 +219,59 @@ Profile.prototype = {
       reader.open(aFile);
       reader.test(null);
 
-      var appINI = dirSvc.get("ProfD", Ci.nsIFile);
-      appINI.append("webapp");
-      appINI.append("webapp.ini");
-      if (appINI.exists())
-        appINI.remove(false);
-      appINI.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
-      reader.extract("webapp.ini", appINI);
+      // extract the webapp.ini to a temp location so it can be parsed
+      var tempINI = dirSvc.get("TmpD", Ci.nsIFile);
+      tempINI.append("webapp.ini");
+      tempINI.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+      reader.extract("webapp.ini", tempINI);
+      this.readINI(tempINI);
+      tempINI.remove(false);
 
-      var iniFactory = Components.manager.getClassObjectByContractID("@mozilla.org/xpcom/ini-parser-factory;1", Ci.nsIINIParserFactory);
-      var iniParser = iniFactory.createINIParser(appINI);
+      // creating a webapp install requires an ID
+      if (this.id.length > 0) {
+        // now we will build the webapp folder in the profile
+        var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
+        appSandbox.append("webapps");
+        appSandbox.append(this.id);
 
-      var keys = iniParser.getKeys("Parameters");
-      while (keys.hasMore()) {
-        var key = keys.getNext();
-        var value = iniParser.getString("Parameters", key);
-        this.setParameter(key.toLowerCase(), value);
-      }
+        var appINI = appSandbox.clone();
+        appINI.append("webapp.ini");
+        if (appINI.exists())
+          appINI.remove(false);
+        appINI.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+        reader.extract("webapp.ini", appINI);
 
-      if (reader.hasEntry("webapp.js")) {
-        var appScript = dirSvc.get("ProfD", Ci.nsIFile);
-        appScript.append("webapp");
-        appScript.append("webapp.js");
-        if (appScript.exists())
-          appScript.remove(false);
-        appScript.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
-        reader.extract("webapp.js", appScript);
+        if (reader.hasEntry("webapp.js")) {
+          var appScript = appSandbox.clone();
+          appScript.append("webapp.js");
+          if (appScript.exists())
+            appScript.remove(false);
+          appScript.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+          reader.extract("webapp.js", appScript);
+        }
 
-        var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-        var appScriptURI = ios.newFileURI(appScript);
+        if (this.icon != "webrunner") {
+          var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+          var iconExt = "";
+          var os = xulRuntime.OS.toLowerCase();
+          if (os == "winnt")
+            iconExt = ".ico";
+          else if (os == "linux")
+            iconExt = ".xpm";
+          else if (os == "darwin")
+            iconExt = ".icns";
 
-        var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
-        scriptLoader.loadSubScript(appScriptURI.spec, this.script);
-      }
-
-      if (this.icon != "webrunner") {
-        var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-        var iconExt = "";
-        if (xulRuntime.OS.toLowerCase() == "winnt")
-          iconExt = ".ico";
-        else if (xulRuntime.OS.toLowerCase() == "linux")
-          iconExt = ".xpm";
-        else if (xulRuntime.OS.toLowerCase() == "darwin")
-          iconExt = ".icns";
-
-        var iconName = this.icon + iconExt;
-        if (reader.hasEntry(iconName)) {
-          var appIcon = dirSvc.get("ProfD", Ci.nsIFile);
-          appIcon.append("webapp");
-          var appIconFolder = appIcon.clone();
-          appIcon.append("icons");
-          appIcon.append("default");
-          appIcon.append(iconName);
-          if (appIcon.exists())
-            appIcon.remove(false);
-          appIcon.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
-          reader.extract(iconName, appIcon);
-
-          var iconProvider = new IconProvider(appIconFolder);
-          var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-          dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(iconProvider);
+          var iconName = this.icon + iconExt;
+          if (reader.hasEntry(iconName)) {
+            var appIcon = appSandbox.clone();
+            appIcon.append("icons");
+            appIcon.append("default");
+            appIcon.append(iconName);
+            if (appIcon.exists())
+              appIcon.remove(false);
+            appIcon.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+            reader.extract(iconName, appIcon);
+          }
         }
       }
     }
@@ -219,8 +280,7 @@ Profile.prototype = {
     }
   },
 
-  readCommandLine: function(aCmdLine)
-  {
+  readCommandLine : function(aCmdLine) {
     for (var key in this) {
       var value = aCmdLine.handleFlagWithParam(key, false);
       if (value != null)

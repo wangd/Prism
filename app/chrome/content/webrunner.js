@@ -27,6 +27,9 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+Components.utils.import("resource://gre/modules/JSON.jsm");
+Components.utils.import("resource://app/modules/WebAppInstall.jsm");
+
 window.addEventListener("load", function() { WebRunner.startup(); }, false);
 window.addEventListener("unload", function() { WebRunner.shutdown(); }, false);
 
@@ -40,7 +43,7 @@ var HostUI = {
   },
 
   getBrowser : function() {
-    return document.getElementById("browser_main");
+    return document.getElementById("browser_content");
   },
 
   showAlert : function(aImage, aTitle, aMsg) {
@@ -50,10 +53,26 @@ var HostUI = {
     var sound = Cc["@mozilla.org/sound;1"].createInstance(Ci.nsISound);
     sound.beep();
   },
-  
+
   getResource : function(aResource) {
     var resourceSpec = "chrome://webrunner/skin/resources/" + aResource;
     return resourceSpec;
+  },
+
+  sidebar : {
+    get visible() {
+      return document.getElementById("splitter_sidebar").getAttribute("state") == "open";
+    },
+
+    set visible(show) {
+      document.getElementById("splitter_sidebar").setAttribute("state", show ? "open" : "collapsed");
+    },
+
+    add : function(title, uri) {
+      document.getElementById("box_sidebar").href = uri;
+      document.getElementById("label_sidebar").value = title;
+      document.getElementById("browser_sidebar").setAttribute("src", uri);
+    }
   }
 };
 
@@ -66,7 +85,76 @@ var WebRunner = {
   _ios : null,
 
   _getBrowser : function() {
-    return document.getElementById("browser_main");
+    return document.getElementById("browser_content");
+  },
+
+  _saveSettings : function() {
+      var settings = {};
+      settings.version = "1";
+
+      settings.window = {};
+      settings.window.screenX = window.screenX;
+      settings.window.screenY = window.screenY;
+      settings.window.width = window.outerWidth;
+      settings.window.height = window.outerHeight;
+
+      settings.sidebar = {};
+      settings.sidebar.visible = (document.getElementById("splitter_sidebar").getAttribute("state") == "open");
+      settings.sidebar.width = document.getElementById("box_sidebar").width;
+
+      // Save using JSON format
+      if (this._profile.hasOwnProperty("id")) {
+        var json = JSON.toString(settings);
+        var file = IO.getFile("Profile", null);
+        file.append("webapps");
+        file.append(this._profile.id);
+        file.append("localstore.json");
+        if (!file.exists())
+          file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+        var stream = IO.newOutputStream(file, "text write create truncate");
+        stream.writeString(json);
+        stream.close();
+      }
+  },
+
+  _loadSettings : function() {
+      // Load using JSON format
+      var settings;
+      if (this._profile.hasOwnProperty("id")) {
+        var file = IO.getFile("Profile", null);
+        file.append("webapps");
+        file.append(this._profile.id);
+        file.append("localstore.json");
+        if (file.exists()) {
+          var stream = IO.newInputStream(file, "text");
+          var json = stream.readLine();
+          stream.close();
+          settings = JSON.fromString(json);
+
+          if (settings.window) {
+              window.moveTo(settings.window.screenX, settings.window.screenY);
+              window.resizeTo(settings.window.width, settings.window.height);
+          }
+
+          if (settings.sidebar) {
+              document.getElementById("splitter_sidebar").setAttribute("state", settings.sidebar.visible ? "open" : "collapsed");
+              document.getElementById("box_sidebar").width = settings.sidebar.width;
+          }
+        }
+      }
+  },
+
+  _delayedStartup : function() {
+    this._loadSettings();
+
+    this._profile.script["host"] = HostUI;
+    if (this._profile.script.startup)
+      this._profile.script.startup();
+  },
+
+  _handleWindowClose : function(event) {
+    // Handler for clicking on the 'x' to close the window
+    return this.shutdownQuery();
   },
 
   _popupShowing : function(aEvent) {
@@ -108,6 +196,62 @@ var WebRunner = {
     return true;
   },
 
+  _dragOver : function(aEvent)
+  {
+    var dragService = Cc["@mozilla.org/widget/dragservice;1"].getService(Ci.nsIDragService);
+    var dragSession = dragService.getCurrentSession();
+
+    var supported = dragSession.isDataFlavorSupported("text/x-moz-url");
+    if (!supported)
+      supported = dragSession.isDataFlavorSupported("application/x-moz-file");
+
+    if (supported)
+      dragSession.canDrop = true;
+  },
+
+  _dragDrop : function(aEvent)
+  {
+    var dragService = Cc["@mozilla.org/widget/dragservice;1"].getService(Ci.nsIDragService);
+    var dragSession = dragService.getCurrentSession();
+    if (dragSession.sourceNode)
+      return;
+
+    var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
+    trans.addDataFlavor("text/x-moz-url");
+    trans.addDataFlavor("application/x-moz-file");
+
+    var uris = [];
+    for (var i=0; i<dragSession.numDropItems; i++) {
+      var uri = null;
+
+      dragSession.getData(trans, i);
+      var flavor = {}, data = {}, length = {};
+      trans.getAnyTransferData(flavor, data, length);
+      if (data) {
+        try {
+          var str = data.value.QueryInterface(Ci.nsISupportsString);
+        }
+        catch(ex) {
+        }
+
+        if (str) {
+          uri = ioService.newURI(str.data.split("\n")[0], null, null);
+        }
+        else {
+          var file = dataObj.value.QueryInterface(Ci.nsIFile);
+          if (file)
+            uri = this._ios.newFileURI(file);
+        }
+      }
+
+      if (uri)
+        uris.push(uri);
+    }
+
+    if (this._profile.script.dropFiles)
+      this._profile.script.dropFiles(uris);
+  },
+
   _domClick : function(aEvent)
   {
     var link = aEvent.target;
@@ -134,10 +278,6 @@ var WebRunner = {
     }
   },
 
-  get profile() {
-    return this._profile;
-  },
-
   startup : function()
   {
     this._ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
@@ -147,12 +287,28 @@ var WebRunner = {
 
       // Set the windowtype attribute here, so we always know which window is the main window
       document.documentElement.setAttribute("windowtype", "webrunner:main");
+
+      // Hack to get the mime handler initialized correctly so the content handler dialog doesn't appear
+      var hs = Cc["@mozilla.org/uriloader/handler-service;1"].getService(Ci.nsIHandlerService);
+      var extps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService);
+
+      // Set the 'http' handler
+      var httpHandler = extps.getProtocolHandlerInfo("http");
+      httpHandler.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
+      httpHandler.alwaysAskBeforeHandling = false;
+      hs.store(httpHandler);
+
+      // Set the 'https' handler
+      var httpsHandler = extps.getProtocolHandlerInfo("https");
+      httpsHandler.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
+      httpsHandler.alwaysAskBeforeHandling = false;
+      hs.store(httpsHandler);
     }
     else {
       var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
       var win = wm.getMostRecentWindow("webrunner:main");
       if (win && win.WebRunner) {
-        this._profile = win.WebRunner.profile;
+        this._profile = win.WebRunner._profile;
         this._profile.uri = null;
       }
       else {
@@ -160,47 +316,56 @@ var WebRunner = {
       }
     }
 
-    // process commandline parameters
+    // Process commandline parameters
     document.documentElement.setAttribute("id", this._profile.icon);
-    document.getElementById("statusbar").hidden = !this._profile.showstatus;
-    document.getElementById("locationbar").hidden = !this._profile.showlocation;
+    document.getElementById("locationbar").hidden = !this._profile.location;
+    document.getElementById("box_sidebar").hidden = !this._profile.sidebar;
+    document.getElementById("splitter_sidebar").hidden = !this._profile.sidebar;
 
-    if (!this._profile.enablenavigation) {
-      // remove navigation key from the document
+    if (!this._profile.navigation) {
+      // Remove navigation key from the document
       var keys = document.getElementsByTagName("key");
       for (var i=keys.length - 1; i>=0; i--)
         if (keys[i].className == "nav")
           keys[i].parentNode.removeChild(keys[i]);
     }
 
-    // hookup the browser window callbacks
+    // Hookup the browser window callbacks
     window.QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIWebNavigation)
           .QueryInterface(Ci.nsIDocShellTreeItem)
           .treeOwner
           .QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIXULWindow)
-          .XULBrowserWindow = BrowserWindow;
+          .XULBrowserWindow = this;
 
     var self = this;
 
+    window.addEventListener("close", function(event) { self._handleWindowClose(event); }, false);
+
     var browser = this._getBrowser();
     browser.addEventListener("DOMTitleChanged", function(aEvent) { self._domTitleChanged(aEvent); }, true)
-    browser.webProgress.addProgressListener(BrowserProgressListener, Ci.nsIWebProgress.NOTIFY_ALL);
+    browser.addEventListener("dragover", function(aEvent) { self._dragOver(aEvent); }, true)
+    browser.addEventListener("dragdrop", function(aEvent) { self._dragDrop(aEvent); }, true)
+    browser.webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
 
     if (this._profile.uri)
       browser.loadURI(this._profile.uri, null, null);
 
-    var browserContext = document.getElementById("popup_main");
-    browserContext.addEventListener("popupshowing", self._popupShowing, false);
+    document.getElementById("popup_main").addEventListener("popupshowing", self._popupShowing, false);
 
-    var fileMenu = document.getElementById("menu_file");
-    if (fileMenu)
-      fileMenu.hidden = true;
+    // Let osx make its app menu, then hide the window menu
+    var mainMenu = document.getElementById("menu_main");
+    if (mainMenu)
+      mainMenu.hidden = true;
 
-    this._profile.script["host"] = HostUI;
-    if (this._profile.script.startup)
-      this._profile.script.startup();
+    setTimeout(function() {self._delayedStartup(); }, 0);
+  },
+
+  shutdownQuery : function() {
+    this._saveSettings();
+
+    return true;
   },
 
   shutdown : function()
@@ -245,6 +410,9 @@ var WebRunner = {
       case "cmd_console":
         window.open("chrome://global/content/console.xul", "_blank", "chrome,extrachrome,dependent,menubar,resizable,scrollbars,status,toolbar");
         break;
+      case "cmd_install":
+        window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal");
+        break;
     }
   },
 
@@ -252,45 +420,19 @@ var WebRunner = {
     var self = this;
     aDocument.addEventListener("click", function(aEvent) { self._domClick(aEvent); }, true);
     aDocument.addEventListener("DOMActivate", function(aEvent) { self._domActivate(aEvent); }, true);
-  }
-};
-
-// nsIXULBrowserWindow implementation to display link destinations in the statusbar
-var BrowserWindow = {
-  QueryInterface: function(aIID) {
-    if (aIID.Equals(Ci.nsIXULBrowserWindow) ||
-        aIID.Equals(Ci.nsISupports))
-     return this;
-
-    throw Components.results.NS_NOINTERFACE;
   },
 
+  // nsIXULBrowserWindow implementation to display link destinations in the statusbar
   setJSStatus: function() { },
   setJSDefaultStatus: function() { },
-
   setOverLink: function(aStatusText, aLink) {
     var statusbar = document.getElementById("status");
     statusbar.label = aStatusText;
-  }
-};
+  },
 
-
-// nsIWebProgressListener implementation to monitor activity in the browser.
-var BrowserProgressListener = {
+  // nsIWebProgressListener implementation to monitor activity in the browser.
   _requestsStarted: 0,
   _requestsFinished: 0,
-
-  // We need to advertize that we support weak references.  This is done simply
-  // by saying that we QI to nsISupportsWeakReference.  XPConnect will take
-  // care of actually implementing that interface on our behalf.
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIWebProgressListener) ||
-        iid.equals(Ci.nsISupportsWeakReference) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
 
   // This method is called to indicate state changes.
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
@@ -302,7 +444,7 @@ var BrowserProgressListener = {
         this._requestsFinished++;
       }
 
-      if (this._requestsStarted > 1) {
+      if (this._profile.status && this._requestsStarted > 1) {
         var value = (100 * this._requestsFinished) / this._requestsStarted;
         var progress = document.getElementById("progress");
         progress.setAttribute("mode", "determined");
@@ -310,7 +452,7 @@ var BrowserProgressListener = {
       }
     }
 
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+    if (this._profile.status && (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK)) {
       var progress = document.getElementById("progress");
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
         progress.hidden = false;
@@ -333,7 +475,7 @@ var BrowserProgressListener = {
   // This method is called to indicate progress changes for the currently
   // loading page.
   onProgressChange: function(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
-    if (this._requestsStarted == 1) {
+    if (this._profile.status && this._requestsStarted == 1) {
       var progress = document.getElementById("progress");
       if (aMaxSelf == -1) {
         progress.setAttribute("mode", "undetermined");
@@ -354,14 +496,16 @@ var BrowserProgressListener = {
   // This method is called to indicate a status changes for the currently
   // loading page.  The message is already formatted for display.
   onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {
-    var statusbar = document.getElementById("status");
-    statusbar.setAttribute("label", aMessage);
+    if (this._profile.status) {
+      var statusbar = document.getElementById("status");
+      statusbar.setAttribute("label", aMessage);
+    }
   },
 
   // This method is called when the security state of the browser changes.
   onSecurityChange: function(aWebProgress, aRequest, aState) {
     var security = document.getElementById("security");
-    var browser = document.getElementById("browser_main");
+    var browser = this._getBrowser();
 
     security.removeAttribute("label");
     switch (aState) {
@@ -385,5 +529,18 @@ var BrowserProgressListener = {
         security.removeAttribute("level");
         break;
     }
+  },
+
+  // We need to advertize that we support weak references.  This is done simply
+  // by saying that we QI to nsISupportsWeakReference.  XPConnect will take
+  // care of actually implementing that interface on our behalf.
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Ci.nsIWebProgressListener) ||
+        aIID.equals(Ci.nsISupportsWeakReference) ||
+        aIID.Equals(Ci.nsIXULBrowserWindow) ||
+        aIID.equals(Ci.nsISupports))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
   }
 };

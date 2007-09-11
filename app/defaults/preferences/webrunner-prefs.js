@@ -1,7 +1,7 @@
 pref("toolkit.defaultChromeURI", "chrome://webrunner/content/webrunner.xul");  // - main xul window
 pref("browser.chromeURL", "chrome://webrunner/content/webrunner.xul");         // - allow popup windows to open
 
-pref("general.useragent.extra.webrunner", "Webrunner/0.6");
+pref("general.useragent.extra.webrunner", "Webrunner/0.7");
 
 /* debugging prefs */
 pref("browser.dom.window.dump.enabled", true);
@@ -9,6 +9,11 @@ pref("javascript.options.showInConsole", true);
 pref("javascript.options.strict", true);
 pref("nglayout.debug.disable_xul_cache", true);
 pref("nglayout.debug.disable_xul_fastload", true);
+
+/* default security dialogs like firefox */
+pref("security.warn_entering_secure.show_once", false);
+pref("security.warn_leaving_secure.show_once", false);
+pref("security.warn_submit_insecure.show_once", false);
 
 /* disable warnings when opening external links */
 pref("network.protocol-handler.warn-external.http", false);

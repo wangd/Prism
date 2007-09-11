@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://explorer/skin/explorer.css" type="text/css"?>
+<?xml-stylesheet href="chrome://webrunner/skin/webrunner.css" type="text/css"?>
 
 <!DOCTYPE overlay SYSTEM "chrome://inspector/locale/tasksOverlay.dtd" >
 

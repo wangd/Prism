@@ -33,10 +33,9 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="webrunner"
         windowtype="webrunner"
-        title="&webrunner.title;"
+        title="&app.title;"
         width="750" height="550"
-        screenX="10" screenY="10"
-        persist="width,height,screenX,screenY,sizemode">
+        screenX="10" screenY="10">
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
@@ -58,6 +57,7 @@
     <command id="cmd_close" label="&close.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_quit" label="&quit.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_console" label="&console.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_install" label="&install.label;" oncommand="WebRunner.doCommand(this.id);"/>
   </commandset>
 
   <keyset id="keyset_app">
@@ -69,28 +69,18 @@
   </keyset>
 
   <popupset>
-    <popup id="popup_main">
+    <menupopup id="popup_content">
       <menuitem id="menuitem_cut" command="cmd_cut"/>
       <menuitem id="menuitem_copy" command="cmd_copy"/>
       <menuitem id="menuitem_paste" command="cmd_paste"/>
       <menuitem id="menuitem_delete" command="cmd_delete"/>
       <menuseparator/>
       <menuitem id="menuitem_selectall" command="cmd_selectAll"/>
-      <menuseparator/>
-      <menuitem id="menuitem_print" command="cmd_print"/>
-      <menuseparator/>
-      <menu id="menu_app" label="&app.label;">
-        <menupopup id="popup_app">
-          <menuitem id="menuitem_console" command="cmd_console"/>
-          <menuseparator/>
-          <menuitem id="menuitem_about" command="cmd_about"/>
-        </menupopup>
-      </menu>
-    </popup>
+    </menupopup>
   </popupset>
 
   <toolbox>
-    <menubar>
+    <menubar id="menu_main">
       <menu id="menu_file" label="&file.label;">
         <menupopup>
           <menuitem id="menu_FileQuitItem" label="&quit.label;" key="key_quit" oncommand="WebRunner.doCommand('cmd_quit');"/>
@@ -102,12 +92,37 @@
     </toolbar>
   </toolbox>
 
-  <browser id="browser_main" flex="1" type="content-primary" context="popup_main"/>
+  <hbox id="box_main" flex="1">
+    <vbox id="box_sidebar" width="200">
+      <hbox class="sidebarheader">
+        <description id="label_sidebar" value="" flex="1"/>
+      </hbox>
+      <browser id="browser_sidebar" flex="1" type="content" src="about:blank"/>
+    </vbox>
+
+    <splitter id="splitter_sidebar" collapse="before" state="collapsed">
+      <grippy/>
+    </splitter>
+
+    <vbox id="box_content" flex="1">
+      <browser id="browser_content" flex="1" type="content-primary" context="popup_content"/>
+    </vbox>
+  </hbox>
 
   <statusbar id="statusbar">
     <statusbarpanel id="status" label="" crop="end" flex="1"/>
     <progressmeter id="progress" mode="determined" value="0" hidden="true"/>
     <statusbarpanel id="security" class="statusbarpanel-iconic-text"/>
+      <toolbarbutton id="button_commands" type="menu" tooltiptext="&commands.tooltip;">
+        <menupopup id="popup_main">
+          <menuitem id="menuitem_print" command="cmd_print"/>
+          <menuitem id="menuitem_install" command="cmd_install"/>
+          <menuseparator/>
+          <menuitem id="menuitem_console" command="cmd_console"/>
+          <menuseparator/>
+          <menuitem id="menuitem_about" command="cmd_about"/>
+        </menupopup>
+      </toolbarbutton>
   </statusbar>
 
 </window>

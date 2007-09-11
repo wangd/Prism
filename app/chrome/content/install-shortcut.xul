@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://webrunner/locale/install-shortcut.dtd">
+
+<dialog id="install"
+        title="&dialog.title;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        persist="screenX screenY width height"
+        buttons="accept,cancel"
+        ondialogaccept="return InstallShortcut.accept();">
+
+  <script type="application/x-javascript" src="chrome://webrunner/content/install-shortcut.js"/>
+
+  <description>&dialog.hint;</description>
+  <label control="name">&name.label;</label>
+  <textbox id="name"/>
+  <separator class="thin"/>
+  <description>&location.hint;</description>
+  <checkbox id="desktop" label="&desktop.label;"/>
+  <checkbox id="quicklaunch" label="&quicklaunch.label;"/>
+</dialog>
