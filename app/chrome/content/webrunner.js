@@ -411,7 +411,7 @@ var WebRunner = {
         window.open("chrome://global/content/console.xul", "_blank", "chrome,extrachrome,dependent,menubar,resizable,scrollbars,status,toolbar");
         break;
       case "cmd_install":
-        window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal");
+        window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", this._profile.id,  this._profile.icon);
         break;
     }
   },

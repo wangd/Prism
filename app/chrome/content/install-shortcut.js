@@ -27,9 +27,9 @@ Components.utils.import("resource://app/modules/WebAppInstall.jsm");
 var InstallShortcut = {
   accept : function() {
     var name = document.getElementById("name");
-    if (name.value.length > 0) {
+    if (window.arguments.length == 2 && name.value.length > 0) {
       var wai = new WebAppInstall();
-      wai.createShortcut(name.value, this.profile.id, this.profile.icon);
+      wai.createShortcut(name.value, window.arguments[0], window.arguments[1]);
     }
     return true;
   }

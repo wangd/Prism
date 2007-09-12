@@ -18,16 +18,21 @@ WebAppInstall.prototype = {
     appIcon.append(id);
     appIcon.append("icons");
     appIcon.append("default");
-    appIcon.append(icon + ".ico");
 
     var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
     var os = xulRuntime.OS.toLowerCase();
-    if (os == "winnt")
+    if (os == "winnt") {
+      appIcon.append(icon + ".ico");
       this._createShortcutWindows(webrunner.path, name, id, appIcon.path);
-    else if (os == "linux")
+    }
+    else if (os == "linux") {
+      appIcon.append(icon + ".xpm");
       this._createShortcutLinux(webrunner.path, name, id, appIcon.path);
-    else if (os == "darwin")
+    }
+    else if (os == "darwin") {
+      appIcon.append(icon + ".icns");
       this._createShortcutMac(webrunner.path, name, id, appIcon.path);
+    }
   },
 
   _createShortcutWindows : function(target, name, id, icon) {
@@ -44,7 +49,7 @@ WebAppInstall.prototype = {
 
     var cmd = "Set oWsh = CreateObject(\"WScript.Shell\")\n";
     cmd += "sDesktop = oWsh.SpecialFolders(\"Desktop\")\n";
-    cmd += "Set oShortcut = oWsh.CreateShortcut(sDesktop & \"\\test.lnk\")\n";
+    cmd += "Set oShortcut = oWsh.CreateShortcut(sDesktop & \"\\" + name + ".lnk\")\n";
     cmd += "oShortcut.TargetPath = \"" + target + "\"\n";
     cmd += "oShortcut.Arguments = \"-webapp " + id + "\"\n";
     cmd += "oShortcut.IconLocation = \"" + icon + "\"\n";
