@@ -11,7 +11,6 @@ WebAppInstall.prototype = {
   createShortcut : function(name, id, icon) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
     var webrunner = dirSvc.get("resource:app", Ci.nsIFile);
-    webrunner.append("webrunner.exe");
 
     var appIcon = dirSvc.get("ProfD", Ci.nsIFile);
     appIcon.append("webapps");
@@ -22,14 +21,17 @@ WebAppInstall.prototype = {
     var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
     var os = xulRuntime.OS.toLowerCase();
     if (os == "winnt") {
+      webrunner.append("webrunner.exe");
       appIcon.append(icon + ".ico");
       this._createShortcutWindows(webrunner.path, name, id, appIcon.path);
     }
     else if (os == "linux") {
+      webrunner.append("webrunner");
       appIcon.append(icon + ".xpm");
       this._createShortcutLinux(webrunner.path, name, id, appIcon.path);
     }
     else if (os == "darwin") {
+      webrunner.append("webrunner");
       appIcon.append(icon + ".icns");
       this._createShortcutMac(webrunner.path, name, id, appIcon.path);
     }
