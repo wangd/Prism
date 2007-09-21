@@ -98,13 +98,21 @@ function Profile(aCmdLine)
 
   var file = null;
 
-  // check for a webapp profile
+  // Check for a webapp profile
   var webapp = aCmdLine.handleFlagWithParam("webapp", false);
   if (webapp) {
-    // check for a bundle first
-    file = aCmdLine.resolveFile(webapp);
+    // Check for a bundle first
+    try {
+      file = aCmdLine.resolveFile(webapp);
+    }
+    catch (ex) {
+      // Ouch, not a file
+      file = null;
+    }
+
+    // Do we have a valid file? or did it fail?
     if (!file || !file.exists()) {
-      // not a bundle. look for an installed webapp
+      // Its not a bundle. look for an installed webapp
       var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
       var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
       appSandbox.append("webapps");
@@ -114,7 +122,7 @@ function Profile(aCmdLine)
     }
   }
 
-  // check for an OSX launch
+  // Check for an OSX launch
   if (!file) {
     var uri = aCmdLine.handleFlagWithParam("url", false);
     if (uri) {
@@ -124,7 +132,7 @@ function Profile(aCmdLine)
   }
 
   if (file && file.exists()) {
-    // bundles are files and need to be installed
+    // Bundles are files and need to be installed
     if (!file.isDirectory())
       this.install(file);
 
@@ -188,13 +196,13 @@ Profile.prototype = {
   init : function(aFile) {
     var appSandbox = aFile.clone();
 
-    // read the INI settings
+    // Read the INI settings
     var appINI = appSandbox.clone();
     appINI.append("webapp.ini");
     if (appINI.exists())
       this.readINI(appINI);
 
-    // load the application script
+    // Load the application script
     var appScript = appSandbox.clone();
     appScript.append("webapp.js");
     if (appScript.exists()) {
@@ -205,7 +213,7 @@ Profile.prototype = {
       scriptLoader.loadSubScript(appScriptURI.spec, this.script);
     }
 
-    // initialize the icon provider
+    // Initialize the icon provider
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
     var iconProvider = new IconProvider(appSandbox);
     dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(iconProvider);
@@ -219,7 +227,7 @@ Profile.prototype = {
       reader.open(aFile);
       reader.test(null);
 
-      // extract the webapp.ini to a temp location so it can be parsed
+      // Extract the webapp.ini to a temp location so it can be parsed
       var tempINI = dirSvc.get("TmpD", Ci.nsIFile);
       tempINI.append("webapp.ini");
       tempINI.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
@@ -227,9 +235,9 @@ Profile.prototype = {
       this.readINI(tempINI);
       tempINI.remove(false);
 
-      // creating a webapp install requires an ID
+      // Creating a webapp install requires an ID
       if (this.id.length > 0) {
-        // now we will build the webapp folder in the profile
+        // Now we will build the webapp folder in the profile
         var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
         appSandbox.append("webapps");
         appSandbox.append(this.id);
