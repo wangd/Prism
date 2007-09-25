@@ -4,7 +4,7 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
   <Description about="urn:mozilla:install-manifest">
     <em:id>inspector@mozilla.org</em:id>
-    <em:version>1.9a7pre</em:version>
+    <em:version>1.9a9pre</em:version>
 
     <em:targetApplication>
       <!-- WebRunner -->

@@ -16,7 +16,7 @@
     <key id="key_inspector" key="&inspectorTaskCmd.commandkey;" modifiers="accel,shift"  command="cmd_inspector"/>
   </keyset>
 
-  <menupopup id="popup_app">
+  <menupopup id="popup_main">
     <menuitem id="menuitem_inspector" class="menuitem-iconic" accesskey="&inspectorTaskCmd.accesskey.ff;" command="cmd_inspector" key="key_inspector" insertafter="menuitem_console"/>
   </menupopup>
 

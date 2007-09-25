@@ -92,11 +92,15 @@ var WebRunner = {
       var settings = {};
       settings.version = "1";
 
+      //
       settings.window = {};
-      settings.window.screenX = window.screenX;
-      settings.window.screenY = window.screenY;
-      settings.window.width = window.outerWidth;
-      settings.window.height = window.outerHeight;
+      settings.window.state = window.windowState;
+      if (window.windowState == window.STATE_NORMAL) {
+        settings.window.screenX = window.screenX;
+        settings.window.screenY = window.screenY;
+        settings.window.width = window.outerWidth;
+        settings.window.height = window.outerHeight;
+      }
 
       settings.sidebar = {};
       settings.sidebar.visible = (document.getElementById("splitter_sidebar").getAttribute("state") == "open");
@@ -132,13 +136,23 @@ var WebRunner = {
           settings = JSON.fromString(json);
 
           if (settings.window) {
-              window.moveTo(settings.window.screenX, settings.window.screenY);
-              window.resizeTo(settings.window.width, settings.window.height);
+            switch (settings.window.state) {
+              case window.STATE_MAXIMIZED:
+                window.maximize();
+                break;
+              case window.STATE_MINIMIZED:
+                // Do nothing if window was closed minimized
+                break;
+              case window.STATE_NORMAL:
+                window.moveTo(settings.window.screenX, settings.window.screenY);
+                window.resizeTo(settings.window.width, settings.window.height);
+                break;
+            }
           }
 
           if (settings.sidebar) {
-              document.getElementById("splitter_sidebar").setAttribute("state", settings.sidebar.visible ? "open" : "collapsed");
-              document.getElementById("box_sidebar").width = settings.sidebar.width;
+            document.getElementById("splitter_sidebar").setAttribute("state", settings.sidebar.visible ? "open" : "collapsed");
+            document.getElementById("box_sidebar").width = settings.sidebar.width;
           }
         }
       }
@@ -356,10 +370,14 @@ var WebRunner = {
 
     // Let osx make its app menu, then hide the window menu
     var mainMenu = document.getElementById("menu_main");
-    if (mainMenu)
+    if (mainMenu) {
       mainMenu.hidden = true;
 
-    setTimeout(function() {self._delayedStartup(); }, 0);
+      // Needed for linux or the menubar doesn't hide
+      document.getElementById("menu_file").hidden = true;
+    }
+
+    setTimeout(function() { self._delayedStartup(); }, 0);
   },
 
   shutdownQuery : function() {
