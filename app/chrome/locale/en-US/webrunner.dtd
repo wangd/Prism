@@ -11,6 +11,7 @@
 <!ENTITY back.label          "Back">
 <!ENTITY forward.label       "Forward">
 <!ENTITY home.label          "Home">
+<!ENTITY reload.label        "Reload">
 <!ENTITY close.label         "Close">
 <!ENTITY quit.label          "Quit WebRunner">
 <!ENTITY about.label         "About WebRunner">

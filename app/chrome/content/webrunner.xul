@@ -54,6 +54,7 @@
     <command id="cmd_back" label="&back.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_forward" label="&forward.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_home" label="&home.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_reload" label="&reload.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_close" label="&close.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_quit" label="&quit.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_console" label="&console.label;" oncommand="WebRunner.doCommand(this.id);"/>
@@ -64,6 +65,7 @@
     <key id="key_back" class="nav" modifiers="alt" keycode="VK_LEFT" command="cmd_back"/>
     <key id="key_forward" class="nav" modifiers="alt" keycode="VK_RIGHT" command="cmd_forward"/>
     <key id="key_home" class="nav" modifiers="alt" keycode="VK_HOME" command="cmd_home"/>
+    <key id="key_reload" class="nav" keycode="VK_F5" command="cmd_reload"/>
     <key id="key_close" modifiers="accel" key="W" command="cmd_close"/>
     <key id="key_quit" modifiers="accel" key="q" command="cmd_quit"/>
   </keyset>
