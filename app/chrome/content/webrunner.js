@@ -83,6 +83,7 @@ var HostUI = {
 var WebRunner = {
   _profile : null,
   _ios : null,
+  _tld : null,
 
   _getBrowser : function() {
     return document.getElementById("browser_content");
@@ -199,15 +200,32 @@ var WebRunner = {
   },
 
   _isLinkExternal : function(aLink) {
+    var isExternal = true;
     if (aLink instanceof HTMLAnchorElement) {
-      if (aLink.target == "_self" || aLink.target == "_top")
-        return false;
+      if (aLink.target == "_self" || aLink.target == "_top") {
+        isExternal = false;
+      }
+      else {
+        var linkHost = this._ios.newURI(aLink.href, null, null).QueryInterface(Ci.nsIURL).host;
+        var currentHost = this._getBrowser().currentURI.host;
+        if (linkHost == currentHost) {
+          isExternal = false;
+        }
+        else {
+          var linkPos = linkHost.length - (this._tld.getEffectiveTLDLength(linkHost) + 2);
+          while (linkPos > -1 && linkHost.charAt(linkPos) != ".")
+            linkPos--;
+          var currentPos = currentHost.length - (this._tld.getEffectiveTLDLength(currentHost) + 2);
+          while (currentPos > -1 && currentHost.charAt(currentPos) != ".")
+            currentPos--;
 
-      var currentURL = this._ios.newURI(aLink.href, null, null).QueryInterface(Ci.nsIURL);
-      var commonBase = currentURL.getCommonBaseSpec(this._getBrowser().currentURI);
-      return (commonBase.length == 0);
+          var linkDomain = linkHost.substr(linkPos + 1);
+          var currentDomain = currentHost.substr(currentPos + 1);
+          isExternal = (linkDomain != currentDomain);
+        }
+      }
     }
-    return true;
+    return isExternal;
   },
 
   _dragOver : function(aEvent)
@@ -295,6 +313,7 @@ var WebRunner = {
   startup : function()
   {
     this._ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    this._tld = Cc["@mozilla.org/network/effective-tld-service;1"].getService(Ci.nsIEffectiveTLDService);
 
     if (window.arguments && window.arguments[0]) {
       this._profile = new Profile(window.arguments[0].QueryInterface(Ci.nsICommandLine));
@@ -418,6 +437,9 @@ var WebRunner = {
         break;
       case "cmd_home":
         this._getBrowser().loadURI(this._profile.uri, null, null);
+        break;
+      case "cmd_reload":
+        this._getBrowser().reload();
         break;
       case "cmd_close":
         close();
