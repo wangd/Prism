@@ -13,7 +13,7 @@
   </commandset>
 
   <menupopup id="popup_main">
-    <menuitem id="menuitem_inspector" class="menuitem-iconic" accesskey="&inspectorTaskCmd.accesskey.ff;" command="cmd_inspector" insertafter="menuitem_console"/>
+    <menuitem id="menuitem_inspector" accesskey="&inspectorTaskCmd.accesskey.ff;" command="cmd_inspector" insertafter="menuitem_console"/>
   </menupopup>
 
 </overlay>
