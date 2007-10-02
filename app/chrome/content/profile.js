@@ -64,14 +64,14 @@ function IconProvider(aFolder) {
 
 IconProvider.prototype = {
   getFile: function(prop, persistent) {
-    throw Components.results.NS_ERROR_FAILURE;
+    return Components.results.NS_ERROR_FAILURE;
   },
 
   getFiles: function(prop, persistent) {
     if (prop == NS_APP_CHROME_DIR_LIST) {
       return new ArrayEnumerator([this._folder]);
     }
-    throw Components.results.NS_ERROR_FAILURE;
+    return Components.results.NS_ERROR_FAILURE;
   },
 
   QueryInterface: function(iid) {
@@ -213,6 +213,17 @@ Profile.prototype = {
       scriptLoader.loadSubScript(appScriptURI.spec, this.script);
     }
 
+    // Load the application style
+    var appStyle = appSandbox.clone();
+    appStyle.append("webapp.css");
+    if (appStyle.exists()) {
+      var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+      var appStyleURI = ios.newFileURI(appStyle);
+
+      var styleSheets = Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService);
+      styleSheets.loadAndRegisterSheet(appStyleURI, styleSheets.USER_SHEET);
+    }
+
     // Initialize the icon provider
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
     var iconProvider = new IconProvider(appSandbox);
@@ -256,6 +267,15 @@ Profile.prototype = {
             appScript.remove(false);
           appScript.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
           reader.extract("webapp.js", appScript);
+        }
+
+        if (reader.hasEntry("webapp.css")) {
+          var appStyle = appSandbox.clone();
+          appStyle.append("webapp.css");
+          if (appStyle.exists())
+            appStyle.remove(false);
+          appStyle.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+          reader.extract("webapp.css", appStyle);
         }
 
         if (this.icon != "webrunner") {

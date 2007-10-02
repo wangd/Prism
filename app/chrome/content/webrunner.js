@@ -190,6 +190,53 @@ var WebRunner = {
     copy.setAttribute("disabled", (((!isTextField || !isTextSelectied) && !isContentSelected) ? "true" : "false"));
     paste.setAttribute("disabled", (!isTextField ? "true" : "false"));
     del.setAttribute("disabled", (!isTextField ? "true" : "false"));
+
+    InlineSpellCheckerUI.clearSuggestionsFromMenu();
+    InlineSpellCheckerUI.uninit();
+
+    var separator = document.getElementById("menusep_spellcheck");
+    separator.hidden = true;
+    var addToDictionary = document.getElementById("menuitem_addToDictionary");
+    addToDictionary.hidden = true;
+    var noSuggestions = document.getElementById("menuitem_noSuggestions");
+    noSuggestions.hidden = true;
+
+    // if the document is editable, show context menu like in text inputs
+    var win = target.ownerDocument.defaultView;
+    if (win) {
+      var isEditable = false;
+      try {
+        var editingSession = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIWebNavigation)
+                                .QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIEditingSession);
+        isEditable = editingSession.windowIsEditable(win);
+      }
+      catch(ex) {
+        // If someone built with composer disabled, we can't get an editing session.
+      }
+    }
+
+    var editor = null;
+    if (isTextField && !target.readOnly)
+      editor = target.QueryInterface(Ci.nsIDOMNSEditableElement).editor;
+
+    if (isEditable)
+      editor = editingSession.getEditorForWindow(win);
+
+    if (editor) {
+      InlineSpellCheckerUI.init(editor);
+      InlineSpellCheckerUI.initFromEvent(document.popupRangeParent, document.popupRangeOffset);
+
+      var onMisspelling = InlineSpellCheckerUI.overMisspelling;
+      if (onMisspelling) {
+        separator.hidden = false;
+        addToDictionary.hidden = false;
+        var menu = document.getElementById("popup_content");
+        var suggestions = InlineSpellCheckerUI.addSuggestionsToMenu(menu, addToDictionary, 5);
+        noSuggestions.hidden = (suggestions > 0);
+      }
+    }
   },
 
   _domTitleChanged : function(aEvent) {
@@ -385,7 +432,7 @@ var WebRunner = {
     if (this._profile.uri)
       browser.loadURI(this._profile.uri, null, null);
 
-    document.getElementById("popup_main").addEventListener("popupshowing", self._popupShowing, false);
+    document.getElementById("popup_content").addEventListener("popupshowing", self._popupShowing, false);
 
     // Let osx make its app menu, then hide the window menu
     var mainMenu = document.getElementById("menu_main");

@@ -1,20 +1,22 @@
-<!ENTITY app.title           "WebRunner">
+<!ENTITY app.title                  "WebRunner">
 
-<!ENTITY file.label          "File">
-<!ENTITY cut.label           "Cut">
-<!ENTITY copy.label          "Copy">
-<!ENTITY paste.label         "Paste">
-<!ENTITY delete.label        "Delete">
-<!ENTITY selectAll.label     "Select All">
-<!ENTITY print.label         "Print...">
-<!ENTITY pageSetup.label     "Page Setup...">
-<!ENTITY back.label          "Back">
-<!ENTITY forward.label       "Forward">
-<!ENTITY home.label          "Home">
-<!ENTITY reload.label        "Reload">
-<!ENTITY close.label         "Close">
-<!ENTITY quit.label          "Quit WebRunner">
-<!ENTITY about.label         "About WebRunner">
-<!ENTITY console.label       "Error Console">
-<!ENTITY install.label       "Install to Desktop">
-<!ENTITY commands.tooltip    "Commands">
+<!ENTITY file.label                 "File">
+<!ENTITY cut.label                  "Cut">
+<!ENTITY copy.label                 "Copy">
+<!ENTITY paste.label                "Paste">
+<!ENTITY delete.label               "Delete">
+<!ENTITY selectAll.label            "Select All">
+<!ENTITY noSuggestions.label        "(No suggestions)">
+<!ENTITY addToDictionary.label      "Add to Dictionary">
+<!ENTITY print.label                "Print...">
+<!ENTITY pageSetup.label            "Page Setup...">
+<!ENTITY back.label                 "Back">
+<!ENTITY forward.label              "Forward">
+<!ENTITY home.label                 "Home">
+<!ENTITY reload.label               "Reload">
+<!ENTITY close.label                "Close">
+<!ENTITY quit.label                 "Quit WebRunner">
+<!ENTITY about.label                "About WebRunner">
+<!ENTITY console.label              "Error Console">
+<!ENTITY install.label              "Install to Desktop">
+<!ENTITY commands.tooltip           "Commands">

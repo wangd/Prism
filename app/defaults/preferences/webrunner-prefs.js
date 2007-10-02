@@ -1,7 +1,7 @@
 pref("toolkit.defaultChromeURI", "chrome://webrunner/content/webrunner.xul");  // - main xul window
 pref("browser.chromeURL", "chrome://webrunner/content/webrunner.xul");         // - allow popup windows to open
 
-pref("general.useragent.extra.webrunner", "Webrunner/0.7");
+pref("general.useragent.extra.webrunner", "webrunner/0.7");
 
 /* debugging prefs */
 pref("browser.dom.window.dump.enabled", true);
@@ -43,3 +43,5 @@ pref("alerts.height", 50);
 pref("signon.rememberSignons", true);
 pref("signon.expireMasterPassword", false);
 pref("signon.SignonFileName", "signons.txt");
+
+pref("layout.spellcheckDefault", 1);

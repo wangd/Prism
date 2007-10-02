@@ -1,10 +1,10 @@
 addEventListener("load", onload, false);
 
-function onload(aEvent) 
+function onload(aEvent)
 {
   if (aEvent.target != document)
     return;
-    
+
   var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
                           .getService(Components.interfaces.nsIXULAppInfo);
 
@@ -13,4 +13,6 @@ function onload(aEvent)
 
   var userAgent = document.getElementById("useragent");
   userAgent.value = navigator.userAgent;
+  
+  document.documentElement.getButton("accept").focus();
 }

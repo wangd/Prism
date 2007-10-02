@@ -39,6 +39,7 @@
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
   <script type="application/x-javascript" src="chrome://webrunner/content/profile.js"/>
   <script type="application/x-javascript" src="chrome://webrunner/content/webrunner.js"/>
 
@@ -72,12 +73,15 @@
 
   <popupset>
     <menupopup id="popup_content">
+      <menuitem id="menuitem_noSuggestions" disabled="true" label="&noSuggestions.label;"/>
+      <menuitem id="menuitem_addToDictionary" label="&addToDictionary.label;" oncommand="InlineSpellCheckerUI.addToDictionary();"/>
+      <menuseparator id="menusep_spellcheck"/>
       <menuitem id="menuitem_cut" command="cmd_cut"/>
       <menuitem id="menuitem_copy" command="cmd_copy"/>
       <menuitem id="menuitem_paste" command="cmd_paste"/>
       <menuitem id="menuitem_delete" command="cmd_delete"/>
       <menuseparator/>
-      <menuitem id="menuitem_selectall" command="cmd_selectAll"/>
+      <menuitem id="menuitem_selectAll" command="cmd_selectAll"/>
     </menupopup>
   </popupset>
 
