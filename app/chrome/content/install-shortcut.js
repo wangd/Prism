@@ -22,14 +22,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
 Components.utils.import("resource://app/modules/WebAppInstall.jsm");
 
 var InstallShortcut = {
+  init : function() {
+    var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+    var os = xulRuntime.OS.toLowerCase();
+    if (os == "winnt") {
+      document.getElementById("applications").hidden = true;
+      document.getElementById("dock").hidden = true;
+    }
+    else if (os == "linux") {
+      document.getElementById("programs").hidden = true;
+      document.getElementById("quicklaunch").hidden = true;
+
+      document.getElementById("applications").hidden = true;
+      document.getElementById("dock").hidden = true;
+    }
+    else if (os == "darwin") {
+      document.getElementById("programs").hidden = true;
+      document.getElementById("quicklaunch").hidden = true;
+    }
+  },
+
   accept : function() {
     var name = document.getElementById("name");
-    if (window.arguments.length == 2 && name.value.length > 0) {
+    var locations = "";
+    if (document.getElementById("desktop").checked)
+      locations += "desktop,";
+    if (document.getElementById("programs").checked)
+      locations += "programs,";
+    if (document.getElementById("quicklaunch").checked)
+      locations += "quicklaunch,";
+
+    var programs = document.getElementById("programs");
+    if (window.arguments.length == 2 && name.value.length > 0 && locations.length > 0) {
       var wai = new WebAppInstall();
-      wai.createShortcut(name.value, window.arguments[0], window.arguments[1]);
+      wai.createShortcut(name.value, window.arguments[0], window.arguments[1], locations);
     }
     return true;
   }

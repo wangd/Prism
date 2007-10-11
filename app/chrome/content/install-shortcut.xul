@@ -4,20 +4,30 @@
 
 <!DOCTYPE window SYSTEM "chrome://webrunner/locale/install-shortcut.dtd">
 
-<dialog id="install"
+<dialog id="install-shortcut"
         title="&dialog.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        persist="screenX screenY width height"
+        persist="screenX screenY"
         buttons="accept,cancel"
+        onload="InstallShortcut.init();"
         ondialogaccept="return InstallShortcut.accept();">
 
   <script type="application/x-javascript" src="chrome://webrunner/content/install-shortcut.js"/>
 
-  <description>&dialog.hint;</description>
-  <label control="name">&name.label;</label>
-  <textbox id="name"/>
+  <groupbox>
+    <caption label="&dialog.hint;"/>
+    <label control="name">&name.label;</label>
+    <textbox id="name"/>
+  </groupbox>
   <separator class="thin"/>
-  <description>&location.hint;</description>
-  <checkbox id="desktop" label="&desktop.label;"/>
-  <checkbox id="quicklaunch" label="&quicklaunch.label;"/>
+  <groupbox>
+    <caption label="&location.hint;"/>
+    <checkbox id="desktop" label="&desktop.label;"/>
+    <checkbox id="programs" label="&programs.label;"/>
+    <checkbox id="quicklaunch" label="&quicklaunch.label;"/>
+    <checkbox id="applications" label="&applications.label;"/>
+    <checkbox id="dock" label="&dock.label;"/>
+    <separator class="thin"/>
+    <description>&uninstall.hint;</description>
+  </groupbox>
 </dialog>

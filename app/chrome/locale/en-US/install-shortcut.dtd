@@ -1,7 +1,11 @@
 <!ENTITY dialog.title        "Install Shortcut">
 
-<!ENTITY dialog.hint         "Create a shortcut to the web application">
+<!ENTITY dialog.hint         "Web Application">
 <!ENTITY name.label          "Type the name of the shortcut:">
-<!ENTITY location.hint       "Where do you want to create the shortcut?">
+<!ENTITY location.hint       "Shortcuts">
 <!ENTITY desktop.label       "Desktop">
-<!ENTITY quicklaunch.label   "Quick Launch bar">
+<!ENTITY programs.label      "Start Menu">
+<!ENTITY quicklaunch.label   "Quick Launch Bar">
+<!ENTITY applications.label  "Applications Folder">
+<!ENTITY dock.label          "Dock">
+<!ENTITY uninstall.hint      "To uninstall this application, simply delete the shortcuts.">
