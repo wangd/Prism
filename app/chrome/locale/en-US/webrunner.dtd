@@ -3,6 +3,7 @@
 <!ENTITY file.label                 "File">
 <!ENTITY cut.label                  "Cut">
 <!ENTITY copy.label                 "Copy">
+<!ENTITY copylink.label             "Copy Link Location">
 <!ENTITY paste.label                "Paste">
 <!ENTITY delete.label               "Delete">
 <!ENTITY selectAll.label            "Select All">

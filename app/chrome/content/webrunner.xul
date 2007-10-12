@@ -46,6 +46,7 @@
   <commandset id="cmdset_app">
     <command id="cmd_cut" label="&cut.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_copy" label="&copy.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_copylink" label="&copylink.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_paste" label="&paste.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_delete" label="&delete.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_selectAll" label="&selectAll.label;" oncommand="WebRunner.doCommand(this.id);"/>
@@ -82,6 +83,8 @@
       <menuitem id="menuitem_delete" command="cmd_delete"/>
       <menuseparator/>
       <menuitem id="menuitem_selectAll" command="cmd_selectAll"/>
+      <menuseparator id="menusep_copylink"/>
+      <menuitem id="menuitem_copylink" command="cmd_copylink"/>
     </menupopup>
 
     <tooltip id="tooltip_content"/>

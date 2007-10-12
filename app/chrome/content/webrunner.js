@@ -191,6 +191,17 @@ var WebRunner = {
     paste.setAttribute("disabled", (!isTextField ? "true" : "false"));
     del.setAttribute("disabled", (!isTextField ? "true" : "false"));
 
+    var copylink = document.getElementById("menuitem_copylink");
+    var copylinkSep = document.getElementById("menusep_copylink");
+    if (target instanceof HTMLAnchorElement && target.href) {
+      copylink.hidden = false;
+      copylinkSep.hidden = false;
+    }
+    else {
+      copylink.hidden = true;
+      copylinkSep.hidden = true;
+    }
+
     InlineSpellCheckerUI.clearSuggestionsFromMenu();
     InlineSpellCheckerUI.uninit();
 
@@ -507,6 +518,13 @@ var WebRunner = {
       case "cmd_delete":
       case "cmd_selectAll":
         goDoCommand(aCmd);
+        break;
+      case "cmd_copylink":
+        var target = document.popupNode;
+        if (target instanceof HTMLAnchorElement && target.href) {
+          var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+          clipboard.copyString(target.href);
+        }
         break;
       case "cmd_print":
         PrintUtils.print();
