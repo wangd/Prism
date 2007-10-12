@@ -83,6 +83,10 @@
       <menuseparator/>
       <menuitem id="menuitem_selectAll" command="cmd_selectAll"/>
     </menupopup>
+
+    <tooltip id="tooltip_content"/>
+
+    <panel id="popup_autocomplete" type="autocomplete" noautofocus="true"/>
   </popupset>
 
   <toolbox>
@@ -103,7 +107,7 @@
       <hbox class="sidebarheader">
         <description id="label_sidebar" value="" flex="1"/>
       </hbox>
-      <browser id="browser_sidebar" flex="1" type="content" src="about:blank"/>
+      <browser id="browser_sidebar" flex="1" type="content" src="about:blank" tooltip="tooltip_content"/>
     </vbox>
 
     <splitter id="splitter_sidebar" collapse="before" state="collapsed">
@@ -111,7 +115,7 @@
     </splitter>
 
     <vbox id="box_content" flex="1">
-      <browser id="browser_content" flex="1" type="content-primary" context="popup_content"/>
+      <browser id="browser_content" flex="1" type="content-primary" context="popup_content" tooltip="tooltip_content"/>
     </vbox>
   </hbox>
 

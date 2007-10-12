@@ -239,6 +239,46 @@ var WebRunner = {
     }
   },
 
+  _tooltipShowing : function(aEvent) {
+    var tooltipNode = document.tooltipNode;
+    var canShow = false;
+    if (tooltipNode.namespaceURI != "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul") {
+      const XLinkNS = "http://www.w3.org/1999/xlink";
+
+      var titleText = null;
+      var XLinkTitleText = null;
+      var direction = tooltipNode.ownerDocument.dir;
+      var defView = tooltipNode.ownerDocument.defaultView;
+
+      while (defView && !titleText && !XLinkTitleText && tooltipNode) {
+        if (tooltipNode.nodeType == Node.ELEMENT_NODE) {
+          titleText = tooltipNode.getAttribute("title");
+          XLinkTitleText = tooltipNode.getAttributeNS(XLinkNS, "title");
+          direction = defView.getComputedStyle(tooltipNode, "").getPropertyValue("direction");
+        }
+        tooltipNode = tooltipNode.parentNode;
+      }
+
+      var tooltip = document.getElementById("tooltip_content");
+      tooltip.style.direction = direction;
+
+      for each (var text in [titleText, XLinkTitleText]) {
+        if (text && /\S/.test(text)) {
+          // Per HTML 4.01 6.2 (CDATA section), literal CRs and tabs should be
+          // replaced with spaces, and LFs should be removed entirely.
+          text = text.replace(/[\r\t]/g, ' ');
+          text = text.replace(/\n/g, '');
+
+          tooltip.setAttribute("label", text);
+          canShow = true;
+        }
+      }
+    }
+
+    if (!canShow)
+      aEvent.preventDefault();
+  },
+
   _domTitleChanged : function(aEvent) {
     if (aEvent.target != this._getBrowser().contentDocument)
       return;
@@ -433,6 +473,7 @@ var WebRunner = {
       browser.loadURI(this._profile.uri, null, null);
 
     document.getElementById("popup_content").addEventListener("popupshowing", self._popupShowing, false);
+    document.getElementById("tooltip_content").addEventListener("popupshowing", self._tooltipShowing, false);
 
     // Let osx make its app menu, then hide the window menu
     var mainMenu = document.getElementById("menu_main");

@@ -134,7 +134,7 @@ function Profile(aCmdLine)
   if (file && file.exists()) {
     // Bundles are files and need to be installed
     if (!file.isDirectory())
-      this.install(file);
+      file = this.install(file);
 
     this.init(file);
   }
@@ -248,10 +248,23 @@ Profile.prototype = {
 
       // Creating a webapp install requires an ID
       if (this.id.length > 0) {
+        var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+        var iconExt = "";
+        var os = xulRuntime.OS.toLowerCase();
+        if (os == "winnt")
+          iconExt = ".ico";
+        else if (os == "linux")
+          iconExt = ".xpm";
+        else if (os == "darwin")
+          iconExt = ".icns";
+
         // Now we will build the webapp folder in the profile
         var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
         appSandbox.append("webapps");
         appSandbox.append(this.id);
+
+        // Make a copy so we can return it
+        aFile = appSandbox.clone();
 
         var appINI = appSandbox.clone();
         appINI.append("webapp.ini");
@@ -269,26 +282,21 @@ Profile.prototype = {
           reader.extract("webapp.js", appScript);
         }
 
-        if (reader.hasEntry("webapp.css")) {
+        // We check for an OS specific and common stylesheet,
+        // defaulting to the OS specific sheet
+        if (reader.hasEntry(os + "/webapp.css") || reader.hasEntry("webapp.css")) {
           var appStyle = appSandbox.clone();
           appStyle.append("webapp.css");
           if (appStyle.exists())
             appStyle.remove(false);
           appStyle.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
-          reader.extract("webapp.css", appStyle);
+          if (reader.hasEntry(os + "/webapp.css"))
+            reader.extract(os + "/webapp.css", appStyle);
+          else
+            reader.extract("webapp.css", appStyle);
         }
 
         if (this.icon != "webrunner") {
-          var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-          var iconExt = "";
-          var os = xulRuntime.OS.toLowerCase();
-          if (os == "winnt")
-            iconExt = ".ico";
-          else if (os == "linux")
-            iconExt = ".xpm";
-          else if (os == "darwin")
-            iconExt = ".icns";
-
           var iconName = this.icon + iconExt;
           if (reader.hasEntry(iconName)) {
             var appIcon = appSandbox.clone();
@@ -306,6 +314,8 @@ Profile.prototype = {
     catch (e) {
       Components.utils.reportError(e);
     }
+
+    return aFile;
   },
 
   readCommandLine : function(aCmdLine) {
