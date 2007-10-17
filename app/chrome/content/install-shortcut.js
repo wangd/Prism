@@ -45,6 +45,9 @@ var InstallShortcut = {
     else if (os == "darwin") {
       document.getElementById("programs").hidden = true;
       document.getElementById("quicklaunch").hidden = true;
+
+      // Until we get it working
+      document.getElementById("dock").hidden = true;
     }
   },
 

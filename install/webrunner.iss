@@ -1,6 +1,6 @@
 [Setup]
 AppName=WebRunner
-AppVerName=WebRunner 0.7
+AppVerName=WebRunner 0.8
 AppPublisher=Mozilla
 AppPublisherURL=http://www.starkravingfinkle.org
 AppSupportURL=http://www.starkravingfinkle.org
