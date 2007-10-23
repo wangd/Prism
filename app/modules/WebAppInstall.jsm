@@ -1,6 +1,10 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+const PR_WRONLY = 0x02;
+const PR_CREATE_FILE = 0x08;
+const PR_TRUNCATE = 0x20;
+
 EXPORTED_SYMBOLS = ["WebAppInstall"];
 
 function WebAppInstall()
@@ -10,9 +14,7 @@ function WebAppInstall()
 WebAppInstall.prototype = {
   createShortcut : function(name, id, icon, location) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    var webrunner = dirSvc.get("resource:app", Ci.nsIFile);
-
-    var xre = dirSvc.get("XREExeF", Ci.nsIFile);
+    var target = dirSvc.get("resource:app", Ci.nsIFile);
 
     var appIcon = dirSvc.get("ProfD", Ci.nsIFile);
     appIcon.append("webapps");
@@ -23,20 +25,21 @@ WebAppInstall.prototype = {
     var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
     var os = xulRuntime.OS.toLowerCase();
     if (os == "winnt") {
-      webrunner.append("webrunner.exe");
+      target.append("webrunner.exe");
       appIcon.append(icon + ".ico");
-      this._createShortcutMac(webrunner.path, name, id, appIcon, location);
-//      this._createShortcutWindows(webrunner.path, name, id, appIcon, location);
+      this._createShortcutWindows(target, name, id, appIcon, location);
     }
     else if (os == "linux") {
-      webrunner.append("webrunner");
+      target.append("webrunner");
       appIcon.append(icon + ".xpm");
-      this._createShortcutLinux(webrunner.path, name, id, appIcon, location);
+      this._createShortcutLinux(target, name, id, appIcon, location);
     }
     else if (os == "darwin") {
-      webrunner.append("webrunner");
+      var targetAdj = target.parent;
+      targetAdj.append("MacOS");
+      targetAdj.append("xulrunner");
       appIcon.append(icon + ".icns");
-      this._createShortcutMac(webrunner.path, name, id, appIcon, location);
+      this._createShortcutMac(targetAdj, name, id, appIcon, location);
     }
   },
 
@@ -61,15 +64,11 @@ WebAppInstall.prototype = {
       file.remove(false);
     file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
 
-    var ioSvc = Cc["@mozilla.org/io/scriptable-io;1"].getService(Ci.nsIScriptableIO);
-//    var stream = ioSvc.newOutputStream(file, "text write create truncate");
-    var stream = Cc['@mozilla.org/network/file-output-stream;1'].createInstance(Ci.nsIFileOutputStream);
-
     var cmd = "Set oWsh = CreateObject(\"WScript.Shell\")\n";
     if (locations.indexOf("desktop") > -1) {
       cmd += "sLocation = oWsh.SpecialFolders(\"Desktop\")\n";
       cmd += "Set oShortcut = oWsh.CreateShortcut(sLocation & \"\\" + name + ".lnk\")\n";
-      cmd += "oShortcut.TargetPath = \"" + target + "\"\n";
+      cmd += "oShortcut.TargetPath = \"" + target.path + "\"\n";
       cmd += "oShortcut.Arguments = \"-webapp " + id + "\"\n";
       cmd += "oShortcut.IconLocation = \"" + icon.path + "\"\n";
       cmd += "oShortcut.Save\n"
@@ -77,7 +76,7 @@ WebAppInstall.prototype = {
     if (locations.indexOf("programs") > -1 && programs.exists()) {
       cmd += "sLocation = oWsh.SpecialFolders(\"Programs\") & \"\\Web Apps\"\n";
       cmd += "Set oShortcut = oWsh.CreateShortcut(sLocation & \"\\" + name + ".lnk\")\n";
-      cmd += "oShortcut.TargetPath = \"" + target + "\"\n";
+      cmd += "oShortcut.TargetPath = \"" + target.path + "\"\n";
       cmd += "oShortcut.Arguments = \"-webapp " + id + "\"\n";
       cmd += "oShortcut.IconLocation = \"" + icon.path + "\"\n";
       cmd += "oShortcut.Save\n"
@@ -85,13 +84,15 @@ WebAppInstall.prototype = {
     if (locations.indexOf("quicklaunch") > -1 && quicklaunch.exists()) {
       cmd += "sLocation = \"" + quicklaunch.path + "\"\n";
       cmd += "Set oShortcut = oWsh.CreateShortcut(sLocation & \"\\" + name + ".lnk\")\n";
-      cmd += "oShortcut.TargetPath = \"" + target + "\"\n";
+      cmd += "oShortcut.TargetPath = \"" + target.path + "\"\n";
       cmd += "oShortcut.Arguments = \"-webapp " + id + "\"\n";
       cmd += "oShortcut.IconLocation = \"" + icon.path + "\"\n";
       cmd += "oShortcut.Save\n"
     }
 
-    stream.writeString(cmd);
+    var stream = Cc['@mozilla.org/network/file-output-stream;1'].createInstance(Ci.nsIFileOutputStream);
+    stream.init(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, 0);
+    stream.write(cmd, cmd.length);
     stream.close();
 
     file.launch();
@@ -106,17 +107,16 @@ WebAppInstall.prototype = {
       file.remove(false);
     file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
 
-    var ioSvc = Cc["@mozilla.org/io/scriptable-io;1"].getService(Ci.nsIScriptableIO);
-    var stream = ioSvc.newOutputStream(file, "text write create truncate");
-
     var cmd = "[Desktop Entry]\n";
     cmd += "Name=" + name + "\n";
     cmd += "Type=Application\n";
     cmd += "Comment=Web Application\n";
-    cmd += "Exec=" + target + " -webapp " + id + "\n";
+    cmd += "Exec=" + target.path + " -webapp " + id + "\n";
     cmd += "Icon=" + icon.path + "\n";
 
-    stream.writeString(cmd);
+    var stream = Cc['@mozilla.org/network/file-output-stream;1'].createInstance(Ci.nsIFileOutputStream);
+    stream.init(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, 0);
+    stream.write(cmd, cmd.length);
     stream.close();
   },
 
@@ -153,7 +153,7 @@ WebAppInstall.prototype = {
     "<key>CFBundlePackageType</key>\n" +
     "<string>APPL</string>\n" +
     "<key>CFBundleExecutable</key>\n" +
-    "<string>xulrunner</string>\n" +
+    "<string>" + name + "</string>\n" +
     "<key>NSAppleScriptEnabled</key>\n" +
     "<true/>\n" +
     "<key>CFBundleGetInfoString</key>\n" +
@@ -178,9 +178,9 @@ WebAppInstall.prototype = {
 
     var info = location.clone();
     info.append("Info.plist");
-    var ioSvc = Cc["@mozilla.org/io/scriptable-io;1"].getService(Ci.nsIScriptableIO);
-    var stream = ioSvc.newOutputStream(info, "text write create truncate");
-    stream.writeString(contents);
+    var stream = Cc['@mozilla.org/network/file-output-stream;1'].createInstance(Ci.nsIFileOutputStream);
+    stream.init(info, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, 0);
+    stream.write(contents, contents.length);
     stream.close();
 
     var resources = location.clone();
@@ -193,5 +193,12 @@ WebAppInstall.prototype = {
     macos.append("MacOS");
     if (!macos.exists())
       macos.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+
+    var cmd = target.path + " -webapp " + id;
+    var script = macos.clone();
+    script.append(name);
+    stream.init(script, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0755, 0);
+    stream.write(cmd, cmd.length);
+    stream.close();
   }
 }

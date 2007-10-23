@@ -49,14 +49,26 @@ var HostUI = {
   showAlert : function(aImage, aTitle, aMsg) {
     var alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     alerts.showAlertNotification(aImage, aTitle, aMsg, false, "", null);
-
-    var sound = Cc["@mozilla.org/sound;1"].createInstance(Ci.nsISound);
-    sound.beep();
   },
 
   getResource : function(aResource) {
     var resourceSpec = "chrome://webrunner/skin/resources/" + aResource;
     return resourceSpec;
+  },
+
+  playSound : function(aSound) {
+    var sound = Cc["@mozilla.org/sound;1"].createInstance(Ci.nsISound);
+    if (aSound == "beep") {
+      sound.beep();
+    }
+    else if (aSound.indexOf("://") == -1) {
+      sound.playSystemSound(aSound);
+    }
+    else
+    {
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+      sound.play(ioService.newURI(aSound, null, null));
+    }
   },
 
   sidebar : {

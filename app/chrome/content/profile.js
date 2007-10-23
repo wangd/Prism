@@ -19,7 +19,8 @@
  *
  * Contributor(s):
  *   Wladimir Palant <trev@adblockplus.org>
- *   Mark Finkle, <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
+ *   Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
+ *   Cesar Oliveira <a.sacred.line@gmail.com>
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -296,18 +297,30 @@ Profile.prototype = {
             reader.extract("webapp.css", appStyle);
         }
 
-        if (this.icon != "webrunner") {
-          var iconName = this.icon + iconExt;
-          if (reader.hasEntry(iconName)) {
-            var appIcon = appSandbox.clone();
-            appIcon.append("icons");
-            appIcon.append("default");
-            appIcon.append(iconName);
-            if (appIcon.exists())
-              appIcon.remove(false);
-            appIcon.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
-            reader.extract(iconName, appIcon);
-          }
+        var iconName = this.icon + iconExt;
+        var appIcon = appSandbox.clone();
+
+        appIcon.append("icons");
+        appIcon.append("default");
+
+        if (reader.hasEntry(iconName)) {
+          appIcon.append(iconName);
+          if (appIcon.exists())
+            appIcon.remove(false);
+          appIcon.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+          reader.extract(iconName, appIcon);
+        }
+        else {
+          // webapp.ini doesn't have its own icon, so we substitute the
+          // default icon instead
+          var defaultIcon = dirSvc.get("resource:app", Ci.nsIFile);
+
+          defaultIcon.append("chrome");
+          defaultIcon.append("icons");
+          defaultIcon.append("default");
+          defaultIcon.append(iconName);
+
+          defaultIcon.copyTo(appIcon, "");
         }
       }
     }

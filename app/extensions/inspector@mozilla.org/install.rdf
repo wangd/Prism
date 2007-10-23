@@ -7,7 +7,7 @@
     <em:version>1.9a9pre</em:version>
 
     <em:targetApplication>
-      <!-- WebRunner -->
+      <!-- Prism -->
       <Description>
         <em:id>webrunner@developer.mozilla.org</em:id>
         <em:minVersion>0.4</em:minVersion>
