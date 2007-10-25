@@ -29,6 +29,26 @@ Components.utils.import("resource://app/modules/WebAppInstall.jsm");
 
 var InstallShortcut = {
   init : function() {
+    // Check the dialog mode
+    if (window.arguments && window.arguments.length == 2) {
+      var bundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
+      bundle = bundle.createBundle("chrome://webrunner/locale/install-shortcut.properties");
+      document.title = bundle.GetStringFromName("dialog.title");
+      document.getElementById("row_uri").hidden = false;
+      document.getElementById("options").hidden = false;
+
+      // Default the UI from the given config
+      if (window.arguments[0].uri) {
+        document.getElementById("uri").value = window.arguments[0].uri;
+        document.getElementById("name").focus();
+      }
+      document.getElementById("status").checked = window.arguments[0].status;
+      document.getElementById("location").value = window.arguments[0].location;
+      document.getElementById("navigation").value = window.arguments[0].navigation;
+
+      window.arguments[1].value = true;
+    }
+
     var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
     var os = xulRuntime.OS.toLowerCase();
     if (os == "winnt") {
@@ -62,9 +82,34 @@ var InstallShortcut = {
       locations += "quicklaunch,";
 
     var programs = document.getElementById("programs");
-    if (window.arguments.length == 2 && name.value.length > 0 && locations.length > 0) {
+    if (window.arguments && name.value.length > 0 && locations.length > 0) {
       var wai = new WebAppInstall();
-      wai.createShortcut(name.value, window.arguments[0], window.arguments[1], locations);
+      if (window.arguments.length == 2) {
+        var uri = document.getElementById("uri");
+        var doLocation = document.getElementById("location").checked ? true : false;
+        var doStatus = document.getElementById("status").checked ? true : false;
+        var doNavigation = document.getElementById("navigation").checked ? true : false;
+        var params = {id: name.value.toLowerCase() + "@webrunner", uri: uri.value, icon: "webrunner", status: doStatus, location: doLocation, sidebar: "false", navigation: doNavigation};
+
+        // Make the web application in the profile folder
+        var wai = new WebAppInstall();
+        wai.createApplication(params);
+        wai.createShortcut(name.value, params.id, params.icon, locations);
+
+        // Update the caller's config
+        window.arguments[0].id = params.id;
+        window.arguments[0].uri = params.uri;
+        window.arguments[0].icon = params.icon;
+        window.arguments[0].status = params.status;
+        window.arguments[0].location = params.location;
+        window.arguments[0].navigation = params.navigation;
+
+        // Let the caller know we actually installed a web application
+        window.arguments[1].value = false;
+      }
+
+      // Make any desired shortcuts
+      wai.createShortcut(name.value, window.arguments[0].id, window.arguments[0].icon, locations);
     }
     return true;
   }

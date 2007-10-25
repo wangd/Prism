@@ -1,3 +1,28 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is WebRunner.
+ *
+ * The Initial Developer of the Original Code is Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
+ *   Cesar Oliveira <a.sacred.line@gmail.com>
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
@@ -12,6 +37,66 @@ function WebAppInstall()
 }
 
 WebAppInstall.prototype = {
+  createApplication : function(params) {
+    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+
+    // Creating a webapp install requires an ID
+    if (params.hasOwnProperty("id") == true && params.id.length > 0) {
+      var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+      var iconExt = "";
+      var os = xulRuntime.OS.toLowerCase();
+      if (os == "winnt")
+        iconExt = ".ico";
+      else if (os == "linux")
+        iconExt = ".xpm";
+      else if (os == "darwin")
+        iconExt = ".icns";
+
+      // Now we will build the webapp folder in the profile
+      var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
+      appSandbox.append("webapps");
+      appSandbox.append(params.id);
+
+      var appINI = appSandbox.clone();
+      appINI.append("webapp.ini");
+      if (appINI.exists())
+        appINI.remove(false);
+      appINI.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+
+      // Save the params to an INI file
+      var cmd = "[Parameters]\n";
+      cmd += "id=" + params.id + "\n";
+      cmd += "uri=" + params.uri + "\n";
+      cmd += "icon=" + params.icon + "\n";
+      cmd += "status=" + params.status + "\n";
+      cmd += "location=" + params.location + "\n";
+      cmd += "sidebar=" + params.sidebar + "\n";
+      cmd += "navigation=" + params.navigation + "\n";
+
+      var stream = Cc['@mozilla.org/network/file-output-stream;1'].createInstance(Ci.nsIFileOutputStream);
+      stream.init(appINI, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, 0);
+      stream.write(cmd, cmd.length);
+      stream.close();
+
+      // Create a default icon
+      var iconName = params.icon + iconExt;
+      var appIcon = appSandbox.clone();
+
+      appIcon.append("icons");
+      appIcon.append("default");
+
+      var defaultIcon = dirSvc.get("resource:app", Ci.nsIFile);
+      defaultIcon.append("chrome");
+      defaultIcon.append("icons");
+      defaultIcon.append("default");
+      defaultIcon.append(iconName);
+
+      if (appIcon.exists())
+        appIcon.remove(false);
+      defaultIcon.copyTo(appIcon, "");
+    }
+  },
+
   createShortcut : function(name, id, icon, location) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
     var target = dirSvc.get("resource:app", Ci.nsIFile);

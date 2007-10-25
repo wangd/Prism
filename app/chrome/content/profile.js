@@ -147,18 +147,16 @@ Profile.prototype = {
   script : {},
   id : "",
   fileTypes : [],
-  uri : "chrome://webrunner/locale/welcome.html",
+  uri : null,
   icon : "webrunner",
   status : true,
   location : false,
   sidebar : false,
   navigation : true,
+  flags : ["id", "uri", "icon", "status", "location", "sidebar", "navigation"],
 
   setParameter: function(aName, aValue) {
-    if (["id", "uri", "icon", "status", "location", "sidebar", "navigation"].indexOf(aName) == -1)
-      return;
-
-    if (typeof this[aName] != "string" && typeof this[aName] != "boolean")
+    if (this.flags.indexOf(aName) == -1)
       return;
 
     if (typeof this[aName] == "boolean")
@@ -332,7 +330,8 @@ Profile.prototype = {
   },
 
   readCommandLine : function(aCmdLine) {
-    for (var key in this) {
+    for (var index in this.flags) {
+      var key = this.flags[index];
       var value = aCmdLine.handleFlagWithParam(key, false);
       if (value != null)
         this.setParameter(key, value);

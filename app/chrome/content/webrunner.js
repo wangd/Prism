@@ -425,8 +425,14 @@ var WebRunner = {
     this._ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     this._tld = Cc["@mozilla.org/network/effective-tld-service;1"].getService(Ci.nsIEffectiveTLDService);
 
+    var install = false;
+
     if (window.arguments && window.arguments[0]) {
       this._profile = new Profile(window.arguments[0].QueryInterface(Ci.nsICommandLine));
+
+      install = window.arguments[0].handleFlag("install", false);
+      if (!install)
+        install = (this._profile.uri == null);
 
       // Set the windowtype attribute here, so we always know which window is the main window
       document.documentElement.setAttribute("windowtype", "webrunner:main");
@@ -457,6 +463,16 @@ var WebRunner = {
       else {
         this._profile = new Profile(null);
       }
+    }
+
+    // Do we need to handle making a web application?
+    if (install) {
+      var cancel = {value: true};
+      window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", this._profile, cancel);
+      
+      // Since we needed to install and the user must have canceled, lets close webrunner
+      if (cancel.value)
+        window.close();
     }
 
     // Process commandline parameters
@@ -493,7 +509,7 @@ var WebRunner = {
     browser.webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
 
     if (this._profile.uri)
-      browser.loadURI(this._profile.uri, null, null);
+        browser.loadURI(this._profile.uri, null, null);
 
     document.getElementById("popup_content").addEventListener("popupshowing", self._popupShowing, false);
     document.getElementById("tooltip_content").addEventListener("popupshowing", self._tooltipShowing, false);
@@ -569,7 +585,7 @@ var WebRunner = {
         window.open("chrome://global/content/console.xul", "_blank", "chrome,extrachrome,dependent,menubar,resizable,scrollbars,status,toolbar");
         break;
       case "cmd_install":
-        window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", this._profile.id,  this._profile.icon);
+        window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", this._profile);
         break;
     }
   },

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://webrunner/skin/install-shortcut.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://webrunner/locale/install-shortcut.dtd">
 
@@ -16,12 +16,31 @@
 
   <groupbox>
     <caption label="&dialog.hint;"/>
-    <label control="name">&name.label;</label>
-    <textbox id="name"/>
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row id="row_uri" hidden="true">
+          <label control="uri">&uri.label;</label>
+          <textbox id="uri"/>
+        </row>
+        <row id="row_name">
+          <label control="name">&name.label;</label>
+          <textbox id="name"/>
+        </row>
+      </rows>
+    </grid>
+    <vbox id="options" hidden="true">
+      <checkbox id="location" label="&location.label;"/>
+      <checkbox id="status" label="&status.label;"/>
+      <checkbox id="navigation" label="&navigation.label;"/>
+    </vbox>
   </groupbox>
   <separator class="thin"/>
   <groupbox>
-    <caption label="&location.hint;"/>
+    <caption label="&shortcut.hint;"/>
     <checkbox id="desktop" label="&desktop.label;"/>
     <checkbox id="programs" label="&programs.label;"/>
     <checkbox id="quicklaunch" label="&quicklaunch.label;"/>
