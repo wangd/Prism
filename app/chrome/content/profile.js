@@ -148,11 +148,11 @@ Profile.prototype = {
   id : "",
   fileTypes : [],
   uri : null,
-  icon : "webrunner",
-  status : true,
+  icon : "app",
+  status : false,
   location : false,
   sidebar : false,
-  navigation : true,
+  navigation : false,
   flags : ["id", "uri", "icon", "status", "location", "sidebar", "navigation"],
 
   setParameter: function(aName, aValue) {

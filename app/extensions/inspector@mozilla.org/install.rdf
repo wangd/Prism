@@ -9,7 +9,7 @@
     <em:targetApplication>
       <!-- Prism -->
       <Description>
-        <em:id>webrunner@developer.mozilla.org</em:id>
+        <em:id>prism@developer.mozilla.org</em:id>
         <em:minVersion>0.4</em:minVersion>
         <em:maxVersion>1.0.0.*</em:maxVersion>
       </Description>

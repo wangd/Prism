@@ -56,11 +56,11 @@ WebAppInstall.prototype = {
       var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
       appSandbox.append("webapps");
       appSandbox.append(params.id);
+      if (appSandbox.exists())
+        appSandbox.remove(true);
 
       var appINI = appSandbox.clone();
       appINI.append("webapp.ini");
-      if (appINI.exists())
-        appINI.remove(false);
       appINI.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
 
       // Save the params to an INI file
@@ -90,9 +90,6 @@ WebAppInstall.prototype = {
       defaultIcon.append("icons");
       defaultIcon.append("default");
       defaultIcon.append(iconName);
-
-      if (appIcon.exists())
-        appIcon.remove(false);
       defaultIcon.copyTo(appIcon, "");
     }
   },
@@ -110,12 +107,12 @@ WebAppInstall.prototype = {
     var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
     var os = xulRuntime.OS.toLowerCase();
     if (os == "winnt") {
-      target.append("webrunner.exe");
+      target.append("prism.exe");
       appIcon.append(icon + ".ico");
       this._createShortcutWindows(target, name, id, appIcon, location);
     }
     else if (os == "linux") {
-      target.append("webrunner");
+      target.append("prism");
       appIcon.append(icon + ".xpm");
       this._createShortcutLinux(target, name, id, appIcon, location);
     }
@@ -255,11 +252,12 @@ WebAppInstall.prototype = {
     "</plist>";
 
     location.append(name + ".app");
-    if (!location.exists())
-      location.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    if (location.exists())
+      location.remove(true);
+    location.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+
     location.append("Contents");
-    if (!location.exists())
-      location.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    location.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
 
     var info = location.clone();
     info.append("Info.plist");
@@ -270,14 +268,12 @@ WebAppInstall.prototype = {
 
     var resources = location.clone();
     resources.append("Resources");
-    if (!resources.exists())
-      resources.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    resources.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
     icon.copyTo(resources, icon.leafName);
 
     var macos = location.clone();
     macos.append("MacOS");
-    if (!macos.exists())
-      macos.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    macos.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
 
     var cmd = target.path + " -webapp " + id;
     var script = macos.clone();

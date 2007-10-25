@@ -43,8 +43,8 @@ var InstallShortcut = {
         document.getElementById("name").focus();
       }
       document.getElementById("status").checked = window.arguments[0].status;
-      document.getElementById("location").value = window.arguments[0].location;
-      document.getElementById("navigation").value = window.arguments[0].navigation;
+      document.getElementById("location").checked = window.arguments[0].location;
+      document.getElementById("navigation").checked = window.arguments[0].navigation;
 
       window.arguments[1].value = true;
     }
@@ -89,7 +89,7 @@ var InstallShortcut = {
         var doLocation = document.getElementById("location").checked ? true : false;
         var doStatus = document.getElementById("status").checked ? true : false;
         var doNavigation = document.getElementById("navigation").checked ? true : false;
-        var params = {id: name.value.toLowerCase() + "@webrunner", uri: uri.value, icon: "webrunner", status: doStatus, location: doLocation, sidebar: "false", navigation: doNavigation};
+        var params = {id: name.value.toLowerCase() + "@prism.app", uri: uri.value, icon: "app", status: doStatus, location: doLocation, sidebar: "false", navigation: doNavigation};
 
         // Make the web application in the profile folder
         var wai = new WebAppInstall();

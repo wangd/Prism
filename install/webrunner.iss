@@ -31,6 +31,7 @@ Source: ..\app\modules\*; DestDir: {app}\modules; Components: main; Flags: ignor
 Source: ..\app\xulrunner\*; DestDir: {app}\xulrunner; Components: runtime; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
+Name: {group}\Prism; Filename: "{app}\webrunner.exe"; IconFilename: "{app}\chrome\icons\default\webrunner.ico"; WorkingDir: "{app}"
 Name: {group}\{cm:UninstallProgram,Prism}; Filename: {uninstallexe}
 
 [Registry]
