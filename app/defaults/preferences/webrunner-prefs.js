@@ -1,7 +1,7 @@
 pref("toolkit.defaultChromeURI", "chrome://webrunner/content/webrunner.xul");  // - main xul window
 pref("browser.chromeURL", "chrome://webrunner/content/webrunner.xul");         // - allow popup windows to open
 
-pref("general.useragent.extra.webrunner", "webrunner/0.7");
+pref("general.useragent.extra.prism", "prism/0.8");
 
 /* debugging prefs */
 pref("browser.dom.window.dump.enabled", true);
