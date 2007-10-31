@@ -230,22 +230,8 @@ WebAppInstall.prototype = {
     "<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
     "<plist version=\"1.0\">\n" +
     "<dict>\n" +
-    "<key>CFBundleInfoDictionaryVersion</key>\n" +
-    "<string>6.0</string>\n" +
-    "<key>CFBundlePackageType</key>\n" +
-    "<string>APPL</string>\n" +
     "<key>CFBundleExecutable</key>\n" +
     "<string>" + name + "</string>\n" +
-    "<key>NSAppleScriptEnabled</key>\n" +
-    "<true/>\n" +
-    "<key>CFBundleGetInfoString</key>\n" +
-    "<string>" + name + "</string>\n" +
-    "<key>CFBundleName</key>\n" +
-    "<string>" + name + "</string>\n" +
-    "<key>CFBundleShortVersionString</key>\n" +
-    "<string>1</string>\n" +
-    "<key>CFBundleVersion</key>\n" +
-    "<string>1.0</string>\n" +
     "<key>CFBundleIconFile</key>\n" +
     "<string>" + icon.leafName + "</string>\n" +
     "</dict>\n" +
@@ -275,7 +261,7 @@ WebAppInstall.prototype = {
     macos.append("MacOS");
     macos.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
 
-    var cmd = target.path + " -webapp " + id;
+    var cmd = "#!/bin/sh\n" + target.path + " -webapp " + id;
     var script = macos.clone();
     script.append(name);
     stream.init(script, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0755, 0);
