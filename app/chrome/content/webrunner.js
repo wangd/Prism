@@ -320,23 +320,10 @@ var WebRunner = {
         isExternal = false;
       }
       else {
-        var linkHost = this._ios.newURI(aLink.href, null, null).QueryInterface(Ci.nsIURL).host;
-        var currentHost = this._getBrowser().currentURI.host;
-        if (linkHost == currentHost) {
+        var linkDomain = this._tld.getBaseDomain(this._ios.newURI(aLink.href, null, null).QueryInterface(Ci.nsIURL));
+        var currentDomain = this._tld.getBaseDomain(this._getBrowser().currentURI);
+        if (linkDomain == currentDomain)
           isExternal = false;
-        }
-        else {
-          var linkPos = linkHost.length - (this._tld.getEffectiveTLDLength(linkHost) + 2);
-          while (linkPos > -1 && linkHost.charAt(linkPos) != ".")
-            linkPos--;
-          var currentPos = currentHost.length - (this._tld.getEffectiveTLDLength(currentHost) + 2);
-          while (currentPos > -1 && currentHost.charAt(currentPos) != ".")
-            currentPos--;
-
-          var linkDomain = linkHost.substr(linkPos + 1);
-          var currentDomain = currentHost.substr(currentPos + 1);
-          isExternal = (linkDomain != currentDomain);
-        }
       }
     }
     return isExternal;
@@ -645,7 +632,7 @@ var WebRunner = {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         var domDocument = aWebProgress.DOMWindow.document;
-        WebRunner.attachDocument(domDocument);
+        this.attachDocument(domDocument);
       }
     }
   },
