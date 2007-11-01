@@ -7,8 +7,8 @@ pref("general.useragent.extra.prism", "prism/0.8");
 pref("browser.dom.window.dump.enabled", true);
 pref("javascript.options.showInConsole", true);
 pref("javascript.options.strict", true);
-pref("nglayout.debug.disable_xul_cache", true);
-pref("nglayout.debug.disable_xul_fastload", true);
+pref("nglayout.debug.disable_xul_cache", false);
+pref("nglayout.debug.disable_xul_fastload", false);
 
 /* default security dialogs like firefox */
 pref("security.warn_entering_secure.show_once", false);
