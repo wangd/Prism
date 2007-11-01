@@ -71,6 +71,10 @@ var HostUI = {
     }
   },
 
+  getAttention : function() {
+    window.getAttention();
+  },
+
   sidebar : {
     get visible() {
       return document.getElementById("splitter_sidebar").getAttribute("state") == "open";
@@ -469,7 +473,7 @@ var WebRunner = {
     if (install) {
       var cancel = {value: true};
       window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", this._profile, cancel);
-      
+
       // Since we needed to install and the user must have canceled, lets close webrunner
       if (cancel.value)
         window.close();

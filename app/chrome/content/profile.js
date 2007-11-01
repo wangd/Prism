@@ -261,22 +261,20 @@ Profile.prototype = {
         var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
         appSandbox.append("webapps");
         appSandbox.append(this.id);
+        if (appSandbox.exists())
+          appSandbox.remove(true);
 
         // Make a copy so we can return it
         aFile = appSandbox.clone();
 
         var appINI = appSandbox.clone();
         appINI.append("webapp.ini");
-        if (appINI.exists())
-          appINI.remove(false);
         appINI.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
         reader.extract("webapp.ini", appINI);
 
         if (reader.hasEntry("webapp.js")) {
           var appScript = appSandbox.clone();
           appScript.append("webapp.js");
-          if (appScript.exists())
-            appScript.remove(false);
           appScript.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
           reader.extract("webapp.js", appScript);
         }
@@ -286,8 +284,6 @@ Profile.prototype = {
         if (reader.hasEntry(os + "/webapp.css") || reader.hasEntry("webapp.css")) {
           var appStyle = appSandbox.clone();
           appStyle.append("webapp.css");
-          if (appStyle.exists())
-            appStyle.remove(false);
           appStyle.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
           if (reader.hasEntry(os + "/webapp.css"))
             reader.extract(os + "/webapp.css", appStyle);
@@ -297,14 +293,11 @@ Profile.prototype = {
 
         var iconName = this.icon + iconExt;
         var appIcon = appSandbox.clone();
-
         appIcon.append("icons");
         appIcon.append("default");
 
         if (reader.hasEntry(iconName)) {
           appIcon.append(iconName);
-          if (appIcon.exists())
-            appIcon.remove(false);
           appIcon.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
           reader.extract(iconName, appIcon);
         }
