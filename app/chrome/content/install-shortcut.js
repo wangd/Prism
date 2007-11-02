@@ -99,6 +99,8 @@ var InstallShortcut = {
       shortcuts += "programs,";
     if (document.getElementById("quicklaunch").checked)
       shortcuts += "quicklaunch,";
+    if (document.getElementById("applications").checked)
+      shortcuts += "applications,";
 
     if (shortcuts.length == 0) {
       alert(bundle.GetStringFromName("shortcuts.missing"));

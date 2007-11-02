@@ -214,7 +214,7 @@ WebAppInstall.prototype = {
     }
     if (locations.indexOf("applications") > -1) {
       var apps = dirSvc.get("LocApp", Ci.nsIFile);
-      apps.append("Web Apps");
+      //apps.append("Web Apps");
       if (!apps.exists())
         apps.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
       this._createBundle(target, name, id, icon, apps);

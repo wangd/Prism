@@ -183,6 +183,25 @@ var WebRunner = {
       this._profile.script.startup();
   },
 
+  _processConfig : function() {
+    // Process commandline parameters
+    document.documentElement.setAttribute("id", this._profile.icon);
+    document.getElementById("locationbar").hidden = !this._profile.location;
+    document.getElementById("box_sidebar").hidden = !this._profile.sidebar;
+    document.getElementById("splitter_sidebar").hidden = !this._profile.sidebar;
+
+    if (!this._profile.navigation) {
+      // Remove navigation key from the document
+      var keys = document.getElementsByTagName("key");
+      for (var i=keys.length - 1; i>=0; i--)
+        if (keys[i].className == "nav")
+          keys[i].parentNode.removeChild(keys[i]);
+    }
+
+    if (this._profile.uri)
+        this._getBrowser().loadURI(this._profile.uri, null, null);
+  },
+
   _handleWindowClose : function(event) {
     // Handler for clicking on the 'x' to close the window
     return this.shutdownQuery();
@@ -456,28 +475,24 @@ var WebRunner = {
       }
     }
 
+    var self = this;
+
     // Do we need to handle making a web application?
     if (install) {
-      var cancel = {value: true};
-      window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", this._profile, cancel);
+      function _showInstall() {
+        var cancel = {value: true};
+        window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", self._profile, cancel);
 
-      // Since we needed to install and the user must have canceled, lets close webrunner
-      if (cancel.value)
-        window.close();
-    }
+        // Since we needed to install and the user must have canceled, lets close webrunner
+        if (cancel.value) {
+          window.close();
+        }
+        else {
+          self._processConfig();
+        }
+      }
 
-    // Process commandline parameters
-    document.documentElement.setAttribute("id", this._profile.icon);
-    document.getElementById("locationbar").hidden = !this._profile.location;
-    document.getElementById("box_sidebar").hidden = !this._profile.sidebar;
-    document.getElementById("splitter_sidebar").hidden = !this._profile.sidebar;
-
-    if (!this._profile.navigation) {
-      // Remove navigation key from the document
-      var keys = document.getElementsByTagName("key");
-      for (var i=keys.length - 1; i>=0; i--)
-        if (keys[i].className == "nav")
-          keys[i].parentNode.removeChild(keys[i]);
+      setTimeout(_showInstall, 250);
     }
 
     // Hookup the browser window callbacks
@@ -489,8 +504,6 @@ var WebRunner = {
           .getInterface(Ci.nsIXULWindow)
           .XULBrowserWindow = this;
 
-    var self = this;
-
     window.addEventListener("close", function(event) { self._handleWindowClose(event); }, false);
 
     var browser = this._getBrowser();
@@ -499,8 +512,7 @@ var WebRunner = {
     browser.addEventListener("dragdrop", function(aEvent) { self._dragDrop(aEvent); }, true)
     browser.webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
 
-    if (this._profile.uri)
-        browser.loadURI(this._profile.uri, null, null);
+    this._processConfig();
 
     document.getElementById("popup_content").addEventListener("popupshowing", self._popupShowing, false);
     document.getElementById("tooltip_content").addEventListener("popupshowing", self._tooltipShowing, false);
