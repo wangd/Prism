@@ -261,7 +261,7 @@ WebAppInstall.prototype = {
     macos.append("MacOS");
     macos.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
 
-    var cmd = "#!/bin/sh\n" + target.path + " -webapp " + id;
+    var cmd = "#!/bin/sh\nexec " + target.path + " -webapp " + id;
     var script = macos.clone();
     script.append(name);
     stream.init(script, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0755, 0);
