@@ -440,7 +440,7 @@ var WebRunner = {
     if (window.arguments && window.arguments[0]) {
       this._profile = new Profile(window.arguments[0].QueryInterface(Ci.nsICommandLine));
 
-      install = window.arguments[0].handleFlag("install", false);
+      install = window.arguments[0].handleFlag("install-webapp", false);
       if (!install)
         install = (this._profile.uri == null);
 

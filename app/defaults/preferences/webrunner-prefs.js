@@ -32,6 +32,7 @@ pref("browser.download.manager.closeWhenDone", true);
 pref("browser.download.manager.openDelay", 0);
 pref("browser.download.manager.focusWhenStarting", false);
 pref("browser.download.manager.flashCount", 2);
+pref("browser.download.manager.displayedHistoryDays", 7);
 
 /* download alerts */
 pref("alerts.slideIncrement", 1);
