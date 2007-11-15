@@ -96,8 +96,20 @@ WebAppInstall.prototype = {
 
   createShortcut : function(name, id, icon, location) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    var target = dirSvc.get("resource:app", Ci.nsIFile);
+    var target = dirSvc.get("XREExeF", Ci.nsIFile);
 
+    /* Check to see if were pointing to a binary (eg. xulrunner-bin).
+     * We always want to point to xulrunner rather than xulrunner-bin,
+     * because xulrunner will set up the library paths
+     */
+    if (target.leafName.search("-bin") != -1) {
+      let target_shell = target.parent;
+      target_shell.append(target.leafName.replace("-bin", ""));
+      if (target_shell.exists()) {
+        target = target_shell;
+      }
+    }
+Components.utils.reportError(target.path);
     var appIcon = dirSvc.get("ProfD", Ci.nsIFile);
     appIcon.append("webapps");
     appIcon.append(id);
@@ -107,12 +119,10 @@ WebAppInstall.prototype = {
     var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
     var os = xulRuntime.OS.toLowerCase();
     if (os == "winnt") {
-      target.append("prism.exe");
       appIcon.append(icon + ".ico");
       this._createShortcutWindows(target, name, id, appIcon, location);
     }
     else if (os == "linux") {
-      target.append("prism");
       appIcon.append(icon + ".xpm");
       this._createShortcutLinux(target, name, id, appIcon, location);
     }

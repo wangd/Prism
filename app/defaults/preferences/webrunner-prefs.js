@@ -3,6 +3,10 @@ pref("browser.chromeURL", "chrome://webrunner/content/webrunner.xul");         /
 
 pref("general.useragent.extra.prism", "prism/0.8");
 
+/* prefwindow prefs (see: MDC - Preferences System and bug 350528) */
+pref("browser.preferences.animateFadeIn", "false");
+pref("browser.preferences.instantApply", "false");
+
 /* debugging prefs */
 pref("browser.dom.window.dump.enabled", true);
 pref("javascript.options.showInConsole", true);
@@ -45,4 +49,23 @@ pref("signon.rememberSignons", true);
 pref("signon.expireMasterPassword", false);
 pref("signon.SignonFileName", "signons.txt");
 
+/* spellcheck */
 pref("layout.spellcheckDefault", 1);
+
+/* extension manager and xpinstall */
+pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
+pref("xpinstall.dialog.progress.skin", "chrome://mozapps/content/extensions/extensions.xul?type=themes");
+pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/extensions.xul?type=extensions");
+pref("xpinstall.dialog.progress.type.skin", "Extension:Manager-themes");
+pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager-extensions");
+pref("extensions.update.enabled", true);
+pref("extensions.update.interval", 86400);
+pref("extensions.dss.enabled", false);
+pref("extensions.dss.switchPending", false);
+pref("extensions.ignoreMTimeChanges", false);
+pref("extensions.logging.enabled", false);
+
+// NB these point at AMO
+pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");

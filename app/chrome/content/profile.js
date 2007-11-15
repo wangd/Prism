@@ -152,8 +152,9 @@ Profile.prototype = {
   status : false,
   location : false,
   sidebar : false,
+  credits : "",
   navigation : false,
-  flags : ["id", "uri", "icon", "status", "location", "sidebar", "navigation"],
+  flags : ["id", "uri", "icon", "status", "location", "sidebar", "navigation", "credits"],
 
   setParameter: function(aName, aValue) {
     if (this.flags.indexOf(aName) == -1)

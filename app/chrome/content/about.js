@@ -43,5 +43,13 @@ function onload(aEvent)
   var userAgent = document.getElementById("useragent");
   userAgent.value = navigator.userAgent;
 
+  var credits = document.getElementById("credits");
+  credits.value = window.arguments[0].credits.replace("\\n", "\n", "g");
+
+  if (credits.value.length == 0) {
+    document.getElementById("box_credits").hidden = true;
+    document.getElementById("about").height -= 50;
+  }
+
   document.documentElement.getButton("accept").focus();
 }

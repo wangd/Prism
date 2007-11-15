@@ -61,6 +61,7 @@
     <command id="cmd_quit" label="&quit.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_console" label="&console.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_install" label="&install.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_addons" label="Add-ons" oncommand="WebRunner.doCommand(this.id);"/>
   </commandset>
 
   <keyset id="keyset_app">
@@ -68,8 +69,9 @@
     <key id="key_forward" class="nav" modifiers="alt" keycode="VK_RIGHT" command="cmd_forward"/>
     <key id="key_home" class="nav" modifiers="alt" keycode="VK_HOME" command="cmd_home"/>
     <key id="key_reload" class="nav" keycode="VK_F5" command="cmd_reload"/>
-    <key id="key_close" modifiers="accel" key="W" command="cmd_close"/>
+    <key id="key_close" modifiers="accel" key="w" command="cmd_close"/>
     <key id="key_quit" modifiers="accel" key="q" command="cmd_quit"/>
+    <key id="key_print" modifiers="accel" key="p" command="cmd_print"/>
   </keyset>
 
   <popupset>
@@ -129,9 +131,17 @@
       <toolbarbutton id="button_commands" type="menu" tooltiptext="&commands.tooltip;">
         <menupopup id="popup_main">
           <menuitem id="menuitem_print" command="cmd_print"/>
+          <menuitem id="menuitem_pageSetup" command="cmd_pageSetup"/>
+          <menuseparator/>
           <menuitem id="menuitem_install" command="cmd_install"/>
           <menuseparator/>
-          <menuitem id="menuitem_console" command="cmd_console"/>
+          <menu id="menu_tools" label="&tools.label;">
+            <menupopup id="popup_tools">
+              <menuitem id="menuitem_addons" command="cmd_addons"/>
+              <menuseparator/>
+              <menuitem id="menuitem_console" command="cmd_console"/>
+            </menupopup>
+          </menu>
           <menuseparator/>
           <menuitem id="menuitem_about" command="cmd_about"/>
         </menupopup>

@@ -387,7 +387,7 @@ var WebRunner = {
         }
 
         if (str) {
-          uri = ioService.newURI(str.data.split("\n")[0], null, null);
+          uri = this._ios.newURI(str.data.split("\n")[0], null, null);
         }
         else {
           var file = dataObj.value.QueryInterface(Ci.nsIFile);
@@ -564,7 +564,7 @@ var WebRunner = {
         PrintUtils.showPageSetup();
         break;
       case "cmd_about":
-        window.openDialog("chrome://webrunner/content/about.xul", "about", "centerscreen,modal");
+        window.openDialog("chrome://webrunner/content/about.xul", "about", "centerscreen,modal", this._profile);
         break;
       case "cmd_back":
         this._getBrowser().goBack();
@@ -590,6 +590,30 @@ var WebRunner = {
       case "cmd_install":
         window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", this._profile);
         break;
+      case "cmd_addons":
+				const EMTYPE = "Extension:Manager";
+
+				var aOpenMode = "extensions";
+				var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+				                   .getService(Components.interfaces.nsIWindowMediator);
+				var needToOpen = true;
+				var windowType = EMTYPE + "-" + aOpenMode;
+				var windows = wm.getEnumerator(windowType);
+				while (windows.hasMoreElements()) {
+					var theEM = windows.getNext().QueryInterface(Components.interfaces.nsIDOMWindowInternal);
+					if (theEM.document.documentElement.getAttribute("windowtype") == windowType) {
+						theEM.focus();
+						needToOpen = false;
+						break;
+  				}
+    		}
+
+				if (needToOpen) {
+					const EMURL = "chrome://mozapps/content/extensions/extensions.xul?type=" + aOpenMode;
+					const EMFEATURES = "chrome,dialog=no,resizable=yes";
+					window.openDialog(EMURL, "", EMFEATURES);
+				}
+				break;
     }
   },
 

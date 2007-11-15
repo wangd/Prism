@@ -12,7 +12,7 @@
     <command id="cmd_inspector" label="&inspectorTaskCmd.label;" oncommand="inspectDOMDocument(content.document);"/>
   </commandset>
 
-  <menupopup id="popup_main">
+  <menupopup id="popup_tools">
     <menuitem id="menuitem_inspector" accesskey="&inspectorTaskCmd.accesskey.ff;" command="cmd_inspector" insertafter="menuitem_console"/>
   </menupopup>
 

@@ -7,25 +7,16 @@
   -moz-appearance: none;
 }
 
-#brandName {
-  font-weight: bold; font-size: larger;
-} 
-
-#useragent {
-  margin: 11px 20px 0px 13px;
+#useragent, #credits {
+  margin: 1em 0 0 12px;
   background-color: #FFFFFF;
   color: #000000;
-  padding: 1px 0px 0px 3px;
   -moz-appearance: none;
   overflow: hidden;
   border: 0px;
 }
 
-#version {
+#version, #bundleinfo {
   font-weight: bold;
-  margin: 1em 0px 10px 17px;
-}
-
-#copyright {
-  margin: 0px 0px 3px 16px;
+  margin: 1em 0 0 15px;
 }
