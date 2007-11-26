@@ -13,6 +13,7 @@ OutputBaseFilename=prism-win32
 SetupIconFile=..\app\chrome\icons\default\webrunner.ico
 Compression=lzma
 SolidCompression=yes
+PrivilegesRequired=none
 
 [Languages]
 Name: english; MessagesFile: compiler:Default.isl
@@ -35,9 +36,9 @@ Name: {group}\Prism; Filename: "{app}\prism.exe"; IconFilename: "{app}\chrome\ic
 Name: {group}\{cm:UninstallProgram,Prism}; Filename: {uninstallexe}
 
 [Registry]
-Root: HKCR; Subkey: ".webapp"; ValueType: string; ValueName: ""; ValueData: "Prism.App"; Flags: uninsdeletevalue
-Root: HKCR; Subkey: "Prism.App"; ValueType: string; ValueName: ""; ValueData: "Prism Launcher"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "Prism.App\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\chrome\icons\default\webrunner.ico";
-Root: HKCR; Subkey: "Prism.App\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\prism.exe"" -webapp ""%1""";
+Root: HKCR; Subkey: ".webapp"; ValueType: string; ValueName: ""; ValueData: "Prism.App"; Check: IsAdminLoggedOn; Flags: uninsdeletevalue
+Root: HKCR; Subkey: "Prism.App"; ValueType: string; ValueName: ""; ValueData: "Prism Launcher"; Check: IsAdminLoggedOn; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Prism.App\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\chrome\icons\default\webrunner.ico"; Check: IsAdminLoggedOn;
+Root: HKCR; Subkey: "Prism.App\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\prism.exe"" -webapp ""%1"""; Check: IsAdminLoggedOn;
 
 

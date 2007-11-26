@@ -127,7 +127,7 @@ Components.utils.reportError(target.path);
       this._createShortcutLinux(target, name, id, appIcon, location);
     }
     else if (os == "darwin") {
-      var targetAdj = target.parent;
+      var targetAdj = target.parent.clone();
       targetAdj.append("MacOS");
       targetAdj.append("xulrunner");
       appIcon.append(icon + ".icns");
