@@ -109,7 +109,7 @@ WebAppInstall.prototype = {
         target = target_shell;
       }
     }
-Components.utils.reportError(target.path);
+
     var appIcon = dirSvc.get("ProfD", Ci.nsIFile);
     appIcon.append("webapps");
     appIcon.append(id);
