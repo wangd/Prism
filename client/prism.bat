@@ -1,0 +1,1 @@
+start xulrunner\xulrunner.exe application.ini -console -jsconsole
