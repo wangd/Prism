@@ -1,0 +1,35 @@
+#filter substitution
+
+webrunner.jar:
+% content webrunner %content/
+% content branding %branding/
+% locale branding @AB_CD@ %branding/
+% overlay  chrome://webrunner/content/webrunner.xul chrome://webrunner/content/overlays/inspector.xul
+  content/about.xul                    (content/about.xul)
+  content/about.js                     (content/about.js)
+  content/profile.js                   (content/profile.js)
+  content/webrunner.xul                (content/webrunner.xul)
+  content/webrunner.js                 (content/webrunner.js)
+  branding/brand.dtd                   (locale/@AB_CD@/brand/brand.dtd)
+  branding/brand.properties            (locale/@AB_CD@/brand/brand.properties)
+  branding/icon128.png                 (locale/@AB_CD@/brand/icon128.png)
+    
+classic.jar:
+% skin webrunner classic/1.0 %
+  about.css                            (skin/standard/about.css)
+  webrunner.css                        (skin/standard/webrunner.css)
+  images/gear.png                      (skin/standard/images/gear.png)
+  images/secure-broken.png             (skin/standard/images/secure-broken.png)
+  images/secure.png                    (skin/standard/images/secure.png)
+  resources/calendar28.png             (skin/standard/resources/calendar28.png)
+  resources/event28.png                (skin/standard/resources/event28.png)
+  resources/help28.png                 (skin/standard/resources/help28.png)
+  resources/information28.png          (skin/standard/resources/information28.png)
+  resources/mail28.png                 (skin/standard/resources/mail28.png)
+  resources/permission28.png           (skin/standard/resources/permission28.png)
+  resources/warning28.png              (skin/standard/resources/warning28.png)
+  
+@AB_CD@.jar:
+% locale webrunner @AB_CD@ %
+  about.dtd                            (locale/@AB_CD@/about.dtd)
+  webrunner.dtd                        (locale/@AB_CD@/webrunner.dtd)

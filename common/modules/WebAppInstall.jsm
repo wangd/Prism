@@ -128,8 +128,7 @@ WebAppInstall.prototype = {
     }
     else if (os == "darwin") {
       var targetAdj = target.parent.clone();
-      targetAdj.append("MacOS");
-      targetAdj.append("xulrunner");
+      targetAdj.append("prism");
       appIcon.append(icon + ".icns");
       this._createShortcutMac(targetAdj, name, id, appIcon, location);
     }
