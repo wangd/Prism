@@ -28,7 +28,7 @@ classic.jar:
   resources/mail28.png                 (skin/standard/resources/mail28.png)
   resources/permission28.png           (skin/standard/resources/permission28.png)
   resources/warning28.png              (skin/standard/resources/warning28.png)
-  
+
 @AB_CD@.jar:
 % locale webrunner @AB_CD@ %
   about.dtd                            (locale/@AB_CD@/about.dtd)

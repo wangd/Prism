@@ -10,6 +10,7 @@
         persist="screenX screenY"
         buttons="accept,cancel"
         onload="InstallShortcut.init();"
+        onunload="InstallShortcut.cleanup();"
         ondialogaccept="return InstallShortcut.accept();">
 
   <script type="application/x-javascript" src="chrome://webrunner/content/install-shortcut.js"/>

@@ -24,6 +24,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://app/modules/ImageUtils.jsm");
+
 /**
  * Constructs an nsISimpleEnumerator for the given array of items.
  */
@@ -148,7 +150,7 @@ Profile.prototype = {
   id : "",
   fileTypes : [],
   uri : null,
-  icon : "app",
+  icon : "webrunner",
   status : false,
   location : false,
   sidebar : false,
@@ -249,14 +251,7 @@ Profile.prototype = {
       // Creating a webapp install requires an ID
       if (this.id.length > 0) {
         var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-        var iconExt = "";
-        var os = xulRuntime.OS.toLowerCase();
-        if (os == "winnt")
-          iconExt = ".ico";
-        else if (os == "linux")
-          iconExt = ".xpm";
-        else if (os == "darwin")
-          iconExt = ".icns";
+        var iconExt = ImageUtils.getNativeIconExtension();
 
         // Now we will build the webapp folder in the profile
         var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
@@ -282,6 +277,9 @@ Profile.prototype = {
 
         // We check for an OS specific and common stylesheet,
         // defaulting to the OS specific sheet
+        var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+        var iconExt = "";
+        var os = xulRuntime.OS.toLowerCase();
         if (reader.hasEntry(os + "/webapp.css") || reader.hasEntry("webapp.css")) {
           var appStyle = appSandbox.clone();
           appStyle.append("webapp.css");
@@ -293,6 +291,7 @@ Profile.prototype = {
         }
 
         var iconName = this.icon + iconExt;
+        var pngName = this.icon + ".png";
         var appIcon = appSandbox.clone();
         appIcon.append("icons");
         appIcon.append("default");
@@ -301,6 +300,33 @@ Profile.prototype = {
           appIcon.append(iconName);
           appIcon.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
           reader.extract(iconName, appIcon);
+        }
+        else if (reader.hasEntry(pngName))
+        {
+          var targetPath = appIcon.clone();
+          appIcon.append(pngName);
+          appIcon.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+          reader.extract(pngName, appIcon);
+
+          var fileStream = 
+            Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+          fileStream.init(appIcon, 0x01, 0644, 0);
+
+          var bufferedInput =
+            Components.classes["@mozilla.org/network/buffered-input-stream;1"].
+            createInstance(Components.interfaces.nsIBufferedInputStream);
+          bufferedInput.init(fileStream, 1024);
+          
+          var mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+          var mimeType = mimeService.getTypeFromFile(sourceIcon);
+
+          var fileTitle = sourceIcon.leafName;
+          var dot = fileTitle.lastIndexOf(".");
+          if (dot != -1)
+            fileTitle = fileTitle.substring(0, dot);
+
+          ImageUtils.createNativeIcon(bufferInput, fileTitle, mimeType, targetPath);
+          appIcon.remove(false);
         }
         else {
           // webapp.ini doesn't have its own icon, so we substitute the

@@ -1,3 +1,4 @@
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,16 +12,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla.
+# The Original Code is Operating System Integration extension.
 #
 # The Initial Developer of the Original Code is
-# the Mozilla Foundation <http://www.mozilla.org/>.
+# Matthew Gertner
 # Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Dave Townsend <dtownsend@oxymoronical.com>
-#   Matthew Gertner <matthew@allpeers.com>
+#    Matthew Gertner <matthew@allpeers.com> (Original author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,19 +36,33 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = chrome
+MODULE            = $(MOZ_APP_NAME)
+LIBRARY_NAME      = $(MOZ_APP_NAME)
+IS_COMPONENT      = 1
+USE_STATIC_LIBS   = 1
+EMBED_MANIFEST_AT = 2
 
-EXTRA_JS_MODULES = \
-  $(srcdir)/modules/WebAppInstall.jsm \
-  $(srcdir)/modules/ImageUtils.jsm \
-  $(srcdir)/modules/FaviconDownloader.jsm \
-  $(NULL)
+REQUIRES	= \
+    xpcom \
+    imglib2 \
+    string \
+    gfx \
+    necko \
+		$(NULL)
+
+CPPSRCS = nsICOEncoder.cpp nsOSIntegrationModule.cpp
+
+EXTRA_DSO_LDOPTS = \
+    $(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+    $(XPCOM_FROZEN_LDOPTS) \
+    $(NSPR_LIBS) \
+    $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -32,25 +32,17 @@ const PR_TRUNCATE = 0x20;
 
 EXPORTED_SYMBOLS = ["WebAppInstall"];
 
-function WebAppInstall()
+var WebAppInstall = 
 {
-}
-
-WebAppInstall.prototype = {
   createApplication : function(params) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
     // Creating a webapp install requires an ID
     if (params.hasOwnProperty("id") == true && params.id.length > 0) {
-      var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-      var iconExt = "";
-      var os = xulRuntime.OS.toLowerCase();
-      if (os == "winnt")
-        iconExt = ".ico";
-      else if (os == "linux")
-        iconExt = ".xpm";
-      else if (os == "darwin")
-        iconExt = ".icns";
+      var iconTitle = params.icon.leafName;
+      var dot = iconTitle.lastIndexOf(".");
+      if (dot != -1)
+        iconTitle = iconTitle.substring(0, dot);
 
       // Now we will build the webapp folder in the profile
       var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
@@ -67,7 +59,7 @@ WebAppInstall.prototype = {
       var cmd = "[Parameters]\n";
       cmd += "id=" + params.id + "\n";
       cmd += "uri=" + params.uri + "\n";
-      cmd += "icon=" + params.icon + "\n";
+      cmd += "icon=" + iconTitle + "\n";
       cmd += "status=" + params.status + "\n";
       cmd += "location=" + params.location + "\n";
       cmd += "sidebar=" + params.sidebar + "\n";
@@ -78,19 +70,16 @@ WebAppInstall.prototype = {
       stream.write(cmd, cmd.length);
       stream.close();
 
-      // Create a default icon
-      var iconName = params.icon + iconExt;
+      // Copy the icon
       var appIcon = appSandbox.clone();
 
       appIcon.append("icons");
       appIcon.append("default");
 
-      var defaultIcon = dirSvc.get("resource:app", Ci.nsIFile);
-      defaultIcon.append("chrome");
-      defaultIcon.append("icons");
-      defaultIcon.append("default");
-      defaultIcon.append(iconName);
-      defaultIcon.copyTo(appIcon, "");
+      params.icon.copyTo(appIcon, "");
+      
+      appIcon.append(params.icon.leafName);
+      return appIcon;
     }
   },
 
@@ -110,27 +99,18 @@ WebAppInstall.prototype = {
       }
     }
 
-    var appIcon = dirSvc.get("ProfD", Ci.nsIFile);
-    appIcon.append("webapps");
-    appIcon.append(id);
-    appIcon.append("icons");
-    appIcon.append("default");
-
     var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
     var os = xulRuntime.OS.toLowerCase();
     if (os == "winnt") {
-      appIcon.append(icon + ".ico");
-      this._createShortcutWindows(target, name, id, appIcon, location);
+      this._createShortcutWindows(target, name, id, icon, location);
     }
     else if (os == "linux") {
-      appIcon.append(icon + ".xpm");
-      this._createShortcutLinux(target, name, id, appIcon, location);
+      this._createShortcutLinux(target, name, id, icon, location);
     }
     else if (os == "darwin") {
       var targetAdj = target.parent.clone();
       targetAdj.append("prism");
-      appIcon.append(icon + ".icns");
-      this._createShortcutMac(targetAdj, name, id, appIcon, location);
+      this._createShortcutMac(targetAdj, name, id, icon, location);
     }
   },
 
@@ -277,4 +257,4 @@ WebAppInstall.prototype = {
     stream.write(cmd, cmd.length);
     stream.close();
   }
-}
+};
