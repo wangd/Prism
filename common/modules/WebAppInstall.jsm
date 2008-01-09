@@ -23,6 +23,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://app/modules/ImageUtils.jsm");
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
@@ -39,10 +41,7 @@ var WebAppInstall =
 
     // Creating a webapp install requires an ID
     if (params.hasOwnProperty("id") == true && params.id.length > 0) {
-      var iconTitle = params.icon.leafName;
-      var dot = iconTitle.lastIndexOf(".");
-      if (dot != -1)
-        iconTitle = iconTitle.substring(0, dot);
+      var iconTitle = "webrunner";
 
       // Now we will build the webapp folder in the profile
       var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
@@ -75,10 +74,20 @@ var WebAppInstall =
 
       appIcon.append("icons");
       appIcon.append("default");
+      if (!appIcon.exists())
+        appIcon.create(Ci.nsIFile.DIRECTORY_TYPE, 0600);
+      appIcon.append(iconTitle + ImageUtils.getNativeIconExtension());
 
-      params.icon.copyTo(appIcon, "");
-      
-      appIcon.append(params.icon.leafName);
+      stream = Cc['@mozilla.org/network/file-output-stream;1'].createInstance(Ci.nsIFileOutputStream);
+      stream.init(appIcon, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, 0);
+      var bufferedStream =
+        Components.classes["@mozilla.org/network/buffered-output-stream;1"].
+        createInstance(Components.interfaces.nsIBufferedOutputStream);
+      bufferedStream.init(stream, 1024);
+
+      bufferedStream.writeFrom(params.icon, params.icon.available());
+      bufferedStream.close();
+
       return appIcon;
     }
   },

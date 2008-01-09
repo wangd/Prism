@@ -33,8 +33,7 @@ EXPORTED_SYMBOLS = ["ImageUtils"];
 
 var ImageUtils =
 {
-  createNativeIcon : function(inputStream, fileTitle, mimeType, targetPath) {
-try{
+  createNativeIcon : function(inputStream, fileTitle, mimeType, outputStream) {
     // Convert from source format to native icon format
     var imageTools = Components.classes["@mozilla.org/image/tools;1"].
       createInstance(Components.interfaces.imgITools);
@@ -42,26 +41,13 @@ try{
     var container = {};
     imageTools.decodeImageData(inputStream, mimeType, container);
 
-    var inputStream = 
+    var encodedStream = 
       imageTools.encodeScaledImage(container.value,
       this.getNativeIconMimeType(), container.value.width,
       container.value.height);
 
-    var iconFile = targetPath.clone();
-    iconFile.append(fileTitle + this.getNativeIconExtension());          
-
-    var outputStream =
-      Components.classes["@mozilla.org/network/file-output-stream;1"].
-      createInstance(Components.interfaces.nsIFileOutputStream);
-    outputStream.init(iconFile, PR_WRONLY|PR_CREATE_FILE|PR_TRUNCATE, 0644, 0);
-
-    var bufferedOutput =
-      Components.classes["@mozilla.org/network/buffered-output-stream;1"].
-      createInstance(Components.interfaces.nsIBufferedOutputStream);
-    bufferedOutput.init(outputStream, 1024);
-    bufferedOutput.writeFrom(inputStream, inputStream.available());
-    bufferedOutput.close();    
-}catch(e){Components.utils.reportError(e); throw e; }
+    outputStream.writeFrom(encodedStream, encodedStream.available());
+    outputStream.close();    
   },
   
   getNativeIconExtension : function()
@@ -88,4 +74,5 @@ try{
       return "image/x-icns";  
   }
 };
+
 

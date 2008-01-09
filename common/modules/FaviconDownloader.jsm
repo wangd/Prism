@@ -22,11 +22,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://app/modules/ImageUtils.jsm");
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const PR_UINT32_MAX = 4294967295;
-
-Components.utils.import("resource://app/modules/ImageUtils.jsm");
 
 EXPORTED_SYMBOLS = ["FaviconDownloader"];
 
@@ -35,7 +35,7 @@ var FaviconDownloader = {
   _outputSteam : null,
   _uri : null,
   _mimeType : null,
-  _targetDir : null,
+  _generatedImageStream : null,
   
   QueryInterface : function(iid)
   {
@@ -45,11 +45,17 @@ var FaviconDownloader = {
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
   
-  init : function(uri, targetDir)
+  init : function(uri)
   {
     this._uri = uri;
-    this._targetDir = targetDir;
     this._mimeType = null;
+  },
+
+  getGeneratedImage : function()
+  {
+    if (!this._generatedImageStream)
+      return null;
+    return this._generatedImageStream.newInputStream(0);
   },
   
   handleEvent : function(event)
@@ -90,13 +96,9 @@ var FaviconDownloader = {
   
   onStartRequest : function(reqyest, context)
   {
-    this._storageStream = Cc["@mozilla.org/storagestream;1"].createInstance(Ci.nsIStorageStream);
-    this._storageStream.init(4096, PR_UINT32_MAX, null);
-    var outputStream = this._storageStream.getOutputStream(0);
+    this._storageStream = this.createStorageStream();
     this._outputStream =
-      Components.classes["@mozilla.org/network/buffered-output-stream;1"].
-      createInstance(Components.interfaces.nsIBufferedOutputStream);
-    this._outputStream.init(outputStream, 1024);  
+      this.getBufferedOutputStreamForStorageStream(this._storageStream);
   },
   
   onStopRequest : function(request, context, statusCode)
@@ -105,14 +107,35 @@ var FaviconDownloader = {
       return;
       
     this._outputStream.flush();
-    var inputStream = this._storageStream.newInputStream(0) 
-    ImageUtils.createNativeIcon(inputStream, "favicon", this._mimeType, this._targetDir);
+    var inputStream = this._storageStream.newInputStream(0);
+    this._generatedImageStream = this.createStorageStream();
+    ImageUtils.createNativeIcon(inputStream, "favicon", this._mimeType,
+      this.getBufferedOutputStreamForStorageStream(
+      this._generatedImageStream));
     this._storageStream.close();
   },
   
   onDataAvailable : function(request, context, inputStream, offset, count)
   {
     this._outputStream.writeFrom(inputStream, count);
+  },
+
+  createStorageStream : function()
+  {
+    var storageStream = Cc["@mozilla.org/storagestream;1"].createInstance(Ci.nsIStorageStream);
+    storageStream.init(4096, PR_UINT32_MAX, null);
+    return storageStream;
+  },
+
+  getBufferedOutputStreamForStorageStream : function(storageStream)
+  {
+    var outputStream = storageStream.getOutputStream(0);
+    var bufferedStream =
+      Components.classes["@mozilla.org/network/buffered-output-stream;1"].
+      createInstance(Components.interfaces.nsIBufferedOutputStream);
+    bufferedStream.init(outputStream, 1024);  
+    return bufferedStream;
   }
 };
+
 
