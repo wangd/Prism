@@ -41,15 +41,15 @@ var ImageUtils =
     var container = {};
     imageTools.decodeImageData(inputStream, mimeType, container);
 
-    var encodedStream = 
+    var encodedStream =
       imageTools.encodeScaledImage(container.value,
       this.getNativeIconMimeType(), container.value.width,
       container.value.height);
 
     outputStream.writeFrom(encodedStream, encodedStream.available());
-    outputStream.close();    
+    outputStream.close();
   },
-  
+
   getNativeIconExtension : function()
   {
     var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
@@ -59,9 +59,9 @@ var ImageUtils =
     else if (os == "linux")
       return ".xpm";
     else if (os == "darwin")
-      return ".icns";  
+      return ".icns";
   },
-  
+
   getNativeIconMimeType : function()
   {
     var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
@@ -71,8 +71,6 @@ var ImageUtils =
     else if (os == "linux")
       return "image/xpm";
     else if (os == "darwin")
-      return "image/x-icns";  
+      return "image/x-icns";
   }
 };
-
-

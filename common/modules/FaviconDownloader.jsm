@@ -36,15 +36,15 @@ var FaviconDownloader = {
   _uri : null,
   _mimeType : null,
   _generatedImageStream : null,
-  
+
   QueryInterface : function(iid)
   {
     if (iid,equals(Ci.nsISupports) || iid.equals(Ci.nsIStreamListener))
       return this;
-      
+
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
-  
+
   init : function(uri)
   {
     this._uri = uri;
@@ -57,7 +57,7 @@ var FaviconDownloader = {
       return null;
     return this._generatedImageStream.newInputStream(0);
   },
-  
+
   handleEvent : function(event)
   {
     switch(event.type) {
@@ -69,14 +69,14 @@ var FaviconDownloader = {
         break;
     }
   },
-  
+
   onLinkAdded : function(event)
   {
     var link = event.originalTarget;
     if (link.rel.toLowerCase() == "icon")
       this.loadIcon(link.type, this._uri.resolve(link.href));
   },
-  
+
   onContentLoaded : function(event)
   {
     if (!this._mimeType)
@@ -85,27 +85,27 @@ var FaviconDownloader = {
       this.loadIcon("image/vnd.microsoft.icon", this._uri.prePath + "/favicon.ico");
     }
   },
-  
+
   loadIcon : function(mimeType, uriSpec)
   {
     this._mimeType = mimeType;
-    var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);	
+    var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     var channel = ioService.newChannel(uriSpec, "", null);
     channel.asyncOpen(this, null);
   },
-  
+
   onStartRequest : function(reqyest, context)
   {
     this._storageStream = this.createStorageStream();
     this._outputStream =
       this.getBufferedOutputStreamForStorageStream(this._storageStream);
   },
-  
+
   onStopRequest : function(request, context, statusCode)
   {
     if (statusCode != Components.results.NS_OK)
       return;
-      
+
     this._outputStream.flush();
     var inputStream = this._storageStream.newInputStream(0);
     this._generatedImageStream = this.createStorageStream();
@@ -114,7 +114,7 @@ var FaviconDownloader = {
       this._generatedImageStream));
     this._storageStream.close();
   },
-  
+
   onDataAvailable : function(request, context, inputStream, offset, count)
   {
     this._outputStream.writeFrom(inputStream, count);
@@ -133,9 +133,7 @@ var FaviconDownloader = {
     var bufferedStream =
       Components.classes["@mozilla.org/network/buffered-output-stream;1"].
       createInstance(Components.interfaces.nsIBufferedOutputStream);
-    bufferedStream.init(outputStream, 1024);  
+    bufferedStream.init(outputStream, 1024);
     return bufferedStream;
   }
 };
-
-
