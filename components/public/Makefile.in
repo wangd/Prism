@@ -49,6 +49,7 @@ EXPORTS = \
 		$(NULL)
 
 XPIDLSRCS	= \
+    nsIDesktopEnvironment.idl \
     nsINativeIcon.idl \
 		$(NULL)
 

@@ -33,7 +33,6 @@ EXPORTED_SYMBOLS = ["FaviconDownloader"];
 var FaviconDownloader = {
   _storageStream : null,
   _outputSteam : null,
-  _uri : null,
   _mimeType : null,
   _generatedImageStream : null,
 
@@ -43,12 +42,6 @@ var FaviconDownloader = {
       return this;
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-
-  init : function(uri)
-  {
-    this._uri = uri;
-    this._mimeType = null;
   },
 
   getGeneratedImage : function()
@@ -74,7 +67,7 @@ var FaviconDownloader = {
   {
     var link = event.originalTarget;
     if (link.rel.toLowerCase() == "icon")
-      this.loadIcon(link.type, this._uri.resolve(link.href));
+      this.loadIcon(link.type, event.originalTarget.baseURIObject.resolve(link.href));
   },
 
   onContentLoaded : function(event)
@@ -82,7 +75,7 @@ var FaviconDownloader = {
     if (!this._mimeType)
     {
       // Didn't find a <link rel="icon"...> so try to guess where the favicon is
-      this.loadIcon("image/vnd.microsoft.icon", this._uri.prePath + "/favicon.ico");
+      this.loadIcon("image/vnd.microsoft.icon", event.originalTarget.baseURIObject.prePath + "/favicon.ico");
     }
   },
 
@@ -94,7 +87,7 @@ var FaviconDownloader = {
     channel.asyncOpen(this, null);
   },
 
-  onStartRequest : function(reqyest, context)
+  onStartRequest : function(request, context)
   {
     this._storageStream = this.createStorageStream();
     this._outputStream =

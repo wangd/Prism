@@ -74,10 +74,10 @@ var InstallShortcut = {
       // Until we get it working
       document.getElementById("dock").hidden = true;
     }
-    
+
     document.getElementById("uri").addEventListener("change", this.onUriChange, false);
   },
-  
+
   cleanup: function() {
     if (this._iframe)
     {
@@ -132,11 +132,11 @@ var InstallShortcut = {
         var doNavigation = document.getElementById("navigation").checked ? true : false;
         var idPrefix = name.toLowerCase();
         idPrefix = idPrefix.replace(" ", ".", "g");
-        
+
         var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
         var iconUri = uriFixup.createFixupURI(document.getElementById("uri").value, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
         var icon = this.getIconForUri(iconUri);
-        
+
         var params = {id: idPrefix + "@prism.app", uri: uri.value, icon: icon, status: doStatus, location: doLocation, sidebar: "false", navigation: doNavigation};
 
         // Make the web application in the profile folder
@@ -159,13 +159,13 @@ var InstallShortcut = {
     }
     return true;
   },
-  
+
   getIconForUri : function(uri)
   {
     var favicon = FaviconDownloader.getGeneratedImage();
     if (favicon)
       return favicon;
-  
+
     var iconName ="app" + ImageUtils.getNativeIconExtension();
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
     var defaultIcon = dirSvc.get("resource:app", Ci.nsIFile);
@@ -179,7 +179,7 @@ var InstallShortcut = {
     inputStream.init(defaultIcon, 0x01, 00004, null);
     return inputStream;
   },
-  
+
   onUriChange : function(event)
   {
     // Try to get the page and see if there is a <link> tag for the favicon
@@ -188,34 +188,31 @@ var InstallShortcut = {
       this._iframe = document.createElement("iframe");
       this._iframe.setAttribute("collapsed", true);
       this._iframe.setAttribute("type", "content");
-      
+
       document.documentElement.appendChild(this._iframe);
     }
-    
+
     // If anything is loading in the iframe, stop it
     // This includes about:blank if we just created the iframe
     var webNav = this._iframe.docShell.QueryInterface(Ci.nsIWebNavigation);
     webNav.stop(Ci.nsIWebNavigation.STOP_NETWORK);
-    
+
     this._iframe.docShell.allowJavascript = false;
     this._iframe.docShell.allowAuth = false;
     this._iframe.docShell.allowPlugins = false;
     this._iframe.docShell.allowMetaRedirects = false;
     this._iframe.docShell.allowSubframes = false;
-    this._iframe.docShell.allowImages = false;   
-    
+    this._iframe.docShell.allowImages = false;
+
     var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
     var uri = uriFixup.createFixupURI(document.getElementById("uri").value, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    var tempDir = dirSvc.get("ProfD", Ci.nsIFile);    
-    FaviconDownloader.init(uri, tempDir);
-    
+
     this._iframe.addEventListener("DOMLinkAdded", FaviconDownloader, false);
     this._iframe.addEventListener("DOMContentLoaded", FaviconDownloader, false);
     var uriLoader = Cc["@mozilla.org/uriloader;1"].getService(Ci.nsIURILoader);
 
     var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     var channel = ioService.newChannelFromURI(uri);
-    uriLoader.openURI(channel, true, this._iframe.docShell);    
+    uriLoader.openURI(channel, true, this._iframe.docShell);
   }
 };

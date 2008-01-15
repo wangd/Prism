@@ -34,7 +34,7 @@ const PR_TRUNCATE = 0x20;
 
 EXPORTED_SYMBOLS = ["WebAppInstall"];
 
-var WebAppInstall = 
+var WebAppInstall =
 {
   createApplication : function(params) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
@@ -124,58 +124,31 @@ var WebAppInstall =
   },
 
   _createShortcutWindows : function(target, name, id, icon, location) {
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-
     var locations = location.split(",");
 
-    var programs = dirSvc.get("Progs", Ci.nsIFile);
-    programs.append("Web Apps");
-    if (!programs.exists())
-      programs.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    var desktop = Cc["@mozilla.org/desktop-environment;1"].
+      getService(Ci.nsIDesktopEnvironment);
+    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
-    var quicklaunch = dirSvc.get("AppData", Ci.nsIFile);
-    quicklaunch.append("Microsoft");
-    quicklaunch.append("Internet Explorer");
-    quicklaunch.append("Quick Launch");
+    var shortcut = null;
+    var directory = null;
+    for (var i=0; i<locations.length; i++)
+    {
+      if (locations[i] == "desktop")
+        directory = dirSvc.get("Desk", Ci.nsIFile);
+      else if (locations[i] == "programs")
+      {
+        directory = dirSvc.get("Progs", Ci.nsIFile);
+        directory.append("Web Apps");
+      }
+      else if (locations[i] == "quicklaunch")
+        directory = dirSvc.get("QuickLaunch", Ci.nsIFile);
+      else
+        continue;
 
-    var file = dirSvc.get("TmpD", Ci.nsIFile);
-    file.append("shortcut.vbs");
-    if (file.exists())
-      file.remove(false);
-    file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
-
-    var cmd = "Set oWsh = CreateObject(\"WScript.Shell\")\n";
-    if (locations.indexOf("desktop") > -1) {
-      cmd += "sLocation = oWsh.SpecialFolders(\"Desktop\")\n";
-      cmd += "Set oShortcut = oWsh.CreateShortcut(sLocation & \"\\" + name + ".lnk\")\n";
-      cmd += "oShortcut.TargetPath = \"" + target.path + "\"\n";
-      cmd += "oShortcut.Arguments = \"-webapp " + id + "\"\n";
-      cmd += "oShortcut.IconLocation = \"" + icon.path + "\"\n";
-      cmd += "oShortcut.Save\n"
+      desktop.createShortcut(name, target.path,
+        directory, "", "-webapp " + id, "", icon);
     }
-    if (locations.indexOf("programs") > -1 && programs.exists()) {
-      cmd += "sLocation = oWsh.SpecialFolders(\"Programs\") & \"\\Web Apps\"\n";
-      cmd += "Set oShortcut = oWsh.CreateShortcut(sLocation & \"\\" + name + ".lnk\")\n";
-      cmd += "oShortcut.TargetPath = \"" + target.path + "\"\n";
-      cmd += "oShortcut.Arguments = \"-webapp " + id + "\"\n";
-      cmd += "oShortcut.IconLocation = \"" + icon.path + "\"\n";
-      cmd += "oShortcut.Save\n"
-    }
-    if (locations.indexOf("quicklaunch") > -1 && quicklaunch.exists()) {
-      cmd += "sLocation = \"" + quicklaunch.path + "\"\n";
-      cmd += "Set oShortcut = oWsh.CreateShortcut(sLocation & \"\\" + name + ".lnk\")\n";
-      cmd += "oShortcut.TargetPath = \"" + target.path + "\"\n";
-      cmd += "oShortcut.Arguments = \"-webapp " + id + "\"\n";
-      cmd += "oShortcut.IconLocation = \"" + icon.path + "\"\n";
-      cmd += "oShortcut.Save\n"
-    }
-
-    var stream = Cc['@mozilla.org/network/file-output-stream;1'].createInstance(Ci.nsIFileOutputStream);
-    stream.init(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, 0);
-    stream.write(cmd, cmd.length);
-    stream.close();
-
-    file.launch();
   },
 
   _createShortcutLinux : function(target, name, id, icon, location) {

@@ -42,12 +42,21 @@
 #include "nsXPCOMCID.h"
 #include "nsServiceManagerUtils.h"
 
+#include "nsDesktopEnvironmentWin.h"
 #include "nsICOEncoder.h"
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDesktopEnvironment)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsICOEncoder)
 
 static const nsModuleComponentInfo components[] =
 {
+  { "Windows desktop environment",
+    NS_DESKTOPENVIRONMENT_CID,
+    NS_DESKTOPENVIRONMENT_CONTRACTID,
+    nsDesktopEnvironmentConstructor,
+    nsDesktopEnvironment::OnRegistration,
+    nsDesktopEnvironment::OnUnregistration
+  },
   { "ICO encoder",
     NS_ICOENCODER_CID,
     "@mozilla.org/image/encoder;2?type=image/vnd.microsoft.icon",
