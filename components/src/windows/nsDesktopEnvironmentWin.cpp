@@ -70,8 +70,7 @@ NS_IMETHODIMP nsDesktopEnvironment::GetFile(const char* prop,
     PRBool* persistent, nsIFile** _retval)
 {
   nsresult rv;
-  if (strcmp(prop, "QuickLaunch") == 0)
-  {
+  if (strcmp(prop, "QuickLaunch") == 0) {
     nsCOMPtr<nsIFile> directory;
     nsCOMPtr<nsIProperties>
       dirSvc(do_GetService("@mozilla.org/file/directory_service;1", &rv));
@@ -97,13 +96,14 @@ NS_IMETHODIMP nsDesktopEnvironment::GetFile(const char* prop,
 
     return NS_OK;
   }
-  else
+  else {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 }
 
 NS_IMETHODIMP nsDesktopEnvironment::CreateShortcut(
   const nsAString& aName,
-  const nsAString& aTargetPath,
+  nsIFile* aTarget,
   nsIFile* aLocation,
   const nsAString& aWorkingPath,
   const nsAString& aArguments,
@@ -141,7 +141,11 @@ NS_IMETHODIMP nsDesktopEnvironment::CreateShortcut(
 
   // Set the path to the shortcut target, and add the
   // description.
-  psl->SetPath(nsString(aTargetPath).get());
+  nsAutoString targetPath;
+  rv = aTarget->GetPath(targetPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  psl->SetPath(targetPath.get());
   psl->SetDescription(nsString(aDescription).get());
 
   if(!aWorkingPath.IsEmpty())
@@ -163,9 +167,9 @@ NS_IMETHODIMP nsDesktopEnvironment::CreateShortcut(
   hres = psl->QueryInterface(IID_IPersistFile, (LPVOID FAR *)&ppf);
   if(SUCCEEDED(hres))
   {
-      // Save the link by calling IPersistFile::Save.
-      hres = ppf->Save(lpszFullPath, TRUE);
-      ppf->Release();
+    // Save the link by calling IPersistFile::Save.
+    hres = ppf->Save(lpszFullPath, TRUE);
+    ppf->Release();
   }
   psl->Release();
 
@@ -214,13 +218,13 @@ NS_METHOD nsDesktopEnvironment::OnRegistration(nsIComponentManager *aCompMgr,
       NS_GET_IID(nsICategoryManager), getter_AddRefs(categoryManager));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Register plugin as an observer for XPCOM startup event.
+  // Register plugin as an observer for app startup event.
   rv = categoryManager->AddCategoryEntry("app-startup",
-      "nsDesktopEnvironment",
-      "service," NS_DESKTOPENVIRONMENT_CONTRACTID,
-      PR_TRUE,  // persist category
-      PR_TRUE,  // replace existing
-      nsnull);
+    "nsDesktopEnvironment",
+    "service," NS_DESKTOPENVIRONMENT_CONTRACTID,
+    PR_TRUE,  // persist category
+    PR_TRUE,  // replace existing
+    nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

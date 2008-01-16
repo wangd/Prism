@@ -60,7 +60,7 @@ interface nsIDesktopEnvironment : nsISupports
   **/
   nsIFile createShortcut(
     in AString name,
-    in AString targetPath,
+    in nsIFile target,
     in nsIFile location,
     in AString workingPath,
     in AString arguments,

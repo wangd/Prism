@@ -134,20 +134,22 @@ var WebAppInstall =
     var directory = null;
     for (var i=0; i<locations.length; i++)
     {
-      if (locations[i] == "desktop")
+      if (locations[i] == "desktop") {
         directory = dirSvc.get("Desk", Ci.nsIFile);
-      else if (locations[i] == "programs")
-      {
+      }
+      else if (locations[i] == "programs") {
         directory = dirSvc.get("Progs", Ci.nsIFile);
         directory.append("Web Apps");
       }
-      else if (locations[i] == "quicklaunch")
+      else if (locations[i] == "quicklaunch") {
         directory = dirSvc.get("QuickLaunch", Ci.nsIFile);
-      else
+      }
+      else {
         continue;
+      }
 
-      desktop.createShortcut(name, target.path,
-        directory, "", "-webapp " + id, "", icon);
+      desktop.createShortcut(name, target, directory, "", "-webapp " + id, "", icon);
+
     }
   },
 
