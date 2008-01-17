@@ -13,7 +13,7 @@
  *
  * The Original Code is Prism Extension.
  *
- * The Initial Developer of the Original Code is Cesar Oliveira 
+ * The Initial Developer of the Original Code is Cesar Oliveira
  *	<a.sacred.line@gmail.com>.
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.

@@ -308,7 +308,7 @@ Profile.prototype = {
           appIcon.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
           reader.extract(pngName, appIcon);
 
-          var fileStream = 
+          var fileStream =
             Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
           fileStream.init(appIcon, 0x01, 0644, 0);
 
@@ -316,7 +316,7 @@ Profile.prototype = {
             Components.classes["@mozilla.org/network/buffered-input-stream;1"].
             createInstance(Components.interfaces.nsIBufferedInputStream);
           bufferedInput.init(fileStream, 1024);
-          
+         
           var mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
           var mimeType = mimeService.getTypeFromFile(sourceIcon);
 

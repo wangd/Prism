@@ -66,7 +66,7 @@ nsICNSEncoder::nsICNSEncoder() : mIconFamily(NULL), mIconData(NULL), mIconSize(0
 nsICNSEncoder::~nsICNSEncoder()
 {
 }
- 
+
 // nsICNSEncoder::InitFromData
 NS_IMETHODIMP nsICNSEncoder::InitFromData(const PRUint8* aData,
                                           PRUint32 aLength, // (unused, req'd by JS)
@@ -89,24 +89,24 @@ NS_IMETHODIMP nsICNSEncoder::InitFromData(const PRUint8* aData,
     bitmapFormat:(NSBitmapFormat) ((int) NSAlphaNonpremultipliedBitmapFormat|(int) NSAlphaFirstBitmapFormat)
     bytesPerRow:aStride
     bitsPerPixel:0] autorelease];
-    
+   
   // Need to switch from big endian "host" format to native
   uint32_t* bitmapData = (uint32_t *) [imageRep bitmapData];
   for (PRUint32 i=0; i<aWidth*aHeight; i++)
     bitmapData[i] = CFSwapInt32BigToHost(((uint32_t *) aData)[i]);
-    
+   
   NSImage* image = [[NSImage alloc] initWithSize:NSMakeSize(aWidth, aHeight)];
   [image addRepresentation:imageRep];
-  
+ 
   mIconFamily = (*[IconFamily iconFamilyWithThumbnailsOfImage:image]).hIconFamily;
-  
+ 
   return NS_OK;
 }
 
 
 // nsICNSEncoder::StartImageEncode
 //
-// 
+//
 // See ::InitFromData for other info.
 NS_IMETHODIMP nsICNSEncoder::StartImageEncode(PRUint32 aaWidth,
                                              PRUint32 aaHeight,
@@ -161,9 +161,9 @@ NS_IMETHODIMP nsICNSEncoder::ReadSegments(nsWriteSegmentFun aWriter,
                                          PRUint32 *_retval)
 {
   NS_ENSURE_STATE(mIconFamily);
-  
+ 
   PRUint32 iconSize = GetHandleSize((Handle) mIconFamily);
-  
+ 
   if (!mIconData)
     mIconData = [NSData dataWithBytes:*mIconFamily length:iconSize];
 

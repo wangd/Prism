@@ -11,7 +11,7 @@
 /*
     Copyright (c) 2001-2006 Troy N. Stephens
     Portions Copyright (c) 2007 Google Inc.
- 
+
     Use and distribution of this source code is governed by the MIT License, whose terms are as follows.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -112,7 +112,7 @@ enum {
 {
     FSRef ref;
     OSStatus result;
-    
+   
     self = [self init];
     if (self) {
         if (hIconFamily) {
@@ -261,7 +261,7 @@ enum {
     self = [self init];
     if (self == nil)
         return nil;
-    
+   
     // Resample the given image to create a 512x512 pixel, 32-bit RGBA
     // version, and use that as our "thumbnail" (512x512) icon and mask.
     //
@@ -274,7 +274,7 @@ enum {
       [self autorelease];
       return nil;
     }
-    
+   
     [iconImage512x512 lockFocus];
     iconBitmap512x512 = [[NSBitmapImageRep alloc] initWithFocusedViewRect:NSMakeRect(0, 0, 512, 512)];
     [iconImage512x512 unlockFocus];
@@ -287,18 +287,18 @@ enum {
     // most likely more efficient than resampling from the original image again,
     // particularly if it is large.  It produces a slightly different result, but
     // the difference is minor and should not be objectionable...)
-    
+   
     bitmappedIconImage512x512 = [[NSImage alloc] initWithSize:NSMakeSize(512, 512)];
     [bitmappedIconImage512x512 addRepresentation:iconBitmap512x512];
-    
+   
     if (!bitmappedIconImage512x512) {
       [self autorelease];
       return nil;
     }
-    
+   
     [self setIconFamilyElement:kIconServices512PixelDataARGB fromBitmapImageRep:iconBitmap512x512];
-    [iconBitmap512x512 release];   
-    
+    [iconBitmap512x512 release];  
+   
     iconImage256x256 = [IconFamily resampleImage:bitmappedIconImage512x512 toIconWidth:256 usingImageInterpolation:imageInterpolation];
     if (iconImage256x256) {
       [iconImage256x256 lockFocus];
@@ -309,20 +309,20 @@ enum {
         [iconBitmap256x256 release];
       }
     }
-    
+   
     iconImage128x128 = [IconFamily resampleImage:bitmappedIconImage512x512 toIconWidth:128 usingImageInterpolation:imageInterpolation];
     if (iconImage128x128) {
       [iconImage128x128 lockFocus];
       iconBitmap128x128 = [[NSBitmapImageRep alloc] initWithFocusedViewRect:NSMakeRect(0, 0, 128, 128)];
       [iconImage128x128 unlockFocus];
-      
+     
       if (iconBitmap128x128) {
         [self setIconFamilyElement:kThumbnail32BitData fromBitmapImageRep:iconBitmap128x128];
         [self setIconFamilyElement:kThumbnail8BitMask  fromBitmapImageRep:iconBitmap128x128];
         [iconBitmap128x128 release];
       }
     }
-    
+   
     // Resample the 512x512 image to create a 32x32 pixel, 32-bit RGBA version,
     // and use that as our "large" (32x32) icon and 8-bit mask.
     iconImage32x32 = [IconFamily resampleImage:bitmappedIconImage512x512 toIconWidth:32 usingImageInterpolation:imageInterpolation];
@@ -338,7 +338,7 @@ enum {
         [iconBitmap32x32 release];
       }
     }
-    
+   
     // Resample the 512x512 image to create a 16x16 pixel, 32-bit RGBA version,
     // and use that as our "small" (16x16) icon and 8-bit mask.
     iconImage16x16 = [IconFamily resampleImage:bitmappedIconImage512x512 toIconWidth:16 usingImageInterpolation:imageInterpolation];
@@ -354,10 +354,10 @@ enum {
         [iconBitmap16x16 release];
       }
     }
-    
+   
     // Release the icon.
     [bitmappedIconImage512x512 release];
-        
+       
     // Return the new icon family!
     return self;
 }
@@ -402,7 +402,7 @@ enum {
 		pixelsWide = 256;
 	    break;
 #endif
-	    
+	   
 	// 'it32' 128x128 32-bit RGB image
 	case kThumbnail32BitData:
 		maskElementType = kThumbnail8BitMask;
@@ -414,7 +414,7 @@ enum {
 		maskElementType = kHuge8BitMask;
 		pixelsWide = 48;
 	    break;
-            	    
+            	   
 	// 'il32' 32x32 32-bit RGB image
 	case kLarge32BitData:
 		maskElementType = kLarge8BitMask;
@@ -426,7 +426,7 @@ enum {
 		maskElementType = kSmall8BitMask;
 		pixelsWide = 16;
 	    break;
-	    
+	   
 	default:
 	    return nil;
     }
@@ -438,7 +438,7 @@ enum {
         DisposeHandle( hRawBitmapData );
         return nil;
     }
-        
+       
     if (maskElementType) {
         // Get the corresponding raw, uncompressed 8-bit mask data.
         hRawMaskData = NewHandle( pixelsWide * pixelsWide );
@@ -448,7 +448,7 @@ enum {
             hRawMaskData = NULL;
         }
     }
-    
+   
     // The retrieved raw bitmap data is stored in memory as 32 bit per pixel, 8 bit per sample xRGB data.  (The sample order provided by IconServices is the same, regardless of whether we're running on a big-endian (PPC) or little-endian (Intel) architecture.)
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
     // With proper attention to byte order, we can fold the mask data into the color data in-place, producing ARGB data suitable for handing off to NSBitmapImageRep.
@@ -513,7 +513,7 @@ enum {
             }
         }
     }
-    
+   
     // Create a new NSBitmapImageRep with the given bitmap data.  Note that
     // when creating the NSBitmapImageRep we pass in NULL for the "planes"
     // parameter.  This causes the new NSBitmapImageRep to allocate its own
@@ -545,7 +545,7 @@ enum {
                 pixelsWide * pixelsWide * 4 );
     }
 //    HUnlock( hRawBitmapData ); // Handle-based memory isn't compacted anymore, so calling HLock()/HUnlock() is unnecessary.
-                      
+                     
     // Free the retrieved raw data.
     DisposeHandle( hRawBitmapData );
     if (hRawMaskData)
@@ -586,27 +586,27 @@ enum {
 	case kThumbnail32BitData:
 	    hRawData = [IconFamily get32BitDataFromBitmapImageRep:bitmapImageRep requiredPixelSize:128];
 	    break;
-	    
+	   
 	// 't8mk' 128x128 8-bit alpha mask
 	case kThumbnail8BitMask:
 	    hRawData = [IconFamily get8BitMaskFromBitmapImageRep:bitmapImageRep requiredPixelSize:128];
 	    break;
-	    
+	   
 	// 'il32' 32x32 32-bit RGB image
 	case kLarge32BitData:
 	    hRawData = [IconFamily get32BitDataFromBitmapImageRep:bitmapImageRep requiredPixelSize:32];
 	    break;
-	    
+	   
 	// 'l8mk' 32x32 8-bit alpha mask
 	case kLarge8BitMask:
 	    hRawData = [IconFamily get8BitMaskFromBitmapImageRep:bitmapImageRep requiredPixelSize:32];
 	    break;
-	    
+	   
 	// 'ICN#' 32x32 1-bit alpha mask
 	case kLarge1BitMask:
 	    hRawData = [IconFamily get1BitMaskFromBitmapImageRep:bitmapImageRep requiredPixelSize:32];
 	    break;
-            
+           
 	// 'icl8' 32x32 8-bit indexed image data
 	case kLarge8BitData:
 		hRawData = [IconFamily get8BitDataFromBitmapImageRep:bitmapImageRep requiredPixelSize:32];
@@ -616,12 +616,12 @@ enum {
 	case kSmall32BitData:
 		hRawData = [IconFamily get32BitDataFromBitmapImageRep:bitmapImageRep requiredPixelSize:16];
 		break;
-	    
+	   
 	// 's8mk' 16x16 8-bit alpha mask
 	case kSmall8BitMask:
 	    hRawData = [IconFamily get8BitMaskFromBitmapImageRep:bitmapImageRep requiredPixelSize:16];
 	    break;
-	    
+	   
 	// 'ics#' 16x16 1-bit alpha mask
 	case kSmall1BitMask:
 	    hRawData = [IconFamily get1BitMaskFromBitmapImageRep:bitmapImageRep requiredPixelSize:16];
@@ -631,7 +631,7 @@ enum {
 	case kSmall8BitData:
 		hRawData = [IconFamily get8BitDataFromBitmapImageRep:bitmapImageRep requiredPixelSize:16];
 		break;
-            
+           
 	default:
 	    return NO;
     }
@@ -714,12 +714,12 @@ enum {
     } else if (result != noErr) {
 		return NO;
     }
-    
+   
     // Open the file's resource fork.
     file = FSOpenResFile( &targetFileFSRef, fsRdWrPerm );
     if (file == -1)
 		return NO;
-        
+       
     // Make a copy of the icon family data to pass to AddResource().
     // (AddResource() takes ownership of the handle we pass in; after the
     // CloseResFile() call its master pointer will be set to 0xffffffff.
@@ -731,13 +731,13 @@ enum {
         CloseResFile( file );
         return NO;
     }
-    
+   
     // Remove the file's existing kCustomIconResource of type kIconFamilyType
     // (if any).
     hExistingCustomIcon = GetResource( kIconFamilyType, kCustomIconResource );
     if( hExistingCustomIcon )
         RemoveResource( hExistingCustomIcon );
-    
+   
     // Now add our icon family as the file's new custom icon.
     AddResource( (Handle)hIconFamilyCopy, kIconFamilyType,
                  kCustomIconResource, "\p");
@@ -745,7 +745,7 @@ enum {
         CloseResFile( file );
         return NO;
     }
-    
+   
     if( compat )
     {
         [self addResourceType:kLarge8BitData asResID:kCustomIconResource];
@@ -773,10 +773,10 @@ enum {
 	                          /*parentRef*/ NULL);
     if (result != noErr)
 		return NO;
-    
+   
     // Set the kHasCustomIcon flag, and clear the kHasBeenInited flag.
     //
-    // From Apple's "CustomIcon" code sample:    
+    // From Apple's "CustomIcon" code sample:   
     //     "set bit 10 (has custom icon) and unset the inited flag
     //      kHasBeenInited is 0x0100 so the mask will be 0xFEFF:"
     //    finderInfo.fdFlags = 0xFEFF & (finderInfo.fdFlags | kHasCustomIcon ) ;
@@ -932,7 +932,7 @@ enum {
         finderInfo->reservedField = 0;
     } else if( result != noErr )
         return NO;
-    
+   
     // Get the filename, to be applied to the Icon file.
     filename.length = [@"Icon\r" length];
     [@"Icon\r" getCharacters:filename.unicode];
@@ -1030,7 +1030,7 @@ enum {
     NSData* iconData = nil;
 
 //    HLock((Handle)hIconFamily); // Handle-based memory isn't compacted anymore, so calling HLock()/HUnlock() is unnecessary.
-    
+   
     iconData = [NSData dataWithBytes:*hIconFamily length:GetHandleSize((Handle)hIconFamily)];
     BOOL success = [iconData writeToFile:path atomically:NO];
 
@@ -1100,7 +1100,7 @@ enum {
     previousImageInterpolation = [graphicsContext imageInterpolation];
     [graphicsContext setShouldAntialias:YES];
     [graphicsContext setImageInterpolation:imageInterpolation];
-    
+   
     // Composite the working image into the icon bitmap, centered.
     targetRect.origin.x = ((float)iconWidth - newSize.width ) / 2.0;
     targetRect.origin.y = ((float)iconWidth - newSize.height) / 2.0;
@@ -1130,7 +1130,7 @@ enum {
     int x, y;
     unsigned char alphaByte;
     float oneOverAlpha;
-    
+   
     // Get information about the bitmapImageRep.
     int pixelsWide      = [bitmapImageRep pixelsWide];
     int pixelsHigh      = [bitmapImageRep pixelsHigh];
@@ -1232,7 +1232,7 @@ enum {
     BOOL isPlanar       = [bitmapImageRep isPlanar];
     int bytesPerRow     = [bitmapImageRep bytesPerRow];
     unsigned char* bitmapData = [bitmapImageRep bitmapData];
-    
+   
     // Make sure bitmap has the required dimensions.
     if (pixelsWide != requiredPixelSize || pixelsHigh != requiredPixelSize)
         return NULL;
@@ -1312,7 +1312,7 @@ enum {
     unsigned char* pSrc;
     unsigned char* pDest;
     int x, y;
-    
+   
     // Get information about the bitmapImageRep.
     int pixelsWide      = [bitmapImageRep pixelsWide];
     int pixelsHigh      = [bitmapImageRep pixelsHigh];
@@ -1390,7 +1390,7 @@ enum {
     unsigned char* pDest;
     int x, y;
     unsigned char maskByte;
-    
+   
     // Get information about the bitmapImageRep.
     int pixelsWide      = [bitmapImageRep pixelsWide];
     int pixelsHigh      = [bitmapImageRep pixelsHigh];
@@ -1481,7 +1481,7 @@ enum {
     return hRawData;
 }
 
-- (BOOL) addResourceType:(OSType)type asResID:(int)resID 
+- (BOOL) addResourceType:(OSType)type asResID:(int)resID
 {
     Handle hIconRes = NewHandle(0);
     OSErr err;

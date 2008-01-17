@@ -146,7 +146,7 @@ static HBITMAP DataToBitmap(const PRUint8* aImageData,
   head.biYPelsPerMeter = 0;
   head.biClrUsed = 0;
   head.biClrImportant = 0;
-  
+ 
   BITMAPINFO& bi = *(BITMAPINFO*)reserved_space;
 
   if (aDepth == 1) {
@@ -181,7 +181,7 @@ nsICOEncoder::~nsICOEncoder()
   if (mIcon)
     Close();
 }
- 
+
 // nsICOEncoder::InitFromData
 NS_IMETHODIMP nsICOEncoder::InitFromData(const PRUint8* aData,
                                           PRUint32 aLength, // (unused, req'd by JS)
@@ -201,7 +201,7 @@ NS_IMETHODIMP nsICOEncoder::InitFromData(const PRUint8* aData,
   info.yHotspot = 0;
   info.hbmMask = hBitmap;
   info.hbmColor = hBitmap;
-  
+ 
   mIcon = ::CreateIconIndirect(&info);
   ::DeleteObject(hBitmap);
 
@@ -213,7 +213,7 @@ NS_IMETHODIMP nsICOEncoder::InitFromData(const PRUint8* aData,
 
 // nsICOEncoder::StartImageEncode
 //
-// 
+//
 // See ::InitFromData for other info.
 NS_IMETHODIMP nsICOEncoder::StartImageEncode(PRUint32 aaWidth,
                                              PRUint32 aaHeight,
@@ -390,7 +390,7 @@ nsresult nsICOEncoder::GenerateIconData()
   // doubling the height because icons have two bitmaps
   lpBitmapInfo->bmiHeader.biHeight *= 2;
   lpBitmapInfo->bmiHeader.biSizeImage += maskSize;
-  
+ 
   DeleteObject(iconInfo.hbmColor);
   DeleteObject(iconInfo.hbmMask);
   DeleteDC(hDC);

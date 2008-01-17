@@ -19,7 +19,7 @@
     NSFileManager* fileManager = [NSFileManager defaultManager];
     CFURLRef urlRef;
     Boolean gotFSRef;
-    
+   
     // Check whether the file exists already.  If not, create an empty file if requested.
     if (![fileManager fileExistsAtPath:self]) {
         if (createFile) {
@@ -40,7 +40,7 @@
 //        printf( "** Couldn't make a CFURLRef for the file.\n" );
         return NO;
     }
-    
+   
     // Try to create an FSRef from the URL.  (If the specified file doesn't exist, this
     // function will return false, but if we've reached this code we've already insured
     // that the file exists.)
@@ -51,7 +51,7 @@
 //        printf( "** Couldn't get an FSRef for the file.\n" );
         return NO;
     }
-    
+   
     return YES;
 }
 
