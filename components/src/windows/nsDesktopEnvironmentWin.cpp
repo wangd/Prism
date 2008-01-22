@@ -40,11 +40,20 @@
 
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIBaseWindow.h"
 #include "nsICategoryManager.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIDOMWindow.h"
 #include "nsIGenericFactory.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsILocalFile.h"
 #include "nsIProperties.h"
 #include "nsIServiceManager.h"
+#include "nsIWebNavigation.h"
+#include "nsIXULWindow.h"
+#include "nsNotificationArea.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringAPI.h"
 
@@ -55,8 +64,8 @@
 
 #define MAX_BUF 4096
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsDesktopEnvironment, nsIDesktopEnvironment,
-  nsIDirectoryServiceProvider, nsIObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsDesktopEnvironment, nsIDesktopEnvironment,
+  nsIDirectoryServiceProvider, nsIObserver, nsINotificationArea)
 
 nsDesktopEnvironment::nsDesktopEnvironment()
 {
@@ -64,6 +73,14 @@ nsDesktopEnvironment::nsDesktopEnvironment()
 
 nsDesktopEnvironment::~nsDesktopEnvironment()
 {
+}
+
+nsresult nsDesktopEnvironment::Init()
+{
+  mNotificationArea = new nsNotificationArea();
+  NS_ENSURE_TRUE(mNotificationArea, NS_ERROR_OUT_OF_MEMORY);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDesktopEnvironment::GetFile(const char* prop,
@@ -182,6 +199,55 @@ NS_IMETHODIMP nsDesktopEnvironment::CreateShortcut(
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(shortcutFile, _retval);
+}
+
+NS_IMETHODIMP nsDesktopEnvironment::SetZLevel(nsIDOMWindow* aWindow,
+  PRUint16 aLevel)
+{
+  if (aLevel != nsIDesktopEnvironment::zLevelTop)
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsresult rv;
+  nsCOMPtr<nsIInterfaceRequestor>
+    requestor(do_QueryInterface(aWindow, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIWebNavigation> nav;
+  rv = requestor->GetInterface(NS_GET_IID(nsIWebNavigation),
+    getter_AddRefs(nav));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(nav, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  requestor = do_QueryInterface(treeOwner, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIXULWindow> xulWindow;
+  rv = requestor->GetInterface(NS_GET_IID(nsIXULWindow), getter_AddRefs(xulWindow));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocShell> docShell;
+  rv = xulWindow->GetDocShell(getter_AddRefs(docShell));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(docShell, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nativeWindow theNativeWindow;
+  rv = baseWindow->GetParentNativeWindow( &theNativeWindow );
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  HWND hWnd = reinterpret_cast<HWND>(theNativeWindow);
+  NS_ENSURE_TRUE(hWnd, NS_ERROR_UNEXPECTED);
+
+  SetForegroundWindow(hWnd);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDesktopEnvironment::Observe(nsISupports* aSubject,

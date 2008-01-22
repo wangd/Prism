@@ -71,7 +71,12 @@ NS_IMETHODIMP nsDesktopEnvironment::CreateShortcut(
   NS_ENSURE_ARG(aTarget);
   NS_ENSURE_ARG(aLocation);
 
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsDesktopEnvironment::SetZLevel(nsIDOMWindow* aWindow, PRUint16 aLevel)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsDesktopEnvironment::AddApplication(nsIFile* aAppBundle)

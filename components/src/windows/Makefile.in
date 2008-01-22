@@ -15,7 +15,7 @@
 # The Original Code is Operating System Integration extension.
 #
 # The Initial Developer of the Original Code is
-# Matthew Gertner 
+# Matthew Gertner
 # Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
@@ -55,11 +55,16 @@ REQUIRES	= \
     string \
     gfx \
     necko \
+    appshell \
+    docshell \
+    widget \
+    prism_win \
 		$(NULL)
 
 CPPSRCS = \
     nsICOEncoder.cpp \
     nsDesktopEnvironmentWin.cpp \
+    nsNotificationArea.cpp \
     nsOSIntegrationModule.cpp \
     $(NULL)
 

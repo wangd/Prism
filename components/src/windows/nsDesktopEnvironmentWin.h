@@ -37,7 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDesktopEnvironment.h"
+
+#include "nsCOMPtr.h"
 #include "nsIDirectoryService.h"
+#include "nsINotificationArea.h"
 #include "nsIObserver.h"
 
 class nsIComponentManager;
@@ -56,15 +59,19 @@ struct nsModuleComponentInfo;
 // Desktop integration for Windows platforms.
 class nsDesktopEnvironment : public nsIDesktopEnvironment,
                              public nsIDirectoryServiceProvider,
-                             public nsIObserver
+                             public nsIObserver,
+                             public nsINotificationArea
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDESKTOPENVIRONMENT
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
   NS_DECL_NSIOBSERVER
+  NS_FORWARD_NSINOTIFICATIONAREA(mNotificationArea->)
 
   nsDesktopEnvironment();
+
+  nsresult Init();
 
   static NS_METHOD OnRegistration(nsIComponentManager *aCompMgr,
     nsIFile *aPath, const char *registryLocation, const char *componentType,
@@ -78,4 +85,5 @@ private:
   ~nsDesktopEnvironment();
 
 protected:
+  nsCOMPtr<nsINotificationArea> mNotificationArea;
 };

@@ -154,9 +154,10 @@ Profile.prototype = {
   status : false,
   location : false,
   sidebar : false,
+  trayicon: false,
   credits : "",
   navigation : false,
-  flags : ["id", "uri", "icon", "status", "location", "sidebar", "navigation", "credits"],
+  flags : ["id", "uri", "icon", "status", "location", "sidebar", "trayicon", "navigation", "credits"],
 
   setParameter: function(aName, aValue) {
     if (this.flags.indexOf(aName) == -1)
@@ -315,7 +316,7 @@ Profile.prototype = {
             Components.classes["@mozilla.org/network/buffered-input-stream;1"].
             createInstance(Components.interfaces.nsIBufferedInputStream);
           bufferedInput.init(fileStream, 1024);
-         
+
           var mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
           var mimeType = mimeService.getTypeFromFile(sourceIcon);
 

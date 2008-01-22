@@ -43,6 +43,7 @@
 #include "nsStringAPI.h"
 
 #include <windows.h>
+#include <shellapi.h>
 
 struct ICONFILEHEADER {
   PRUint16 ifhReserved;
@@ -146,7 +147,7 @@ static HBITMAP DataToBitmap(const PRUint8* aImageData,
   head.biYPelsPerMeter = 0;
   head.biClrUsed = 0;
   head.biClrImportant = 0;
- 
+
   BITMAPINFO& bi = *(BITMAPINFO*)reserved_space;
 
   if (aDepth == 1) {
@@ -201,7 +202,7 @@ NS_IMETHODIMP nsICOEncoder::InitFromData(const PRUint8* aData,
   info.yHotspot = 0;
   info.hbmMask = hBitmap;
   info.hbmColor = hBitmap;
- 
+
   mIcon = ::CreateIconIndirect(&info);
   ::DeleteObject(hBitmap);
 
@@ -326,7 +327,8 @@ NS_IMETHODIMP nsICOEncoder::GetHandle(void** _retval)
 {
   NS_ENSURE_STATE(mIcon);
 
-  *_retval = mIcon;
+  *_retval = DuplicateIcon(NULL, mIcon);
+
   return NS_OK;
 }
 
@@ -334,7 +336,6 @@ nsresult nsICOEncoder::GenerateIconData()
 {
   NS_ENSURE_TRUE(mIcon, NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv;
   ICONINFO iconInfo;
   if (!GetIconInfo(mIcon, &iconInfo))
     return NS_ERROR_FAILURE;
@@ -390,7 +391,7 @@ nsresult nsICOEncoder::GenerateIconData()
   // doubling the height because icons have two bitmaps
   lpBitmapInfo->bmiHeader.biHeight *= 2;
   lpBitmapInfo->bmiHeader.biSizeImage += maskSize;
- 
+
   DeleteObject(iconInfo.hbmColor);
   DeleteObject(iconInfo.hbmMask);
   DeleteDC(hDC);

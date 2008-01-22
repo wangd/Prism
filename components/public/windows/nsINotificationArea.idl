@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-aWidth: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,15 +11,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Operating System Integration extension.
+ * The Original Code is MinimizeToTray.
  *
- * The Initial Developer of the Original Code is
- * Matthew Gertner.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * The Initial Developer of the Original Code are
+ * Mark Yen and Brad Peterson.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matthew Gertner <matthew@allpeers.com> (Original author)
+ *   Mark Yen <mook.moz+cvs.mozilla.org@gmail.com>, Original author
+ *   Brad Peterson <b_peterson@yahoo.com>, Original author
+ *   Daniel Glazman <daniel.glazman@disruptive-innovations.com>
+ *   Matthew Gertner <matthew@allpeers.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,32 +38,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "nsIModule.h"
-#include "nsICategoryManager.h"
-#include "nsXPCOMCID.h"
-#include "nsServiceManagerUtils.h"
+#include "nsISupports.idl"
 
-#include "nsDesktopEnvironmentWin.h"
-#include "nsICOEncoder.h"
+interface nsIURI;
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDesktopEnvironment, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsICOEncoder)
-
-static const nsModuleComponentInfo components[] =
+[scriptable, uuid(358282c0-c840-11dc-95ff-0800200c9a66)]
+interface nsINotificationAreaListener : nsISupports
 {
-  { "Windows desktop environment",
-    NS_DESKTOPENVIRONMENT_CID,
-    NS_DESKTOPENVIRONMENT_CONTRACTID,
-    nsDesktopEnvironmentConstructor,
-    nsDesktopEnvironment::OnRegistration,
-    nsDesktopEnvironment::OnUnregistration
-  },
-  { "ICO encoder",
-    NS_ICOENCODER_CID,
-    "@mozilla.org/image/encoder;2?type=image/vnd.microsoft.icon",
-    nsICOEncoderConstructor
-  }
+  void onNotificationAreaClick(in unsigned short button, in unsigned short count);
 };
 
-NS_IMPL_NSGETMODULE(nsOSIntegrationModule, components)
+[scriptable, uuid(03ac64c0-c82f-11dc-95ff-0800200c9a66)]
+interface nsINotificationArea : nsISupports
+{
+  void showIcon(in AString iconId, in nsIURI imageURI, in nsINotificationAreaListener listener);
+  void hideIcon(in AString iconId);
+
+  void setTitle(in AString iconId, in AString title);
+};

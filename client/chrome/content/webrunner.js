@@ -526,7 +526,28 @@ var WebRunner = {
       document.getElementById("menu_file").hidden = true;
     }
 
+    if (this._profile.trayicon)
+      this.showTrayIcon();
+
     setTimeout(function() { self._delayedStartup(); }, 0);
+  },
+
+  showTrayIcon : function() {
+    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+    var appIcon = dirSvc.get("ProfD", Ci.nsIFile);
+    appIcon.append("webapps");
+    appIcon.append(this._profile.id);
+    appIcon.append("icons");
+    appIcon.append("default");
+    appIcon.append(this._profile.icon + ".ico");
+
+    var ioService = Cc["@mozilla.org/network/io-service;1"].
+      getService(Ci.nsIIOService);
+    var iconUri = ioService.newFileURI(appIcon);
+
+    var desktop = Cc["@mozilla.org/desktop-environment;1"].
+      getService(Ci.nsIDesktopEnvironment);
+    desktop.QueryInterface(Ci.nsINotificationArea).showIcon(this._profile.id, iconUri, this);
   },
 
   shutdownQuery : function() {
@@ -537,6 +558,12 @@ var WebRunner = {
 
   shutdown : function()
   {
+    if (this._profile.trayicon) {
+      var desktop = Cc["@mozilla.org/desktop-environment;1"].
+        getService(Ci.nsIDesktopEnvironment);
+      desktop.QueryInterface(Ci.nsINotificationArea).hideIcon(this._profile.id);
+    }
+
     if (this._profile.script.shutdown)
       this._profile.script.shutdown();
   },
@@ -732,6 +759,13 @@ var WebRunner = {
     }
   },
 
+  onNotificationAreaClick : function(button, clickCount) {
+    if (button == 0 && clickCount == 2) {
+      var desktopEnv = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
+      desktopEnv.setZLevel(window, Ci.nsIDesktopEnvironment.zLevelTop);
+    }
+  },
+
   // We need to advertize that we support weak references.  This is done simply
   // by saying that we QI to nsISupportsWeakReference.  XPConnect will take
   // care of actually implementing that interface on our behalf.
@@ -739,6 +773,7 @@ var WebRunner = {
     if (aIID.equals(Ci.nsIWebProgressListener) ||
         aIID.equals(Ci.nsISupportsWeakReference) ||
         aIID.Equals(Ci.nsIXULBrowserWindow) ||
+        aIID.Equals(Ci.nsINotificationAreaListener) ||
         aIID.equals(Ci.nsISupports))
       return this;
 
