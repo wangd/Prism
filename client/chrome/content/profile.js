@@ -278,7 +278,6 @@ Profile.prototype = {
         // We check for an OS specific and common stylesheet,
         // defaulting to the OS specific sheet
         var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-        var iconExt = "";
         var os = xulRuntime.OS.toLowerCase();
         if (reader.hasEntry(os + "/webapp.css") || reader.hasEntry("webapp.css")) {
           var appStyle = appSandbox.clone();

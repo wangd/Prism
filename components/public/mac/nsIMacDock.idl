@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Operating System Integration extension.
+ * The Original Code is WebRunner
  *
  * The Initial Developer of the Original Code is
  * Matthew Gertner.
@@ -36,29 +36,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "nsIModule.h"
-#include "nsICategoryManager.h"
-#include "nsXPCOMCID.h"
-#include "nsServiceManagerUtils.h"
-#include "nsICNSEncoder.h"
-#include "nsDesktopEnvironmentMac.h"
+#include "nsISupports.idl"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDesktopEnvironment);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsICNSEncoder)
+interface nsIFile;
 
-static const nsModuleComponentInfo components[] =
+/**
+ * Encapsulation of the Dock on Mac OS X.
+ */
+[scriptable, uuid(22dc38d0-c2b1-11dc-95ff-0800200c9a66)]
+interface nsIMacDock : nsISupports
 {
-  { "Mac OS X desktop environment",
-    NS_DESKTOPENVIRONMENT_CID,
-    NS_DESKTOPENVIRONMENT_CONTRACTID,
-    nsDesktopEnvironmentConstructor,
-  },
-  { "ICNS encoder",
-    NS_ICNSENCODER_CID,
-    "@mozilla.org/image/encoder;2?type=image/x-icns",
-    nsICNSEncoderConstructor
-  },
-};
+  /**
+   * Add a persistent icon for the application to the OS X dock.
+  **/
+  void addApplication(in nsIFile appBundle);
 
-NS_IMPL_NSGETMODULE(nsOSIntegrationModule, components)
+  /**
+   * Remove an existing persistent icon from the OS X dock.
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE if the specified application doesn't have a persistent icon.
+  **/
+  void removeApplication(in nsIFile appBundle);
+};

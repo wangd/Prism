@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-aWidth: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Operating System Integration extension.
+ * The Original Code is WebRunner
  *
  * The Initial Developer of the Original Code is
  * Matthew Gertner.
@@ -36,29 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "nsIModule.h"
-#include "nsICategoryManager.h"
-#include "nsXPCOMCID.h"
-#include "nsServiceManagerUtils.h"
-#include "nsICNSEncoder.h"
-#include "nsDesktopEnvironmentMac.h"
+#include "nsIApplicationTile.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDesktopEnvironment);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsICNSEncoder)
-
-static const nsModuleComponentInfo components[] =
+// OS X dock tile
+class nsDockTile : public nsIApplicationTile
 {
-  { "Mac OS X desktop environment",
-    NS_DESKTOPENVIRONMENT_CID,
-    NS_DESKTOPENVIRONMENT_CONTRACTID,
-    nsDesktopEnvironmentConstructor,
-  },
-  { "ICNS encoder",
-    NS_ICNSENCODER_CID,
-    "@mozilla.org/image/encoder;2?type=image/x-icns",
-    nsICNSEncoderConstructor
-  },
-};
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIAPPLICATIONTILE
 
-NS_IMPL_NSGETMODULE(nsOSIntegrationModule, components)
+  nsDockTile();
+
+private:
+  ~nsDockTile();
+
+protected:
+};

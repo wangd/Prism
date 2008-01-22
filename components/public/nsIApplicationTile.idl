@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Operating System Integration extension.
+ * The Original Code is WebRunner
  *
  * The Initial Developer of the Original Code is
  * Matthew Gertner.
@@ -36,29 +36,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "nsIModule.h"
-#include "nsICategoryManager.h"
-#include "nsXPCOMCID.h"
-#include "nsServiceManagerUtils.h"
-#include "nsICNSEncoder.h"
-#include "nsDesktopEnvironmentMac.h"
+#include "nsISupports.idl"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDesktopEnvironment);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsICNSEncoder)
+interface nsIFile;
 
-static const nsModuleComponentInfo components[] =
+/**
+ * Operating system tile (i.e. icon) representing the application. Examples are
+ * Mac OS X dock tiles and Windows system tray icons.
+ */
+[scriptable, uuid(9c25e3d0-c432-11dc-95ff-0800200c9a66)]
+interface nsIApplicationTile : nsISupports
 {
-  { "Mac OS X desktop environment",
-    NS_DESKTOPENVIRONMENT_CID,
-    NS_DESKTOPENVIRONMENT_CONTRACTID,
-    nsDesktopEnvironmentConstructor,
-  },
-  { "ICNS encoder",
-    NS_ICNSENCODER_CID,
-    "@mozilla.org/image/encoder;2?type=image/x-icns",
-    nsICNSEncoderConstructor
-  },
-};
+  /**
+   * Specify a new icon for the tile.
+  **/
+  void setIcon(in nsIFile icon);
 
-NS_IMPL_NSGETMODULE(nsOSIntegrationModule, components)
+  /**
+   * Add a badge to the tile with the specified text.
+  **/
+  void setBadgeText(in AString badgeText);
+};

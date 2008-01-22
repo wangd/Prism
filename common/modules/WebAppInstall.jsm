@@ -181,19 +181,21 @@ var WebAppInstall =
 
     var locations = location.split(",");
 
+    var bundle = null;
     if (locations.indexOf("desktop") > -1) {
       var desk = dirSvc.get("Desk", Ci.nsIFile);
-      this._createBundle(target, name, id, icon, desk);
+      bundle = this._createBundle(target, name, id, icon, desk);
     }
     if (locations.indexOf("applications") > -1) {
       var apps = dirSvc.get("LocApp", Ci.nsIFile);
       //apps.append("Web Apps");
       if (!apps.exists())
         apps.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
-      this._createBundle(target, name, id, icon, apps);
+      bundle = this._createBundle(target, name, id, icon, apps);
     }
-    if (locations.indexOf("dock") > -1) {
-      // ???
+    if (locations.indexOf("dock") > -1 && bundle != null) {
+      var dock = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIMacDock);
+      dock.addApplication(bundle);
     }
   },
 
@@ -214,6 +216,8 @@ var WebAppInstall =
     if (location.exists())
       location.remove(true);
     location.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    
+    var bundle = location.clone();
 
     location.append("Contents");
     location.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
@@ -240,5 +244,7 @@ var WebAppInstall =
     stream.init(script, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0755, 0);
     stream.write(cmd, cmd.length);
     stream.close();
+
+    return bundle;
   }
 };

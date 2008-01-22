@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-aWidth: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Operating System Integration extension.
+ * The Original Code is WebRunner
  *
  * The Initial Developer of the Original Code is
  * Matthew Gertner.
@@ -36,29 +36,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "nsIModule.h"
-#include "nsICategoryManager.h"
-#include "nsXPCOMCID.h"
-#include "nsServiceManagerUtils.h"
-#include "nsICNSEncoder.h"
-#include "nsDesktopEnvironmentMac.h"
+#include "nsIDesktopEnvironment.h"
+#include "nsIMacDock.h"
+#include "nsCOMPtr.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDesktopEnvironment);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsICNSEncoder)
+class nsIApplicationTile;
 
-static const nsModuleComponentInfo components[] =
+#define NS_DESKTOPENVIRONMENT_CID \
+{ /* 4851f430-c43a-11dc-95ff-0800200c9a66 */         \
+     0x4851f430,                                     \
+     0xc43a,                                         \
+     0x11dc,                                         \
+    {0x95, 0xff, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66} \
+}
+#define NS_DESKTOPENVIRONMENT_CONTRACTID "@mozilla.org/desktop-environment;1"
+
+// Desktop integration for Mac OS X platforms.
+class nsDesktopEnvironment : public nsIDesktopEnvironment, public nsIMacDock
 {
-  { "Mac OS X desktop environment",
-    NS_DESKTOPENVIRONMENT_CID,
-    NS_DESKTOPENVIRONMENT_CONTRACTID,
-    nsDesktopEnvironmentConstructor,
-  },
-  { "ICNS encoder",
-    NS_ICNSENCODER_CID,
-    "@mozilla.org/image/encoder;2?type=image/x-icns",
-    nsICNSEncoderConstructor
-  },
-};
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDESKTOPENVIRONMENT
+  NS_DECL_NSIMACDOCK
 
-NS_IMPL_NSGETMODULE(nsOSIntegrationModule, components)
+  nsDesktopEnvironment();
+
+private:
+  ~nsDesktopEnvironment();
+
+protected:
+  nsCOMPtr<nsIApplicationTile> mDockTile;
+};

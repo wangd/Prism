@@ -113,6 +113,7 @@ NS_IMETHODIMP nsDesktopEnvironment::CreateShortcut(
 )
 {
   NS_ENSURE_ARG(aLocation);
+  NS_ENSURE_ARG(aTarget);
 
   nsresult rv;
   nsAutoString linkPath;

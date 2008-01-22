@@ -70,9 +70,6 @@ var InstallShortcut = {
     else if (os == "darwin") {
       document.getElementById("programs").hidden = true;
       document.getElementById("quicklaunch").hidden = true;
-
-      // Until we get it working
-      document.getElementById("dock").hidden = true;
     }
 
     document.getElementById("uri").addEventListener("change", this.onUriChange, false);
@@ -116,6 +113,8 @@ var InstallShortcut = {
       shortcuts += "quicklaunch,";
     if (document.getElementById("applications").checked)
       shortcuts += "applications,";
+    if (document.getElementById("dock").checked)
+      shortcuts += "dock,";
 
     if (shortcuts.length == 0) {
       alert(bundle.GetStringFromName("shortcuts.missing"));

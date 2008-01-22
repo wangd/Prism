@@ -38,6 +38,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIApplicationTile;
 interface nsIFile;
 
 /**
@@ -46,6 +47,14 @@ interface nsIFile;
 [scriptable, uuid(86f7332c-f4fd-4a30-946d-433596d79304)]
 interface nsIDesktopEnvironment : nsISupports
 {
+  /**
+   * The application tile for the current application.
+   * On Mac this is the dock tile, on Windows the system tray icon.
+   *
+   * @returns null if there is no application tile.
+  **/
+  readonly attribute nsIApplicationTile applicationTile;
+
   /**
    * Create a shortcut for the application.
    *
