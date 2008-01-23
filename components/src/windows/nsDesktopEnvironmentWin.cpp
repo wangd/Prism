@@ -250,6 +250,11 @@ NS_IMETHODIMP nsDesktopEnvironment::SetZLevel(nsIDOMWindow* aWindow,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDesktopEnvironment::GetApplicationTile(nsIApplicationTile** _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsDesktopEnvironment::Observe(nsISupports* aSubject,
     const char* aTopic, const PRUnichar* aData)
 {
