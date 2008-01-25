@@ -36,13 +36,13 @@ EXPORTED_SYMBOLS = ["WebAppInstall"];
 
 var WebAppInstall =
 {
+  _iconTitle : "webapp",
+
   createApplication : function(params) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
     // Creating a webapp install requires an ID
     if (params.hasOwnProperty("id") == true && params.id.length > 0) {
-      var iconTitle = "webrunner";
-
       // Now we will build the webapp folder in the profile
       var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
       appSandbox.append("webapps");
@@ -58,42 +58,52 @@ var WebAppInstall =
       var cmd = "[Parameters]\n";
       cmd += "id=" + params.id + "\n";
       cmd += "uri=" + params.uri + "\n";
-      cmd += "icon=" + iconTitle + "\n";
+      cmd += "icon=" + this._iconTitle + "\n";
       cmd += "status=" + params.status + "\n";
       cmd += "location=" + params.location + "\n";
       cmd += "sidebar=" + params.sidebar + "\n";
       cmd += "navigation=" + params.navigation + "\n";
+      cmd += "trayicon=" + params.trayicon + "\n";
 
-      var stream = Cc['@mozilla.org/network/file-output-stream;1'].createInstance(Ci.nsIFileOutputStream);
+      var stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
       stream.init(appINI, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, 0);
       stream.write(cmd, cmd.length);
       stream.close();
 
       // Copy the icon
       var appIcon = appSandbox.clone();
-
       appIcon.append("icons");
       appIcon.append("default");
       if (!appIcon.exists())
         appIcon.create(Ci.nsIFile.DIRECTORY_TYPE, 0600);
-      appIcon.append(iconTitle + ImageUtils.getNativeIconExtension());
+      appIcon.append(this._iconTitle + ImageUtils.getNativeIconExtension());
 
-      stream = Cc['@mozilla.org/network/file-output-stream;1'].createInstance(Ci.nsIFileOutputStream);
+      stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
       stream.init(appIcon, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, 0);
-      var bufferedStream =
-        Components.classes["@mozilla.org/network/buffered-output-stream;1"].
-        createInstance(Components.interfaces.nsIBufferedOutputStream);
+      var bufferedStream = Cc["@mozilla.org/network/buffered-output-stream;1"].
+                           createInstance(Ci.nsIBufferedOutputStream);
       bufferedStream.init(stream, 1024);
 
-      bufferedStream.writeFrom(params.icon, params.icon.available());
+      bufferedStream.writeFrom(params.icon.stream, params.icon.stream.available());
       bufferedStream.close();
-
-      return appIcon;
     }
   },
 
-  createShortcut : function(name, id, icon, location) {
+  createShortcut : function(name, id, location) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+
+    // Locate the webapp folder in the profile
+    var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
+    appSandbox.append("webapps");
+    appSandbox.append(id);
+
+    // Locate the webapp icon
+    var appIcon = appSandbox.clone();
+    appIcon.append("icons");
+    appIcon.append("default");
+    appIcon.append(this._iconTitle + ImageUtils.getNativeIconExtension());
+
+    // Locate the runtime
     var target = dirSvc.get("XREExeF", Ci.nsIFile);
 
     /* Check to see if were pointing to a binary (eg. xulrunner-bin).
@@ -111,15 +121,15 @@ var WebAppInstall =
     var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
     var os = xulRuntime.OS.toLowerCase();
     if (os == "winnt") {
-      this._createShortcutWindows(target, name, id, icon, location);
+      this._createShortcutWindows(target, name, id, appIcon, location);
     }
     else if (os == "linux") {
-      this._createShortcutLinux(target, name, id, icon, location);
+      this._createShortcutLinux(target, name, id, appIcon, location);
     }
     else if (os == "darwin") {
       var targetAdj = target.parent.clone();
       targetAdj.append("prism");
-      this._createShortcutMac(targetAdj, name, id, icon, location);
+      this._createShortcutMac(targetAdj, name, id, appIcon, location);
     }
   },
 
@@ -149,7 +159,6 @@ var WebAppInstall =
       }
 
       desktop.createShortcut(name, target, directory, "", "-webapp " + id, "", icon);
-
     }
   },
 
@@ -216,7 +225,7 @@ var WebAppInstall =
     if (location.exists())
       location.remove(true);
     location.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
-    
+
     var bundle = location.clone();
 
     location.append("Contents");

@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Matthew Gertner <matthew@allpeers.com>
+ *   Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -35,6 +36,7 @@ var FaviconDownloader = {
   _outputSteam : null,
   _mimeType : null,
   _generatedImageStream : null,
+  _callback : null,
 
   QueryInterface : function(iid)
   {
@@ -42,6 +44,14 @@ var FaviconDownloader = {
       return this;
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  set callback(callbackFunc) {
+    this._callback = callbackFunc;
+  },
+
+  get mimeType() {
+    return this._mimeType;
   },
 
   getGeneratedImage : function()
@@ -90,8 +100,7 @@ var FaviconDownloader = {
   onStartRequest : function(request, context)
   {
     this._storageStream = this.createStorageStream();
-    this._outputStream =
-      this.getBufferedOutputStreamForStorageStream(this._storageStream);
+    this._outputStream = this.getBufferedOutputStreamForStorageStream(this._storageStream);
   },
 
   onStopRequest : function(request, context, statusCode)
@@ -102,10 +111,13 @@ var FaviconDownloader = {
     this._outputStream.flush();
     var inputStream = this._storageStream.newInputStream(0);
     this._generatedImageStream = this.createStorageStream();
-    ImageUtils.createNativeIcon(inputStream, "favicon", this._mimeType,
+    ImageUtils.createNativeIcon(inputStream, this._mimeType,
       this.getBufferedOutputStreamForStorageStream(
       this._generatedImageStream));
     this._storageStream.close();
+
+    if (this._callback)
+      this._callback();
   },
 
   onDataAvailable : function(request, context, inputStream, offset, count)
@@ -123,9 +135,8 @@ var FaviconDownloader = {
   getBufferedOutputStreamForStorageStream : function(storageStream)
   {
     var outputStream = storageStream.getOutputStream(0);
-    var bufferedStream =
-      Components.classes["@mozilla.org/network/buffered-output-stream;1"].
-      createInstance(Components.interfaces.nsIBufferedOutputStream);
+    var bufferedStream = Cc["@mozilla.org/network/buffered-output-stream;1"].
+                         createInstance(Ci.nsIBufferedOutputStream);
     bufferedStream.init(outputStream, 1024);
     return bufferedStream;
   }

@@ -330,6 +330,11 @@ var WebRunner = {
       return;
 
     document.title = aEvent.target.title;
+
+    if (this._profile.trayicon) {
+      var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
+      desktop.QueryInterface(Ci.nsINotificationArea).setTitle(this._profile.id, document.title);
+    }
   },
 
   _isLinkExternal : function(aLink) {
@@ -541,13 +546,13 @@ var WebRunner = {
     appIcon.append("default");
     appIcon.append(this._profile.icon + ".ico");
 
-    var ioService = Cc["@mozilla.org/network/io-service;1"].
-      getService(Ci.nsIIOService);
+    var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     var iconUri = ioService.newFileURI(appIcon);
 
-    var desktop = Cc["@mozilla.org/desktop-environment;1"].
-      getService(Ci.nsIDesktopEnvironment);
-    desktop.QueryInterface(Ci.nsINotificationArea).showIcon(this._profile.id, iconUri, this);
+    var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
+    var notificationArea = desktop.QueryInterface(Ci.nsINotificationArea);
+    notificationArea.showIcon(this._profile.id, iconUri, this);
+    notificationArea.setTitle(this._profile.id, document.title);
   },
 
   shutdownQuery : function() {

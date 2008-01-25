@@ -16,7 +16,7 @@
   <script type="application/x-javascript" src="chrome://webrunner/content/install-shortcut.js"/>
 
   <groupbox>
-    <caption label="&dialog.hint;"/>
+    <caption label="&dialog.caption;"/>
     <grid>
       <columns>
         <column/>
@@ -37,17 +37,34 @@
       <checkbox id="location" label="&location.label;"/>
       <checkbox id="status" label="&status.label;"/>
       <checkbox id="navigation" label="&navigation.label;"/>
+      <checkbox id="trayicon" label="&trayicon.label;"/>
     </vbox>
   </groupbox>
   <separator class="thin"/>
   <groupbox>
-    <caption label="&shortcut.hint;"/>
+    <caption label="&shortcut.caption;"/>
     <checkbox id="desktop" label="&desktop.label;"/>
     <checkbox id="programs" label="&programs.label;"/>
     <checkbox id="quicklaunch" label="&quicklaunch.label;"/>
     <checkbox id="applications" label="&applications.label;"/>
     <checkbox id="dock" label="&dock.label;"/>
     <separator class="thin"/>
-    <description>&uninstall.hint;</description>
+    <description class="indent">&uninstall.hint;</description>
+  </groupbox>
+  <groupbox>
+    <caption label="&icon.caption;"/>
+    <description style="max-width:30em;">&icon.hint;</description>
+    <separator class="thin"/>
+    <hbox align="top" style="height: 128px;">
+      <separator width="5px"/>
+      <image id="icon" style="max-width: 128px; max-height: 128px;"/>
+      <separator flex="1"/>
+      <button id="icon_source" type="menu" label="&iconSettings.label;">
+        <menupopup>
+          <menuitem id="icon_favicon" type="radio" name="source" label="&iconFavicon.label;" oncommand="InstallShortcut.useFavicon();"/>
+          <menuitem id="icon_file" type="radio" name="source" label="&iconFile.label;" oncommand="InstallShortcut.useFile();"/>
+        </menupopup>
+      </button>
+    </hbox>
   </groupbox>
 </dialog>

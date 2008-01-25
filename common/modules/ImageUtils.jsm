@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Matthew Gertner <matthew@allpeers.com>
+ *   Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -33,10 +34,9 @@ EXPORTED_SYMBOLS = ["ImageUtils"];
 
 var ImageUtils =
 {
-  createNativeIcon : function(inputStream, fileTitle, mimeType, outputStream) {
+  createNativeIcon : function(inputStream, mimeType, outputStream) {
     // Convert from source format to native icon format
-    var imageTools = Components.classes["@mozilla.org/image/tools;1"].
-      createInstance(Components.interfaces.imgITools);
+    var imageTools = Cc["@mozilla.org/image/tools;1"].createInstance(Ci.imgITools);
 
     var container = {};
     imageTools.decodeImageData(inputStream, mimeType, container);
@@ -72,5 +72,24 @@ var ImageUtils =
       return "image/xpm";
     else if (os == "darwin")
       return "image/x-icns";
+  },
+
+  getMimeTypeFromExtension : function(imageExt) {
+    mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+    imageExt = imageExt.toLowerCase();
+    var dotPos = imageExt.lastIndexOf(".");
+    if (dotPos != -1)
+      imageExt = imageExt.substring(dotPos + 1, imageExt.length);
+    return mimeSvc.getTypeFromExtension(imageExt);
+  },
+
+  makeDataURL : function(inputStream, mimetype) {
+    var stream = Cc["@mozilla.org/binaryinputstream;1"].createInstance();
+    stream.QueryInterface(Ci.nsIBinaryInputStream);
+    stream.setInputStream(inputStream);
+
+    var bytes = stream.readByteArray(stream.available()); // returns int[]
+
+    return "data:" + mimetype + ";base64," + btoa(String.fromCharCode.apply(null, bytes));
   }
 };
