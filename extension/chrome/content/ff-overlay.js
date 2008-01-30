@@ -103,19 +103,22 @@ function prism_onload() {
 }
 
 function convertToApplication() {
-	/* I nearly threw up when I saw gURLBar */
-	let title = getBrowser().contentTitle;
-	let url = gURLBar.value;
+  var fakeProfile = {
+    script : {},
+    id : "",
+    fileTypes : [],
+    uri : gBrowser.contentDocument.location.href,
+    icon : "webrunner",
+    status : false,
+    location : false,
+    sidebar : false,
+    trayicon: false,
+    credits : "",
+    navigation : false,
+    flags : ["id", "uri", "icon", "status", "location", "sidebar", "trayicon", "navigation", "credits"]
+  };
 
-	Prism.start_cl(url);
-	
-//	let favicon_url = document.getElementById("page-proxy-favicon").src;
-/*
-	window.openDialog("chrome://deskjogger/content/convert.xul",
-			"Conver Website to Application",
-			"resizeable=no", title, url, favicon_url);
-*/
+  window.openDialog("chrome://refractor/content/install-shortcut.xul", "install", "centerscreen,modal", fakeProfile, { value: true});
 }
 
 window.addEventListener("load", prism_onload, false);
-

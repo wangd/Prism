@@ -2,8 +2,8 @@
 
 webrunner.jar:
 % content webrunner %content/
-  content/install-shortcut.js          (content/install-shortcut.js)
-  content/install-shortcut.xul         (content/install-shortcut.xul)
+* content/install-shortcut.js          (content/install-shortcut.js)
+* content/install-shortcut.xul         (content/install-shortcut.xul)
 
 classic.jar:
 % skin webrunner classic/1.0 %

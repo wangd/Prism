@@ -23,7 +23,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://app/modules/ImageUtils.jsm");
+Components.utils.import("resource://prism/modules/ImageUtils.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -118,22 +118,50 @@ var WebAppInstall =
       }
     }
 
+    var arguments = "";
+    var workingPath = "";
+
+    var appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
+    if (appInfo.name == "Firefox")
+    {
+      var extensionDir = this.getExtensionDirectory(dirSvc);
+      extensionDir.append("prism");
+
+      // We use the working path because of a Windows but that restricts shortcut targets to
+      // 260 characters or less.
+      workingPath = extensionDir.path;
+
+      var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+      var profileDir = dirSvc.get("ProfD", Ci.nsIFile);
+
+      profileDir.append("webapps");
+      profileDir.append(id);
+
+      // This is just a temporary fix until we move the webapp directory out of the profile
+      arguments += "-webapp \"" + profileDir.path + "\"";
+    }
+    else
+      arguments += "-webapp " + id;
+
     var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
     var os = xulRuntime.OS.toLowerCase();
     if (os == "winnt") {
-      this._createShortcutWindows(target, name, id, appIcon, location);
+      this._createShortcutWindows(target, name, arguments, workingPath, appIcon, location);
     }
     else if (os == "linux") {
-      this._createShortcutLinux(target, name, id, appIcon, location);
+      this._createShortcutLinux(target, name, arguments, workingPath, appIcon, location);
     }
     else if (os == "darwin") {
       var targetAdj = target.parent.clone();
-      targetAdj.append("prism");
-      this._createShortcutMac(targetAdj, name, id, appIcon, location);
+      if (appInfo.name == "Firefox")
+        targetAdj.append("firefox");
+      else
+        targetAdj.append("prism");
+      this._createShortcutMac(targetAdj, name, arguments, workingPath, appIcon, location);
     }
   },
 
-  _createShortcutWindows : function(target, name, id, icon, location) {
+  _createShortcutWindows : function(target, name, arguments, workingPath, icon, location) {
     var locations = location.split(",");
 
     var desktop = Cc["@mozilla.org/desktop-environment;1"].
@@ -158,11 +186,13 @@ var WebAppInstall =
         continue;
       }
 
-      desktop.createShortcut(name, target, directory, "", "-webapp " + id, "", icon);
+      arguments = "-app application.ini " + arguments;
+      desktop.createShortcut(name, target, directory, workingPath, arguments, "", icon);
+
     }
   },
 
-  _createShortcutLinux : function(target, name, id, icon, location) {
+  _createShortcutLinux : function(target, name, arguments, workingPath, icon, location) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
     var file = dirSvc.get("Desk", Ci.nsIFile);
@@ -171,11 +201,13 @@ var WebAppInstall =
       file.remove(false);
     file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
 
+    arguments = "-app " + workingPath + "/application.ini " + arguments;
+
     var cmd = "[Desktop Entry]\n";
     cmd += "Name=" + name + "\n";
     cmd += "Type=Application\n";
     cmd += "Comment=Web Application\n";
-    cmd += "Exec=" + target.path + " -webapp " + id + "\n";
+    cmd += "Exec=" + target.path + " " + arguments + "\n";
     cmd += "Icon=" + icon.path + "\n";
 
     var stream = Cc['@mozilla.org/network/file-output-stream;1'].createInstance(Ci.nsIFileOutputStream);
@@ -184,23 +216,25 @@ var WebAppInstall =
     stream.close();
   },
 
-  _createShortcutMac : function(target, name, id, icon, location) {
+  _createShortcutMac : function(target, name, arguments, workingPath, icon, location) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
     var xre = dirSvc.get("XREExeF", Ci.nsIFile);
+
+    arguments = "-app " + workingPath + "/application.ini " + arguments;
 
     var locations = location.split(",");
 
     var bundle = null;
     if (locations.indexOf("desktop") > -1) {
       var desk = dirSvc.get("Desk", Ci.nsIFile);
-      bundle = this._createBundle(target, name, id, icon, desk);
+      bundle = this._createBundle(target, name, arguments, icon, desk);
     }
     if (locations.indexOf("applications") > -1) {
       var apps = dirSvc.get("LocApp", Ci.nsIFile);
       //apps.append("Web Apps");
       if (!apps.exists())
         apps.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
-      bundle = this._createBundle(target, name, id, icon, apps);
+      bundle = this._createBundle(target, name, arguments, icon, apps);
     }
     if (locations.indexOf("dock") > -1 && bundle != null) {
       var dock = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIMacDock);
@@ -208,7 +242,7 @@ var WebAppInstall =
     }
   },
 
-  _createBundle : function(target, name, id, icon, location) {
+  _createBundle : function(target, name, arguments, icon, location) {
     var contents =
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
     "<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
@@ -247,7 +281,7 @@ var WebAppInstall =
     macos.append("MacOS");
     macos.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
 
-    var cmd = "#!/bin/sh\nexec " + target.path + " -webapp " + id;
+    var cmd = "#!/bin/sh\nexec " + target.path + " " + arguments;
     var script = macos.clone();
     script.append(name);
     stream.init(script, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0755, 0);
@@ -255,5 +289,18 @@ var WebAppInstall =
     stream.close();
 
     return bundle;
+  },
+
+  getExtensionDirectory : function(dirSvc)
+  {
+    var extensionDirs = dirSvc.get("XREExtDL", Ci.nsISimpleEnumerator);
+    while (extensionDirs.hasMoreElements())
+    {
+      var extensionDir = extensionDirs.getNext().QueryInterface(Ci.nsIFile);
+      if (extensionDir.leafName == "refractor@developer.mozilla.org")
+        return extensionDir;
+    }
+
+    throw Components.results.NS_ERROR_NOT_AVAILABLE;
   }
 };

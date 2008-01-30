@@ -5,6 +5,7 @@ webrunner.jar:
 % content branding %branding/
 % locale branding @AB_CD@ %branding/
 % overlay  chrome://webrunner/content/webrunner.xul chrome://webrunner/content/overlays/inspector.xul
+% resource prism ..
   content/about.xul                    (content/about.xul)
   content/about.js                     (content/about.js)
   content/profile.js                   (content/profile.js)
@@ -13,7 +14,7 @@ webrunner.jar:
   branding/brand.dtd                   (locale/@AB_CD@/brand/brand.dtd)
   branding/brand.properties            (locale/@AB_CD@/brand/brand.properties)
   branding/icon128.png                 (locale/@AB_CD@/brand/icon128.png)
-    
+
 classic.jar:
 % skin webrunner classic/1.0 %
   about.css                            (skin/standard/about.css)

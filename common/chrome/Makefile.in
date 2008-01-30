@@ -43,6 +43,38 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES += -DAB_CD=$(MOZ_UI_LOCALE)
+DEFINES += -DAB_CD=$(MOZ_UI_LOCALE) -DPACKAGE=webrunner
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ICON_FILES  = \
+            icons/default/app.ico         \
+            icons/default/webrunner.ico   \
+            $(NULL)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+ICON_FILES = \
+            icons/default/app.icns        \
+            icons/default/webrunner.icns  \
+            $(NULL)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ICON_FILES = \
+            icons/default/app.xpm         \
+            icons/default/app16.xpm       \
+            icons/default/webrunner.xpm   \
+            $(NULL)
+endif
+
+ICON_FILES += \
+            icons/default/webrunner.png   \
+            icons/default/webrunner32.png \
+            icons/default/webrunner48.png \
+            $(NULL)
+
 
 include $(topsrcdir)/config/rules.mk
+
+libs:: $(ICON_FILES)
+	$(INSTALL) $^ $(DIST)/bin/chrome/icons/default

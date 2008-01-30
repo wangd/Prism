@@ -23,13 +23,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#filter substitution
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const PR_UINT32_MAX = 4294967295;
 
-Components.utils.import("resource://app/modules/ImageUtils.jsm");
-Components.utils.import("resource://app/modules/WebAppInstall.jsm");
-Components.utils.import("resource://app/modules/FaviconDownloader.jsm");
+Components.utils.import("resource://prism/modules/ImageUtils.jsm");
+Components.utils.import("resource://prism/modules/WebAppInstall.jsm");
+Components.utils.import("resource://prism/modules/FaviconDownloader.jsm");
 
 var InstallShortcut = {
   _userIcon : null,
@@ -44,6 +46,7 @@ var InstallShortcut = {
       if (window.arguments[0].uri) {
         document.getElementById("uri").value = window.arguments[0].uri;
         document.getElementById("name").focus();
+        this.onUriChange();
       }
 
       // Default to use the favicon
@@ -51,7 +54,7 @@ var InstallShortcut = {
 
       if (window.arguments.length == 2) {
         var bundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-        bundle = bundle.createBundle("chrome://webrunner/locale/install-shortcut.properties");
+        bundle = bundle.createBundle("chrome://@PACKAGE@/locale/install-shortcut.properties");
         document.title = bundle.GetStringFromName("dialog.title");
         document.getElementById("row_uri").hidden = false;
         document.getElementById("options").hidden = false;
@@ -104,7 +107,7 @@ var InstallShortcut = {
 
   accept : function() {
     var bundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-    bundle = bundle.createBundle("chrome://webrunner/locale/install-shortcut.properties");
+    bundle = bundle.createBundle("chrome://@PACKAGE@/locale/install-shortcut.properties");
 
     var name = document.getElementById("name").value;
 
@@ -195,12 +198,6 @@ var InstallShortcut = {
     }
 
     var iconName ="app" + ImageUtils.getNativeIconExtension();
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    var defaultIcon = dirSvc.get("resource:app", Ci.nsIFile);
-    defaultIcon.append("chrome");
-    defaultIcon.append("icons");
-    defaultIcon.append("default");
-    defaultIcon.append(iconName);
 
     var inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
                       createInstance(Ci.nsIFileInputStream);

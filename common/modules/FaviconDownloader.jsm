@@ -23,7 +23,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://app/modules/ImageUtils.jsm");
+Components.utils.import("resource://prism/modules/ImageUtils.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;

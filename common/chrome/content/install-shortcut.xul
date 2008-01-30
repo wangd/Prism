@@ -1,8 +1,9 @@
+#filter substitution
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://webrunner/skin/install-shortcut.css" type="text/css"?>
+<?xml-stylesheet href="chrome://@PACKAGE@/skin/install-shortcut.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://webrunner/locale/install-shortcut.dtd">
+<!DOCTYPE window SYSTEM "chrome://@PACKAGE@/locale/install-shortcut.dtd">
 
 <dialog id="install-shortcut"
         title="&dialog.title;"
@@ -13,7 +14,7 @@
         onunload="InstallShortcut.cleanup();"
         ondialogaccept="return InstallShortcut.accept();">
 
-  <script type="application/x-javascript" src="chrome://webrunner/content/install-shortcut.js"/>
+  <script type="application/x-javascript" src="chrome://@PACKAGE@/content/install-shortcut.js"/>
 
   <groupbox>
     <caption label="&dialog.caption;"/>

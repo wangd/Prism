@@ -2,26 +2,26 @@
 
 <!--
    Version: MPL 1.1/GPL 2.0/LGPL 2.1
-  
+
    The contents of this file are subject to the Mozilla Public License Version
    1.1 (the "License"); you may not use this file except in compliance with
    the License. You may obtain a copy of the License at
    http://www.mozilla.org/MPL/
-  
+
    Software distributed under the License is distributed on an "AS IS" basis,
    WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
    for the specific language governing rights and limitations under the
    License.
-  
+
    The Original Code is Prism.
-  
+
    The Initial Developer of the Original Code is Mozilla Corporation.
    Portions created by the Initial Developer are Copyright (C) 2007
    the Initial Developer. All Rights Reserved.
-  
+
    Contributor(s):
      Cesar Oliveira, <a.sacred.line@gmail.com>
-  
+
    Alternatively, the contents of this file may be used under the terms of
    either the GNU General Public License Version 2 or later (the "GPL"), or
    the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -35,19 +35,13 @@
    the terms of any one of the MPL, the GPL or the LGPL.
 -->
 
-<?xml-stylesheet href="chrome://prism-ext/skin/overlay.css" type="text/css"?>
+<?xml-stylesheet href="chrome://refractor/skin/overlay.css" type="text/css"?>
 
-<!DOCTYPE overlay SYSTEM "chrome://prism-ext/locale/ff-overlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://refractor/locale/ff-overlay.dtd">
 
 <overlay id="firefox-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<script type="text/javascript" src="chrome://prism-ext/content/ff-overlay.js"/>
-	<script type="text/javascript" src="chrome://prism-ext/content/prism.js"/>
-	<script type="text/javascript" src="chrome://prism-ext/content/utils.js"/>
-
-	<stringbundleset>
-		<stringbundle id="stringbundle" src="chrome://prism-ext/locale/prism.properties"/>
-	</stringbundleset>
+	<script type="text/javascript" src="chrome://refractor/content/ff-overlay.js"/>
 
 	<menupopup id="menu_ToolsPopup">
 		<menuitem label="&firefox.menuitem.label;"
@@ -55,4 +49,3 @@
 			  oncommand="convertToApplication();"/>
 	</menupopup>
 </overlay>
-
