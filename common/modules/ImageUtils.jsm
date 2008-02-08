@@ -29,6 +29,7 @@ const Ci = Components.interfaces;
 const PR_WRONLY = 0x02;
 const PR_CREATE_FILE = 0x08;
 const PR_TRUNCATE = 0x20;
+const PR_UINT32_MAX = 4294967295;
 
 EXPORTED_SYMBOLS = ["ImageUtils"];
 
@@ -48,6 +49,34 @@ var ImageUtils =
 
     outputStream.writeFrom(encodedStream, encodedStream.available());
     outputStream.close();
+  },
+
+  createNativeIconFromFile : function(file) {
+    var inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
+                      createInstance(Ci.nsIFileInputStream);
+    inputStream.init(file, 0x01, 00004, null);
+
+    var fileName = file.leafName;
+    var fileExt = fileName.substring(fileName.lastIndexOf("."), fileName.length).toLowerCase();
+
+    var mimeType = this.getMimeTypeFromExtension(fileExt);
+
+    // The image decoders use ReadSegments, which isn't implemented on
+    // file input streams. Use a buffered stream to make it work.
+    var bis = Cc["@mozilla.org/network/buffered-input-stream;1"].
+              createInstance(Ci.nsIBufferedInputStream);
+    bis.init(inputStream, 1024);
+
+    var storageStream = Cc["@mozilla.org/storagestream;1"].createInstance(Ci.nsIStorageStream);
+      storageStream.init(4096, PR_UINT32_MAX, null);
+
+    var bss = Cc["@mozilla.org/network/buffered-output-stream;1"].
+              createInstance(Ci.nsIBufferedOutputStream);
+    bss.init(storageStream.getOutputStream(0), 1024);
+
+    this.createNativeIcon(bis, mimeType, bss);
+
+    return storageStream;
   },
 
   getNativeIconExtension : function()

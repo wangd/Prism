@@ -92,12 +92,10 @@ var HostUI = {
   }
 };
 
-
 /**
  * Main application code.
  */
 var WebRunner = {
-  _profile : null,
   _ios : null,
   _tld : null,
 
@@ -124,11 +122,11 @@ var WebRunner = {
       settings.sidebar.width = document.getElementById("box_sidebar").width;
 
       // Save using JSON format
-      if (this._profile.hasOwnProperty("id")) {
+      if (WebAppProperties.hasOwnProperty("id")) {
         var json = JSON.toString(settings);
         var file = IO.getFile("Profile", null);
         file.append("webapps");
-        file.append(this._profile.id);
+        file.append(WebAppProperties.id);
         file.append("localstore.json");
         if (!file.exists())
           file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
@@ -141,10 +139,10 @@ var WebRunner = {
   _loadSettings : function() {
       // Load using JSON format
       var settings;
-      if (this._profile.hasOwnProperty("id")) {
+      if (WebAppProperties.hasOwnProperty("id")) {
         var file = IO.getFile("Profile", null);
         file.append("webapps");
-        file.append(this._profile.id);
+        file.append(WebAppProperties.id);
         file.append("localstore.json");
         if (file.exists()) {
           var stream = IO.newInputStream(file, "text");
@@ -178,19 +176,19 @@ var WebRunner = {
   _delayedStartup : function() {
     this._loadSettings();
 
-    this._profile.script["host"] = HostUI;
-    if (this._profile.script.startup)
-      this._profile.script.startup();
+    WebAppProperties.script["host"] = HostUI;
+    if (WebAppProperties.script.startup)
+      WebAppProperties.script.startup();
   },
 
   _processConfig : function() {
     // Process commandline parameters
-    document.documentElement.setAttribute("id", this._profile.icon);
-    document.getElementById("locationbar").hidden = !this._profile.location;
-    document.getElementById("box_sidebar").hidden = !this._profile.sidebar;
-    document.getElementById("splitter_sidebar").hidden = !this._profile.sidebar;
+    document.documentElement.setAttribute("id", WebAppProperties.icon);
+    document.getElementById("locationbar").hidden = !WebAppProperties.location;
+    document.getElementById("box_sidebar").hidden = !WebAppProperties.sidebar;
+    document.getElementById("splitter_sidebar").hidden = !WebAppProperties.sidebar;
 
-    if (!this._profile.navigation) {
+    if (!WebAppProperties.navigation) {
       // Remove navigation key from the document
       var keys = document.getElementsByTagName("key");
       for (var i=keys.length - 1; i>=0; i--)
@@ -198,8 +196,8 @@ var WebRunner = {
           keys[i].parentNode.removeChild(keys[i]);
     }
 
-    if (this._profile.uri)
-        this._getBrowser().loadURI(this._profile.uri, null, null);
+    if (WebAppProperties.uri)
+        this._getBrowser().loadURI(WebAppProperties.uri, null, null);
   },
 
   _handleWindowClose : function(event) {
@@ -331,9 +329,9 @@ var WebRunner = {
 
     document.title = aEvent.target.title;
 
-    if (this._profile.trayicon) {
+    if (WebAppProperties.trayicon) {
       var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
-      desktop.QueryInterface(Ci.nsINotificationArea).setTitle(this._profile.id, document.title);
+      desktop.QueryInterface(Ci.nsINotificationArea).setTitle(WebAppProperties.id, document.title);
     }
   },
 
@@ -405,8 +403,8 @@ var WebRunner = {
         uris.push(uri);
     }
 
-    if (this._profile.script.dropFiles)
-      this._profile.script.dropFiles(uris);
+    if (WebAppProperties.script.dropFiles)
+      WebAppProperties.script.dropFiles(uris);
   },
 
   _domClick : function(aEvent)
@@ -443,11 +441,11 @@ var WebRunner = {
     var install = false;
 
     if (window.arguments && window.arguments[0]) {
-      this._profile = new Profile(window.arguments[0].QueryInterface(Ci.nsICommandLine));
+      this.handleCommandLine(window.arguments[0].QueryInterface(Ci.nsICommandLine));
 
       install = window.arguments[0].handleFlag("install-webapp", false);
       if (!install)
-        install = (this._profile.uri == null);
+        install = (WebAppProperties.uri == null);
 
       // Set the windowtype attribute here, so we always know which window is the main window
       document.documentElement.setAttribute("windowtype", "webrunner:main");
@@ -468,17 +466,6 @@ var WebRunner = {
       httpsHandler.alwaysAskBeforeHandling = false;
       hs.store(httpsHandler);
     }
-    else {
-      var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-      var win = wm.getMostRecentWindow("webrunner:main");
-      if (win && win.WebRunner) {
-        this._profile = win.WebRunner._profile;
-        this._profile.uri = null;
-      }
-      else {
-        this._profile = new Profile(null);
-      }
-    }
 
     var self = this;
 
@@ -486,7 +473,7 @@ var WebRunner = {
     if (install) {
       function _showInstall() {
         var cancel = {value: true};
-        window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", self._profile, cancel);
+        window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", WebAppProperties, cancel);
 
         // Since we needed to install and the user must have canceled, lets close webrunner
         if (cancel.value) {
@@ -531,28 +518,78 @@ var WebRunner = {
       document.getElementById("menu_file").hidden = true;
     }
 
-    if (this._profile.trayicon)
+    if (WebAppProperties.trayicon)
       this.showTrayIcon();
 
     setTimeout(function() { self._delayedStartup(); }, 0);
+  },
+
+  handleCommandLine : function(aCmdLine) {
+    if (!aCmdLine)
+      return;
+
+    var file = null;
+
+    // Check for a webapp profile
+    var webapp = aCmdLine.handleFlagWithParam("webapp", false);
+    if (webapp) {
+      // Check for a bundle first
+      try {
+        file = aCmdLine.resolveFile(webapp);
+      }
+      catch (ex) {
+        // Ouch, not a file
+        file = null;
+      }
+
+      // Do we have a valid file? or did it fail?
+      if (!file || !file.exists()) {
+        // Its not a bundle. look for an installed webapp
+        var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+        var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
+        appSandbox.append("webapps");
+        appSandbox.append(webapp);
+        if (appSandbox.exists())
+          file = appSandbox.clone();
+      }
+    }
+
+    // Check for an OSX launch
+    if (!file) {
+      var uri = aCmdLine.handleFlagWithParam("url", false);
+      if (uri) {
+        uri = aCmdLine.resolveURI(uri);
+        file = uri.QueryInterface(Ci.nsIFileURL).file;
+      }
+    }
+
+    if (file && file.exists()) {
+      // Bundles are files and need to be installed
+      if (!file.isDirectory())
+        file = WebAppInstall.install(file);
+
+      WebAppInstall.init(file);
+    }
+
+    WebAppInstall.readCommandLine(aCmdLine);
   },
 
   showTrayIcon : function() {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
     var appIcon = dirSvc.get("ProfD", Ci.nsIFile);
     appIcon.append("webapps");
-    appIcon.append(this._profile.id);
+    appIcon.append(WebAppProperties.id);
     appIcon.append("icons");
     appIcon.append("default");
-    appIcon.append(this._profile.icon + ".ico");
+    appIcon.append(WebAppProperties.icon + ".ico");
 
     var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     var iconUri = ioService.newFileURI(appIcon);
 
     var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
     var notificationArea = desktop.QueryInterface(Ci.nsINotificationArea);
-    notificationArea.showIcon(this._profile.id, iconUri, this);
-    notificationArea.setTitle(this._profile.id, document.title);
+    notificationArea.showIcon(WebAppProperties.id, iconUri, this);
+    notificationArea.setTitle(WebAppProperties.id, document.title);
   },
 
   shutdownQuery : function() {
@@ -563,14 +600,14 @@ var WebRunner = {
 
   shutdown : function()
   {
-    if (this._profile.trayicon) {
+    if (WebAppProperties.trayicon) {
       var desktop = Cc["@mozilla.org/desktop-environment;1"].
         getService(Ci.nsIDesktopEnvironment);
-      desktop.QueryInterface(Ci.nsINotificationArea).hideIcon(this._profile.id);
+      desktop.QueryInterface(Ci.nsINotificationArea).hideIcon(WebAppProperties.id);
     }
 
-    if (this._profile.script.shutdown)
-      this._profile.script.shutdown();
+    if (WebAppProperties.script.shutdown)
+      WebAppProperties.script.shutdown();
   },
 
   doCommand : function(aCmd) {
@@ -596,7 +633,7 @@ var WebRunner = {
         PrintUtils.showPageSetup();
         break;
       case "cmd_about":
-        window.openDialog("chrome://webrunner/content/about.xul", "about", "centerscreen,modal", this._profile);
+        window.openDialog("chrome://webrunner/content/about.xul", "about", "centerscreen,modal", WebAppProperties);
         break;
       case "cmd_back":
         this._getBrowser().goBack();
@@ -605,7 +642,7 @@ var WebRunner = {
         this._getBrowser().goForward();
         break;
       case "cmd_home":
-        this._getBrowser().loadURI(this._profile.uri, null, null);
+        this._getBrowser().loadURI(WebAppProperties.uri, null, null);
         break;
       case "cmd_reload":
         this._getBrowser().reload();
@@ -620,7 +657,7 @@ var WebRunner = {
         window.open("chrome://global/content/console.xul", "_blank", "chrome,extrachrome,dependent,menubar,resizable,scrollbars,status,toolbar");
         break;
       case "cmd_install":
-        window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", this._profile);
+        window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", WebAppProperties);
         break;
       case "cmd_addons":
 				const EMTYPE = "Extension:Manager";
@@ -677,7 +714,7 @@ var WebRunner = {
         this._requestsFinished++;
       }
 
-      if (this._profile.status && this._requestsStarted > 1) {
+      if (WebAppProperties.status && this._requestsStarted > 1) {
         var value = (100 * this._requestsFinished) / this._requestsStarted;
         var progress = document.getElementById("progress");
         progress.setAttribute("mode", "determined");
@@ -685,7 +722,7 @@ var WebRunner = {
       }
     }
 
-    if (this._profile.status && (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK)) {
+    if (WebAppProperties.status && (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK)) {
       var progress = document.getElementById("progress");
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
         progress.hidden = false;
@@ -708,7 +745,7 @@ var WebRunner = {
   // This method is called to indicate progress changes for the currently
   // loading page.
   onProgressChange: function(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
-    if (this._profile.status && this._requestsStarted == 1) {
+    if (WebAppProperties.status && this._requestsStarted == 1) {
       var progress = document.getElementById("progress");
       if (aMaxSelf == -1) {
         progress.setAttribute("mode", "undetermined");
@@ -729,7 +766,7 @@ var WebRunner = {
   // This method is called to indicate a status changes for the currently
   // loading page.  The message is already formatted for display.
   onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {
-    if (this._profile.status) {
+    if (WebAppProperties.status) {
       var statusbar = document.getElementById("status");
       statusbar.setAttribute("label", aMessage);
     }

@@ -8,7 +8,6 @@ webrunner.jar:
 % resource prism ..
   content/about.xul                    (content/about.xul)
   content/about.js                     (content/about.js)
-  content/profile.js                   (content/profile.js)
   content/webrunner.xul                (content/webrunner.xul)
   content/webrunner.js                 (content/webrunner.js)
   branding/brand.dtd                   (locale/@AB_CD@/brand/brand.dtd)

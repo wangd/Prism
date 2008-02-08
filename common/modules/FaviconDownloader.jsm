@@ -105,16 +105,17 @@ var FaviconDownloader = {
 
   onStopRequest : function(request, context, statusCode)
   {
-    if (statusCode != Components.results.NS_OK)
-      return;
-
-    this._outputStream.flush();
-    var inputStream = this._storageStream.newInputStream(0);
-    this._generatedImageStream = this.createStorageStream();
-    ImageUtils.createNativeIcon(inputStream, this._mimeType,
-      this.getBufferedOutputStreamForStorageStream(
-      this._generatedImageStream));
-    this._storageStream.close();
+    // Need to check if we've been redirected to an error page
+    if (statusCode == Components.results.NS_OK &&
+        request.QueryInterface(Ci.nsIChannel).contentType != "text/html") {
+      this._outputStream.flush();
+      var inputStream = this._storageStream.newInputStream(0);
+      this._generatedImageStream = this.createStorageStream();
+      ImageUtils.createNativeIcon(inputStream, this._mimeType,
+        this.getBufferedOutputStreamForStorageStream(
+        this._generatedImageStream));
+      this._storageStream.close();
+    }
 
     if (this._callback)
       this._callback();

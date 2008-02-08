@@ -4,14 +4,16 @@ refractor.jar:
 %	content refractor	%content/ xpcnativewrappers=no
 %	skin	refractor	classic/1.0	%skin/classic/
 %	locale	refractor	@AB_CD@	%locale/@AB_CD@/
-% overlay	chrome://browser/content/browser.xul  chrome://refractor/content/ff-overlay.xul
+% overlay	chrome://browser/content/browser.xul  chrome://refractor/content/refractor-overlay.xul
 % resource prism .
-  content/ff-overlay.js                         (content/ff-overlay.js)
-  content/ff-overlay.xul                        (content/ff-overlay.xul)
-  skin/classic/overlay.cs                       (skin/overlay.css)
-  locale/@AB_CD@/ff-overlay.dtd                 (locale/@AB_CD@/ff-overlay.dtd)
+  content/refractor-overlay.js                  (content/refractor-overlay.js)
+  content/refractor-overlay.xul                 (content/refractor-overlay.xul)
+  skin/classic/refractor.css                    (skin/refractor.css)
+  locale/@AB_CD@/refractor-overlay.dtd          (locale/@AB_CD@/refractor-overlay.dtd)
+  locale/@AB_CD@/refractor-overlay.properties   (locale/@AB_CD@/refractor-overlay.properties)
 * content/install-shortcut.js                   (../../common/chrome/content/install-shortcut.js)
 * content/install-shortcut.xul                  (../../common/chrome/content/install-shortcut.xul)
   locale/@AB_CD@/install-shortcut.dtd           (../../common/chrome/locale/@AB_CD@/install-shortcut.dtd)
   locale/@AB_CD@/install-shortcut.properties    (../../common/chrome/locale/@AB_CD@/install-shortcut.properties)
   skin/classic/install-shortcut.css             (../../common/chrome/skin/standard/install-shortcut.css)
+  skin/classic/webrunner48.png                  (../../common/chrome/icons/default/webrunner48.png)
