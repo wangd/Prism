@@ -40,7 +40,6 @@
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
-  <script type="application/x-javascript" src="chrome://webrunner/content/profile.js"/>
   <script type="application/x-javascript" src="chrome://webrunner/content/webrunner.js"/>
 
   <commandset id="cmdset_app">

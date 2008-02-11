@@ -35,6 +35,7 @@ Components.utils.import("resource://prism/modules/FaviconDownloader.jsm");
 var InstallShortcut = {
   _userIcon : null,
   _iframe : null,
+  _faviconDownloader : new FaviconDownloader,
 
   init : function() {
     // Check the dialog mode
@@ -60,10 +61,12 @@ var InstallShortcut = {
       document.getElementById("location").checked = WebAppProperties.location;
       document.getElementById("navigation").checked = WebAppProperties.navigation;
 
-
       document.getElementById("uri").addEventListener("change", function() { self.onUriChange(); }, false);
 
       window.arguments[1].value = true;
+
+      // Display the default application icon
+      this.onIconReady();
     }
     else {
       // We are hiding the URL textbox, but still need to fire the icon preview
@@ -101,8 +104,8 @@ var InstallShortcut = {
   cleanup: function() {
     if (this._iframe)
     {
-      this._iframe.removeEventListener("DOMLinkAdded", FaviconDownloader, false);
-      this._iframe.removeEventListener("DOMContentLoaded", FaviconDownloader, false);
+      this._iframe.removeEventListener("DOMLinkAdded", this._faviconDownloader, false);
+      this._iframe.removeEventListener("DOMContentLoaded", this._faviconDownloader, false);
     }
   },
 
@@ -145,38 +148,50 @@ var InstallShortcut = {
     }
 
     var programs = document.getElementById("programs");
+    var uri = document.getElementById("uri");
+    var doLocation = document.getElementById("location").checked ? true : false;
+    var doStatus = document.getElementById("status").checked ? true : false;
+    var doNavigation = document.getElementById("navigation").checked ? true : false;
+    var doTrayIcon = document.getElementById("trayicon").checked ? true : false;
+    var idPrefix = name.toLowerCase();
+    idPrefix = idPrefix.replace(" ", ".", "g");
+
+    // Get the icon stream which is either the default icon or the favicon
+    var iconData = this.getIcon();
+    var storageStream = ImageUtils.createStorageStream();
+    ImageUtils.createNativeIcon(iconData.stream, iconData.mimeType,
+                                ImageUtils.getBufferedOutputStream(storageStream));
+    iconData = { mimeType: ImageUtils.getNativeIconMimeType(), stream: storageStream.newInputStream(0) };
+
+    var params = {id: idPrefix + "@prism.app", uri: uri.value, icon: iconData, status: doStatus, location: doLocation, sidebar: "false", navigation: doNavigation, trayicon: doTrayIcon};
+
     if (!WebAppProperties.appBundle) {
-      var uri = document.getElementById("uri");
-      var doLocation = document.getElementById("location").checked ? true : false;
-      var doStatus = document.getElementById("status").checked ? true : false;
-      var doNavigation = document.getElementById("navigation").checked ? true : false;
-      var doTrayIcon = document.getElementById("trayicon").checked ? true : false;
-      var idPrefix = name.toLowerCase();
-      idPrefix = idPrefix.replace(" ", ".", "g");
-
-      // Get the icon stream which is either the default icon or the favicon
-      var iconData = this.getIcon();
-      var params = {id: idPrefix + "@prism.app", uri: uri.value, icon: iconData, status: doStatus, location: doLocation, sidebar: "false", navigation: doNavigation, trayicon: doTrayIcon};
-
       // Make the web application in the profile folder
       WebAppInstall.createApplication(params);
 
-      // Update the caller's config
+      // Only update these properties if there isn't an app bundle
       WebAppProperties.id = params.id;
       WebAppProperties.uri = params.uri;
-      WebAppProperties.status = params.status;
-      WebAppProperties.location = params.location;
-      WebAppProperties.navigation = params.navigation;
-      WebAppProperties.trayicon = params.trayicon;
-
-      if (window.arguments && window.arguments.length == 2) {
-        // Let the caller know we actually installed a web application
-        window.arguments[1].value = false;
-      }
-
-      // Make any desired shortcuts
-      WebAppInstall.createShortcut(name, WebAppProperties.id, shortcuts);
     }
+    else {
+      // FIXME
+      // Might need to change the app's icon if the user picked a different one
+    }
+
+    // Update the caller's config
+    WebAppProperties.status = params.status;
+    WebAppProperties.location = params.location;
+    WebAppProperties.navigation = params.navigation;
+    WebAppProperties.trayicon = params.trayicon;
+
+    if (window.arguments && window.arguments.length == 2) {
+      // Let the caller know we actually installed a web application
+      window.arguments[1].value = false;
+    }
+
+    // Make any desired shortcuts
+    WebAppInstall.createShortcut(name, WebAppProperties.id, shortcuts);
+
     return true;
   },
 
@@ -190,10 +205,10 @@ var InstallShortcut = {
       return icon;
     }
 
-    var favicon = FaviconDownloader.getGeneratedImage();
+    var favicon = this._faviconDownloader.imageStream;
     if (favicon) {
       icon.stream = favicon;
-      icon.mimeType = FaviconDownloader.mimeType;
+      icon.mimeType = this._faviconDownloader.mimeType;
       return icon;
     }
 
@@ -204,23 +219,22 @@ var InstallShortcut = {
       defaultIcon.append("default");
       defaultIcon.append(iconName);
 
-      dump("\n\n" + defaultIcon.path + "\n\n");
-
       var inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
                         createInstance(Ci.nsIFileInputStream);
       inputStream.init(defaultIcon, 0x01, 00004, null);
 
       icon.stream = inputStream;
+      icon.mimeType = ImageUtils.getNativeIconMimeType();
     }
     else {
       var iconName = "app" + ImageUtils.getNativeIconExtension();
       var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-      var channel = ioService.newChannel("resource://prism/chrome/icons/default/" + iconName, "", null);
+      var channel = ioService.newChannel("resource://prism/chrome/icons/default/app.png", "", null);
 
       icon.stream = channel.open();
+      icon.mimeType = "image/png";
     }
 
-    icon.mimeType = ImageUtils.getNativeIconMimeType();
     return icon;
   },
 
@@ -228,7 +242,7 @@ var InstallShortcut = {
   {
     // Show the user that we are doing something
     var image = document.getElementById("icon");
-    image.setAttribute("src", "chrome://global/skin/throbber/Throbber-small.gif");
+    image.setAttribute("src", ImageUtils.getNativeThrobberSpec());
 
     // Try to get the page and see if there is a <link> tag for the favicon
     if (!this._iframe)
@@ -257,8 +271,8 @@ var InstallShortcut = {
     var uri = uriFixup.createFixupURI(document.getElementById("uri").value, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
 
     // Hook the iframe events to the favicon loader
-    this._iframe.addEventListener("DOMLinkAdded", FaviconDownloader, false);
-    this._iframe.addEventListener("DOMContentLoaded", FaviconDownloader, false);
+    this._iframe.addEventListener("DOMLinkAdded", this._faviconDownloader, false);
+    this._iframe.addEventListener("DOMContentLoaded", this._faviconDownloader, false);
 
     // Load the web content into the iframe, which also starts the favicon download
     var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
@@ -267,7 +281,7 @@ var InstallShortcut = {
     uriLoader.openURI(channel, true, this._iframe.docShell);
 
     var self = this;
-    FaviconDownloader.callback = function() { self.onIconReady(); };
+    this._faviconDownloader.callback = function() { self.onIconReady(); };
   },
 
   onIconReady : function() {
@@ -292,9 +306,21 @@ var InstallShortcut = {
 
     fp.appendFilters(Ci.nsIFilePicker.filterImages);
     if (fp.show() == Ci.nsIFilePicker.returnOK) {
-      var storageStream = ImageUtils.createNativeIconFromFile(fp.file);
+      var inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
+      createInstance(Ci.nsIFileInputStream);
+      inputStream.init(fp.file, 0x01, 00004, null);
+
+      var storageStream = ImageUtils.createStorageStream();
+      var bufferedOutput = ImageUtils.getBufferedOutputStream(storageStream);
+      bufferedOutput.writeFrom(inputStream, inputStream.available());
+      bufferedOutput.flush();
+
+      var fileName = fp.file.leafName;
+      var fileExt = fileName.substring(fileName.lastIndexOf("."), fileName.length).toLowerCase();
+      var fileMimeType = ImageUtils.getMimeTypeFromExtension(fileExt);
 
       this._userIcon = { mimeType: fileMimeType, storage: storageStream };
+
       this.onIconReady();
     }
   }

@@ -309,13 +309,13 @@ var WebAppInstall =
 
           defaultIcon.copyTo(appIcon, "");
         }
+        WebAppProperties.appBundle = appSandbox;
       }
     }
     catch (e) {
       Components.utils.reportError(e);
     }
 
-    WebAppProperties.appBundle = aFile;
     return aFile;
   },
 

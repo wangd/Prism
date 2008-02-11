@@ -31,13 +31,14 @@ const PR_UINT32_MAX = 4294967295;
 
 EXPORTED_SYMBOLS = ["FaviconDownloader"];
 
-var FaviconDownloader = {
-  _storageStream : null,
-  _outputSteam : null,
-  _mimeType : null,
-  _generatedImageStream : null,
-  _callback : null,
+function FaviconDownloader() {
+  this._storageStream = null;
+  this._outputStream = null;
+  this._mimeType = null;
+  this._callback = null;
+}
 
+FaviconDownloader.prototype = {
   QueryInterface : function(iid)
   {
     if (iid,equals(Ci.nsISupports) || iid.equals(Ci.nsIStreamListener))
@@ -54,11 +55,12 @@ var FaviconDownloader = {
     return this._mimeType;
   },
 
-  getGeneratedImage : function()
+  get imageStream()
   {
-    if (!this._generatedImageStream)
+    if (this._storageStream)
+      return this._storageStream.newInputStream(0);
+    else
       return null;
-    return this._generatedImageStream.newInputStream(0);
   },
 
   handleEvent : function(event)
@@ -99,8 +101,8 @@ var FaviconDownloader = {
 
   onStartRequest : function(request, context)
   {
-    this._storageStream = this.createStorageStream();
-    this._outputStream = this.getBufferedOutputStreamForStorageStream(this._storageStream);
+    this._storageStream = ImageUtils.createStorageStream();
+    this._outputStream = ImageUtils.getBufferedOutputStream(this._storageStream);
   },
 
   onStopRequest : function(request, context, statusCode)
@@ -109,12 +111,6 @@ var FaviconDownloader = {
     if (statusCode == Components.results.NS_OK &&
         request.QueryInterface(Ci.nsIChannel).contentType != "text/html") {
       this._outputStream.flush();
-      var inputStream = this._storageStream.newInputStream(0);
-      this._generatedImageStream = this.createStorageStream();
-      ImageUtils.createNativeIcon(inputStream, this._mimeType,
-        this.getBufferedOutputStreamForStorageStream(
-        this._generatedImageStream));
-      this._storageStream.close();
     }
 
     if (this._callback)
@@ -124,21 +120,5 @@ var FaviconDownloader = {
   onDataAvailable : function(request, context, inputStream, offset, count)
   {
     this._outputStream.writeFrom(inputStream, count);
-  },
-
-  createStorageStream : function()
-  {
-    var storageStream = Cc["@mozilla.org/storagestream;1"].createInstance(Ci.nsIStorageStream);
-    storageStream.init(4096, PR_UINT32_MAX, null);
-    return storageStream;
-  },
-
-  getBufferedOutputStreamForStorageStream : function(storageStream)
-  {
-    var outputStream = storageStream.getOutputStream(0);
-    var bufferedStream = Cc["@mozilla.org/network/buffered-output-stream;1"].
-                         createInstance(Ci.nsIBufferedOutputStream);
-    bufferedStream.init(outputStream, 1024);
-    return bufferedStream;
   }
 };

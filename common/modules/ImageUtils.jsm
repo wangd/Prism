@@ -39,8 +39,14 @@ var ImageUtils =
     // Convert from source format to native icon format
     var imageTools = Cc["@mozilla.org/image/tools;1"].createInstance(Ci.imgITools);
 
+    // The image decoders use ReadSegments, which isn't implemented on
+    // file input streams. Use a buffered stream to make it work.
+    var bis = Cc["@mozilla.org/network/buffered-input-stream;1"].
+              createInstance(Ci.nsIBufferedInputStream);
+    bis.init(inputStream, 1024);
+      
     var container = {};
-    imageTools.decodeImageData(inputStream, mimeType, container);
+    imageTools.decodeImageData(bis, mimeType, container);
 
     var encodedStream =
       imageTools.encodeScaledImage(container.value,
@@ -103,6 +109,18 @@ var ImageUtils =
       return "image/x-icns";
   },
 
+  getNativeThrobberSpec : function()
+  {
+    var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+    var os = xulRuntime.OS.toLowerCase();
+    if (os == "winnt")
+      return "chrome://global/skin/throbber/Throbber-small.gif";
+    else if (os == "linux")
+      return "chrome://global/skin/throbber/Throbber-small.gif";
+    else if (os == "darwin")
+      return "chrome://global/skin/icons/loading_16_grey.gif";
+  },
+
   getMimeTypeFromExtension : function(imageExt) {
     mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
     imageExt = imageExt.toLowerCase();
@@ -120,5 +138,21 @@ var ImageUtils =
     var bytes = stream.readByteArray(stream.available()); // returns int[]
 
     return "data:" + mimetype + ";base64," + btoa(String.fromCharCode.apply(null, bytes));
+  },
+  
+  createStorageStream : function()
+  {
+    var storageStream = Cc["@mozilla.org/storagestream;1"].createInstance(Ci.nsIStorageStream);
+    storageStream.init(4096, PR_UINT32_MAX, null);
+    return storageStream;
+  },
+
+  getBufferedOutputStream : function(storageStream)
+  {
+    var outputStream = storageStream.getOutputStream(0);
+    var bufferedStream = Cc["@mozilla.org/network/buffered-output-stream;1"].
+                         createInstance(Ci.nsIBufferedOutputStream);
+    bufferedStream.init(outputStream, 1024);
+    return bufferedStream;
   }
 };
