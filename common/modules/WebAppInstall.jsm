@@ -32,9 +32,12 @@ const Ci = Components.interfaces;
 const PR_WRONLY = 0x02;
 const PR_CREATE_FILE = 0x08;
 const PR_TRUNCATE = 0x20;
+
+const PR_PERMS_FILE = 0644;
+
 const PR_UINT32_MAX = 4294967295;
 
-EXPORTED_SYMBOLS = ["WebAppInstall", "WebAppProperties"];
+EXPORTED_SYMBOLS = ["WebAppInstall", "WebAppProperties", "FileIO"];
 
 /**
  * Constructs an nsISimpleEnumerator for the given array of items.
@@ -582,5 +585,49 @@ var WebAppInstall =
     }
 
     throw Components.results.NS_ERROR_NOT_AVAILABLE;
+  }
+};
+
+var FileIO = {
+  // Returns the text content of a given nsIFile
+  fileToString : function(file) {
+    // Get a nsIFileInputStream for the file
+    var fis = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+    fis.init(file, -1, 0, 0);
+
+    // Get an intl-aware nsIConverterInputStream for the file
+    var is = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
+    is.init(fis, "UTF-8", 1024, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+
+    // Read the file into string via buffer
+    var data = "";
+    var buffer = {};
+    while (is.readString(4096, buffer) != 0) {
+      data += buffer.value;
+    }
+
+    // Clean up
+    is.close();
+    fis.close();
+
+    return data;
+  },
+
+  // Saves the given text string to the given nsIFile
+  stringToFile : function(data, file) {
+    // Get a nsIFileOutputStream for the file
+    var fos = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+    fos.init(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, PR_PERMS_FILE, 0);
+
+    // Get an intl-aware nsIConverterOutputStream for the file
+    var os = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(Ci.nsIConverterOutputStream);
+    os.init(fos, "UTF-8", 0, 0x0000);
+
+    // Write data to the file
+    os.writeString(data);
+
+    // Clean up
+    os.close();
+    fos.close();
   }
 };

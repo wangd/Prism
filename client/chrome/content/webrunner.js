@@ -130,9 +130,7 @@ var WebRunner = {
         file.append("localstore.json");
         if (!file.exists())
           file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
-        var stream = IO.newOutputStream(file, "text write create truncate");
-        stream.writeString(json);
-        stream.close();
+        FileIO.stringToFile(json, file);
       }
   },
 
@@ -145,9 +143,7 @@ var WebRunner = {
         file.append(WebAppProperties.id);
         file.append("localstore.json");
         if (file.exists()) {
-          var stream = IO.newInputStream(file, "text");
-          var json = stream.readLine();
-          stream.close();
+          var json = FileIO.fileToString(file);
           settings = JSON.fromString(json);
 
           if (settings.window) {
