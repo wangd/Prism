@@ -644,10 +644,12 @@ var WebRunner = {
         this._getBrowser().reload();
         break;
       case "cmd_close":
-        close();
+        if (this.shutdownQuery())
+          close();
         break;
       case "cmd_quit":
-        goQuitApplication();
+        if (this.shutdownQuery())
+          goQuitApplication();
         break;
       case "cmd_console":
         window.open("chrome://global/content/console.xul", "_blank", "chrome,extrachrome,dependent,menubar,resizable,scrollbars,status,toolbar");
