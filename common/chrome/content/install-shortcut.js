@@ -270,18 +270,8 @@ var InstallShortcut = {
     var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
     var uri = uriFixup.createFixupURI(document.getElementById("uri").value, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
 
-    // Hook the iframe events to the favicon loader
-    this._iframe.addEventListener("DOMLinkAdded", this._faviconDownloader, false);
-    this._iframe.addEventListener("DOMContentLoaded", this._faviconDownloader, false);
-
-    // Load the web content into the iframe, which also starts the favicon download
-    var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-    var channel = ioService.newChannelFromURI(uri);
-    var uriLoader = Cc["@mozilla.org/uriloader;1"].getService(Ci.nsIURILoader);
-    uriLoader.openURI(channel, true, this._iframe.docShell);
-
     var self = this;
-    this._faviconDownloader.callback = function() { self.onIconReady(); };
+    this._faviconDownloader.startDownload(uri, this._iframe, function() { self.onIconReady(); });
   },
 
   onIconReady : function() {

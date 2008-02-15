@@ -36,19 +36,31 @@ function FaviconDownloader() {
   this._outputStream = null;
   this._mimeType = null;
   this._callback = null;
+  this._iframe = null;
 }
 
 FaviconDownloader.prototype = {
-  QueryInterface : function(iid)
-  {
+  QueryInterface : function(iid) {
     if (iid,equals(Ci.nsISupports) || iid.equals(Ci.nsIStreamListener))
       return this;
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
 
-  set callback(callbackFunc) {
-    this._callback = callbackFunc;
+  startDownload : function(uri, iframe, callback) {
+    this._iframe = iframe;
+    this._callback = callback;
+    this._mimeType = null;
+
+    // Hook the iframe events to the favicon loader
+    this._iframe.addEventListener("DOMLinkAdded", this, false);
+    this._iframe.addEventListener("DOMContentLoaded", this, false);
+
+    // Load the web content into the iframe, which also starts the favicon download
+    var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    var channel = ioService.newChannelFromURI(uri);
+    var uriLoader = Cc["@mozilla.org/uriloader;1"].getService(Ci.nsIURILoader);
+    uriLoader.openURI(channel, true, this._iframe.docShell);
   },
 
   get mimeType() {
@@ -107,6 +119,9 @@ FaviconDownloader.prototype = {
 
   onStopRequest : function(request, context, statusCode)
   {
+    this._iframe.removeEventListener("DOMLinkAdded", this, false);
+    this._iframe.removeEventListener("DOMContentLoaded", this, false);
+
     // Need to check if we've been redirected to an error page
     if (statusCode == Components.results.NS_OK &&
         request.QueryInterface(Ci.nsIChannel).contentType != "text/html") {
