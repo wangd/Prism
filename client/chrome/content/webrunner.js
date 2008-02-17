@@ -124,7 +124,9 @@ var WebRunner = {
       // Save using JSON format
       if (WebAppProperties.hasOwnProperty("id")) {
         var json = JSON.toString(settings);
-        var file = IO.getFile("Profile", null);
+
+        var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+        var file = dirSvc.get("ProfD", Ci.nsIFile);
         file.append("webapps");
         file.append(WebAppProperties.id);
         file.append("localstore.json");
@@ -138,7 +140,8 @@ var WebRunner = {
       // Load using JSON format
       var settings;
       if (WebAppProperties.hasOwnProperty("id")) {
-        var file = IO.getFile("Profile", null);
+        var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+        var file = dirSvc.get("ProfD", Ci.nsIFile);
         file.append("webapps");
         file.append(WebAppProperties.id);
         file.append("localstore.json");
