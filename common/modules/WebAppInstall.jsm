@@ -139,10 +139,39 @@ var WebAppInstall =
       installRoot.append("WebApps");
     }
     else if (os == "darwin") {
-      installRoot = dirSvc.get("LocApp", Ci.nsIFile);
+      installRoot = dirSvc.get("ULibDir", Ci.nsIFile);
+      installRoot.append("WebApps");
     }
 
     return installRoot;
+  },
+
+  getProfileRoot : function() {
+    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+
+    var profileRoot = null;
+
+    var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+    var os = xulRuntime.OS.toLowerCase();
+    if (os == "winnt") {
+      profileRoot = dirSvc.get("AppData", Ci.nsIFile);
+      profileRoot.append("Prism");
+    }
+    else if (os == "linux") {
+      profileRoot = dirSvc.get("Home", Ci.nsIFile);
+      profileRoot.append(".prism");
+    }
+    else if (os == "darwin") {
+      profileRoot = dirSvc.get("Home", Ci.nsIFile);
+
+      // FIXME: these strings are probably localized on non en-US
+      profileRoot.append("Library");
+      profileRoot.append("Application Support");
+
+      profileRoot.append("Prism");
+    }
+
+    return profileRoot;
   },
 
   setParameter: function(aName, aValue) {
@@ -239,7 +268,7 @@ var WebAppInstall =
       // Extract the webapp.ini to a temp location so it can be parsed
       var tempINI = dirSvc.get("TmpD", Ci.nsIFile);
       tempINI.append("webapp.ini");
-      tempINI.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+      tempINI.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PR_PERMS_FILE);
       reader.extract("webapp.ini", tempINI);
       this.readINI(tempINI);
       tempINI.remove(false);
@@ -260,13 +289,13 @@ var WebAppInstall =
 
         var appINI = appSandbox.clone();
         appINI.append("webapp.ini");
-        appINI.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+        appINI.create(Ci.nsIFile.NORMAL_FILE_TYPE, PR_PERMS_FILE);
         reader.extract("webapp.ini", appINI);
 
         if (reader.hasEntry("webapp.js")) {
           var appScript = appSandbox.clone();
           appScript.append("webapp.js");
-          appScript.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+          appScript.create(Ci.nsIFile.NORMAL_FILE_TYPE, PR_PERMS_FILE);
           reader.extract("webapp.js", appScript);
         }
 
@@ -277,7 +306,7 @@ var WebAppInstall =
         if (reader.hasEntry(os + "/webapp.css") || reader.hasEntry("webapp.css")) {
           var appStyle = appSandbox.clone();
           appStyle.append("webapp.css");
-          appStyle.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+          appStyle.create(Ci.nsIFile.NORMAL_FILE_TYPE, PR_PERMS_FILE);
           if (reader.hasEntry(os + "/webapp.css"))
             reader.extract(os + "/webapp.css", appStyle);
           else
@@ -289,17 +318,18 @@ var WebAppInstall =
         var appIcon = appSandbox.clone();
         appIcon.append("icons");
         appIcon.append("default");
+        appIcon.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
 
         if (reader.hasEntry(iconName)) {
           appIcon.append(iconName);
-          appIcon.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+          appIcon.create(Ci.nsIFile.NORMAL_FILE_TYPE, PR_PERMS_FILE);
           reader.extract(iconName, appIcon);
         }
         else if (reader.hasEntry(pngName))
         {
           var targetPath = appIcon.clone();
           appIcon.append(pngName);
-          appIcon.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+          appIcon.create(Ci.nsIFile.NORMAL_FILE_TYPE, PR_PERMS_FILE);
           reader.extract(pngName, appIcon);
 
           var storageStream = ImageUtils.createNativeIconFromFile(appIcon);
@@ -313,7 +343,7 @@ var WebAppInstall =
           nativeIcon.append(fileTitle + ImageUtils.getNativeIconExtension());
 
           var stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-          stream.init(nativeIcon, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, 0);
+          stream.init(nativeIcon, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, PR_PERMS_FILE, 0);
 
           var bss = Cc["@mozilla.org/network/buffered-output-stream;1"].
                     createInstance(Ci.nsIBufferedOutputStream);
@@ -351,9 +381,13 @@ var WebAppInstall =
     // Locate the runtime
     var target = dirSvc.get("XREExeF", Ci.nsIFile);
 
+    var appOverride = this.getInstallRoot();
+    appOverride.append(id);
+    appOverride.append("override.ini");
+
     // Launch target with webapp
     process.init(target);
-    process.run(false, ["-webapp", id], 2);
+    process.run(false, ["-webapp", id, "-override", appOverride.path], 4);
   },
 
   createApplication : function(params) {
@@ -366,10 +400,10 @@ var WebAppInstall =
       appSandbox.append(params.id);
       if (appSandbox.exists())
         appSandbox.remove(true);
+      appSandbox.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
 
       var appINI = appSandbox.clone();
       appINI.append("webapp.ini");
-      appINI.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
 
       // Save the params to an INI file
       var cmd = "[Parameters]\n";
@@ -381,25 +415,16 @@ var WebAppInstall =
       cmd += "sidebar=" + params.sidebar + "\n";
       cmd += "navigation=" + params.navigation + "\n";
       cmd += "trayicon=" + params.trayicon + "\n";
-
-      var stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-      stream.init(appINI, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, 0);
-      stream.write(cmd, cmd.length);
-      stream.close();
-
-      var overINI = appSandbox.clone();
-      overINI.append("override.ini");
-      overINI.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
+      FileIO.stringToFile(cmd, appINI);
 
       // Save the params to an override INI file
+      var overINI = appSandbox.clone();
+      overINI.append("override.ini");
       if (params.hasOwnProperty("group")) {
         cmd = "[App]\n";
         cmd += "Vendor=Prism\n";
         cmd += "Name=" + params.group + "\n";
-
-        stream.init(overINI, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, 0);
-        stream.write(cmd, cmd.length);
-        stream.close();
+        FileIO.stringToFile(cmd, overINI);
       }
 
       // Copy the icon
@@ -407,11 +432,11 @@ var WebAppInstall =
       appIcon.append("icons");
       appIcon.append("default");
       if (!appIcon.exists())
-        appIcon.create(Ci.nsIFile.DIRECTORY_TYPE, 0600);
+        appIcon.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
       appIcon.append(WebAppProperties.icon + ImageUtils.getNativeIconExtension());
 
-      stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-      stream.init(appIcon, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, 0);
+      var stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+      stream.init(appIcon, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, PR_PERMS_FILE, 0);
       var bufferedStream = Cc["@mozilla.org/network/buffered-output-stream;1"].
                            createInstance(Ci.nsIBufferedOutputStream);
       bufferedStream.init(stream, 1024);
@@ -481,7 +506,19 @@ var WebAppInstall =
     var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
-    var shortcut = null;
+    // Locate the webapp resources
+    var appOverride = root.clone();
+    appOverride.append("override.ini");
+
+    arguments = "-override \"" + appOverride.path + "\" " + arguments;
+    if (workingPath.length)
+      arguments = "-app application.ini " + arguments;
+
+    var appIcon = root.clone();
+    appIcon.append("icons");
+    appIcon.append("default");
+    appIcon.append(WebAppProperties.icon + ImageUtils.getNativeIconExtension());
+
     var directory = null;
     for (var i=0; i<locations.length; i++)
     {
@@ -499,61 +536,71 @@ var WebAppInstall =
         continue;
       }
 
-      // Locate the webapp resources
-      var appOverride = root.clone();
-      appOverride.append("override.ini");
-
-      var appIcon = root.clone();
-      appIcon.append("icons");
-      appIcon.append("default");
-      appIcon.append(WebAppProperties.icon + ImageUtils.getNativeIconExtension());
-
-      arguments = "-app application.ini -override \"" + appOverride.path + "\" " + arguments;
       desktop.createShortcut(name, target, directory, workingPath, arguments, "", appIcon);
     }
   },
 
-  _createShortcutLinux : function(target, name, arguments, workingPath, icon, locations) {
+  _createShortcutLinux : function(target, name, arguments, workingPath, root, locations) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+
+    // Locate the webapp resources
+    var appOverride = root.clone();
+    appOverride.append("override.ini");
+
+    arguments = "-override \"" + appOverride.path + "\" " + arguments;
+    if (workingPath.length)
+      arguments = "-app " + workingPath + "/application.ini " + arguments;
+
+    var appIcon = root.clone();
+    appIcon.append("icons");
+    appIcon.append("default");
+    appIcon.append(WebAppProperties.icon + ImageUtils.getNativeIconExtension());
 
     var file = dirSvc.get("Desk", Ci.nsIFile);
     file.append(name + ".desktop");
     if (file.exists())
       file.remove(false);
-    file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
-
-    if (workingPath.length)
-      arguments = "-app " + workingPath + "/application.ini " + arguments;
+    file.create(Ci.nsIFile.NORMAL_FILE_TYPE, PR_PERMS_FILE);
 
     var cmd = "[Desktop Entry]\n";
     cmd += "Name=" + name + "\n";
     cmd += "Type=Application\n";
     cmd += "Comment=Web Application\n";
     cmd += "Exec=" + target.path + " " + arguments + "\n";
-    cmd += "Icon=" + icon.path + "\n";
+    cmd += "Icon=" + appIcon.path + "\n";
 
     FileIO.stringToFile(cmd, file);
   },
 
-  _createShortcutMac : function(target, name, arguments, workingPath, icon, locations) {
+  _createShortcutMac : function(target, name, arguments, workingPath, root, locations) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    var xre = dirSvc.get("XREExeF", Ci.nsIFile);
 
+    // Locate the webapp resources
+    var appOverride = root.clone();
+    appOverride.append("override.ini");
+
+    arguments = "-override \"" + appOverride.path + "\" " + arguments;
     if (workingPath.length)
       arguments = "-app " + workingPath + "/application.ini " + arguments;
+
+    var appIcon = root.clone();
+    appIcon.append("icons");
+    appIcon.append("default");
+    appIcon.append(WebAppProperties.icon + ImageUtils.getNativeIconExtension());
 
     var bundle = null;
     if (locations.indexOf("desktop") > -1) {
       var desk = dirSvc.get("Desk", Ci.nsIFile);
-      bundle = this._createBundle(target, name, arguments, icon, desk);
+      bundle = this._createBundle(target, name, arguments, appIcon, desk);
     }
     if (locations.indexOf("applications") > -1) {
       var apps = dirSvc.get("LocApp", Ci.nsIFile);
       //apps.append("Web Apps");
       if (!apps.exists())
         apps.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
-      bundle = this._createBundle(target, name, arguments, icon, apps);
+      bundle = this._createBundle(target, name, arguments, appIcon, apps);
     }
+
     if (locations.indexOf("dock") > -1 && bundle != null) {
       var dock = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIMacDock);
       dock.addApplication(bundle);
@@ -599,7 +646,7 @@ var WebAppInstall =
     var cmd = "#!/bin/sh\nexec " + target.path + " " + arguments;
     var script = macos.clone();
     script.append(name);
-    FileIO.stringToFile(cmd, script);
+    FileIO.stringToFile(cmd, script, 0755);
 
     return bundle;
   },
@@ -647,7 +694,7 @@ var FileIO = {
   stringToFile : function(data, file) {
     // Get a nsIFileOutputStream for the file
     var fos = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-    fos.init(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, PR_PERMS_FILE, 0);
+    fos.init(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, (arguments.length == 3 ? arguments[2] : PR_PERMS_FILE), 0);
 
     // Get an intl-aware nsIConverterOutputStream for the file
     var os = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(Ci.nsIConverterOutputStream);
