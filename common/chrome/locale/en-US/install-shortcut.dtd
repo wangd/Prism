@@ -19,3 +19,4 @@
 <!ENTITY iconSettings.label  "Settings">
 <!ENTITY iconFavicon.label   "Use image from web">
 <!ENTITY iconFile.label      "Choose image...">
+<!ENTITY advanced.label      "Advanced...">

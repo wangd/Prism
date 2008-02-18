@@ -41,10 +41,9 @@ var ImageUtils =
 
     // The image decoders use ReadSegments, which isn't implemented on
     // file input streams. Use a buffered stream to make it work.
-    var bis = Cc["@mozilla.org/network/buffered-input-stream;1"].
-              createInstance(Ci.nsIBufferedInputStream);
+    var bis = Cc["@mozilla.org/network/buffered-input-stream;1"].createInstance(Ci.nsIBufferedInputStream);
     bis.init(inputStream, 1024);
-      
+
     var container = {};
     imageTools.decodeImageData(bis, mimeType, container);
 
@@ -58,8 +57,7 @@ var ImageUtils =
   },
 
   createNativeIconFromFile : function(file) {
-    var inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
-                      createInstance(Ci.nsIFileInputStream);
+    var inputStream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
     inputStream.init(file, 0x01, 00004, null);
 
     var fileName = file.leafName;
@@ -74,7 +72,7 @@ var ImageUtils =
     bis.init(inputStream, 1024);
 
     var storageStream = Cc["@mozilla.org/storagestream;1"].createInstance(Ci.nsIStorageStream);
-      storageStream.init(4096, PR_UINT32_MAX, null);
+    storageStream.init(4096, PR_UINT32_MAX, null);
 
     var bss = Cc["@mozilla.org/network/buffered-output-stream;1"].
               createInstance(Ci.nsIBufferedOutputStream);
@@ -139,7 +137,7 @@ var ImageUtils =
 
     return "data:" + mimetype + ";base64," + btoa(String.fromCharCode.apply(null, bytes));
   },
-  
+
   createStorageStream : function()
   {
     var storageStream = Cc["@mozilla.org/storagestream;1"].createInstance(Ci.nsIStorageStream);

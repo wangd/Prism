@@ -107,7 +107,7 @@ var WebRunner = {
       var settings = {};
       settings.version = "1";
 
-      //
+      // Pull out the window state
       settings.window = {};
       settings.window.state = window.windowState;
       if (window.windowState == window.STATE_NORMAL) {
@@ -124,14 +124,9 @@ var WebRunner = {
       // Save using JSON format
       if (WebAppProperties.hasOwnProperty("id")) {
         var json = JSON.toString(settings);
-
-        var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-        var file = dirSvc.get("ProfD", Ci.nsIFile);
-        file.append("webapps");
+        var file = WebAppInstall.getInstallRoot();
         file.append(WebAppProperties.id);
         file.append("localstore.json");
-        if (!file.exists())
-          file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0600);
         FileIO.stringToFile(json, file);
       }
   },
@@ -140,9 +135,7 @@ var WebRunner = {
       // Load using JSON format
       var settings;
       if (WebAppProperties.hasOwnProperty("id")) {
-        var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-        var file = dirSvc.get("ProfD", Ci.nsIFile);
-        file.append("webapps");
+        var file = WebAppInstall.getInstallRoot();
         file.append(WebAppProperties.id);
         file.append("localstore.json");
         if (file.exists()) {
@@ -216,6 +209,7 @@ var WebRunner = {
     var isTextField = target instanceof HTMLTextAreaElement;
     if (target instanceof HTMLInputElement && (target.type == "text" || target.type == "password"))
       isTextField = true;
+
     var isTextSelectied= (isTextField && target.selectionStart != target.selectionEnd);
 
     cut.setAttribute("disabled", ((!isTextField || !isTextSelectied) ? "true" : "false"));
@@ -479,7 +473,9 @@ var WebRunner = {
           window.close();
         }
         else {
-          self._processConfig();
+          WebAppInstall.restart(WebAppProperties.id);
+          window.close();
+          //self._processConfig();
         }
       }
 
@@ -544,9 +540,7 @@ var WebRunner = {
       // Do we have a valid file? or did it fail?
       if (!file || !file.exists()) {
         // Its not a bundle. look for an installed webapp
-        var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-        var appSandbox = dirSvc.get("ProfD", Ci.nsIFile);
-        appSandbox.append("webapps");
+        var appSandbox = WebAppInstall.getInstallRoot();
         appSandbox.append(webapp);
         if (appSandbox.exists())
           file = appSandbox.clone();
@@ -574,9 +568,7 @@ var WebRunner = {
   },
 
   showTrayIcon : function() {
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    var appIcon = dirSvc.get("ProfD", Ci.nsIFile);
-    appIcon.append("webapps");
+    var appIcon = WebAppInstall.getInstallRoot();
     appIcon.append(WebAppProperties.id);
     appIcon.append("icons");
     appIcon.append("default");
@@ -661,29 +653,29 @@ var WebRunner = {
         window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", WebAppProperties);
         break;
       case "cmd_addons":
-				const EMTYPE = "Extension:Manager";
+        const EMTYPE = "Extension:Manager";
 
-				var aOpenMode = "extensions";
-				var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-				                   .getService(Components.interfaces.nsIWindowMediator);
-				var needToOpen = true;
-				var windowType = EMTYPE + "-" + aOpenMode;
-				var windows = wm.getEnumerator(windowType);
-				while (windows.hasMoreElements()) {
-					var theEM = windows.getNext().QueryInterface(Components.interfaces.nsIDOMWindowInternal);
-					if (theEM.document.documentElement.getAttribute("windowtype") == windowType) {
-						theEM.focus();
-						needToOpen = false;
-						break;
-  				}
-    		}
+        var aOpenMode = "extensions";
+        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                           .getService(Components.interfaces.nsIWindowMediator);
+        var needToOpen = true;
+        var windowType = EMTYPE + "-" + aOpenMode;
+        var windows = wm.getEnumerator(windowType);
+        while (windows.hasMoreElements()) {
+          var theEM = windows.getNext().QueryInterface(Components.interfaces.nsIDOMWindowInternal);
+          if (theEM.document.documentElement.getAttribute("windowtype") == windowType) {
+            theEM.focus();
+            needToOpen = false;
+            break;
+          }
+        }
 
-				if (needToOpen) {
-					const EMURL = "chrome://mozapps/content/extensions/extensions.xul?type=" + aOpenMode;
-					const EMFEATURES = "chrome,dialog=no,resizable=yes";
-					window.openDialog(EMURL, "", EMFEATURES);
-				}
-				break;
+        if (needToOpen) {
+          const EMURL = "chrome://mozapps/content/extensions/extensions.xul?type=" + aOpenMode;
+          const EMFEATURES = "chrome,dialog=no,resizable=yes";
+          window.openDialog(EMURL, "", EMFEATURES);
+        }
+        break;
     }
   },
 

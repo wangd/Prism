@@ -33,6 +33,7 @@ Components.utils.import("resource://prism/modules/WebAppInstall.jsm");
 Components.utils.import("resource://prism/modules/FaviconDownloader.jsm");
 
 var InstallShortcut = {
+  _advanced : {},
   _userIcon : null,
   _iframe : null,
   _faviconDownloader : new FaviconDownloader,
@@ -164,6 +165,10 @@ var InstallShortcut = {
     iconData = { mimeType: ImageUtils.getNativeIconMimeType(), stream: storageStream.newInputStream(0) };
 
     var params = {id: idPrefix + "@prism.app", uri: uri.value, icon: iconData, status: doStatus, location: doLocation, sidebar: "false", navigation: doNavigation, trayicon: doTrayIcon};
+    if (this._advanced.hasOwnProperty("group"))
+      params["group"] = this._advanced.group;
+    else
+      params["group"] = name;
 
     if (!WebAppProperties.appBundle) {
       // Make the web application in the profile folder
@@ -190,7 +195,7 @@ var InstallShortcut = {
     }
 
     // Make any desired shortcuts
-    WebAppInstall.createShortcut(name, WebAppProperties.id, shortcuts);
+    WebAppInstall.createShortcut(name, WebAppProperties.id, shortcuts.split(","));
 
     return true;
   },
@@ -313,5 +318,9 @@ var InstallShortcut = {
 
       this.onIconReady();
     }
+  },
+
+  advancedSettings : function() {
+    window.openDialog("chrome://@PACKAGE@/content/install-advanced.xul", "settings", "centerscreen,modal", this._advanced);
   }
 };
