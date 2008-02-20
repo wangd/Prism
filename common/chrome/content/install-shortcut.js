@@ -61,6 +61,7 @@ var InstallShortcut = {
       document.getElementById("status").checked = WebAppProperties.status;
       document.getElementById("location").checked = WebAppProperties.location;
       document.getElementById("navigation").checked = WebAppProperties.navigation;
+      document.getElementById("trayicon").checked = WebAppProperties.trayicon;
 
       document.getElementById("uri").addEventListener("change", function() { self.onUriChange(); }, false);
 
