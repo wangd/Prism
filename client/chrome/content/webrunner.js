@@ -188,6 +188,13 @@ var WebRunner = {
           keys[i].parentNode.removeChild(keys[i]);
     }
 
+    document.title = WebAppProperties.name;
+
+    if (WebAppProperties.trayicon) {
+      var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
+      desktop.QueryInterface(Ci.nsINotificationArea).setTitle(WebAppProperties.id, document.title);
+    }
+
     if (WebAppProperties.uri)
         this._getBrowser().loadURI(WebAppProperties.uri, null, null);
   },
@@ -316,18 +323,6 @@ var WebRunner = {
       aEvent.preventDefault();
   },
 
-  _domTitleChanged : function(aEvent) {
-    if (aEvent.target != this._getBrowser().contentDocument)
-      return;
-
-    document.title = aEvent.target.title;
-
-    if (WebAppProperties.trayicon) {
-      var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
-      desktop.QueryInterface(Ci.nsINotificationArea).setTitle(WebAppProperties.id, document.title);
-    }
-  },
-
   _isLinkExternal : function(aLink) {
     var isExternal = true;
     if (aLink instanceof HTMLAnchorElement) {
@@ -438,7 +433,7 @@ var WebRunner = {
 
       install = window.arguments[0].handleFlag("install-webapp", false);
       if (!install)
-        install = (WebAppProperties.uri == null);
+        install = (WebAppProperties.uri == null || WebAppProperties.name == null);
 
       // Set the windowtype attribute here, so we always know which window is the main window
       document.documentElement.setAttribute("windowtype", "webrunner:main");
@@ -494,7 +489,6 @@ var WebRunner = {
     window.addEventListener("close", function(event) { self._handleWindowClose(event); }, false);
 
     var browser = this._getBrowser();
-    browser.addEventListener("DOMTitleChanged", function(aEvent) { self._domTitleChanged(aEvent); }, true)
     browser.addEventListener("dragover", function(aEvent) { self._dragOver(aEvent); }, true)
     browser.addEventListener("dragdrop", function(aEvent) { self._dragDrop(aEvent); }, true)
     browser.webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);

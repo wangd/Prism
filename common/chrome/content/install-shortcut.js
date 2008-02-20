@@ -48,6 +48,10 @@ var InstallShortcut = {
       document.getElementById("name").focus();
     }
 
+    if (WebAppProperties.name) {
+      document.getElementById("name").value = WebAppProperties.name;
+    }
+
     // Default to use the favicon
     document.getElementById("icon_favicon").setAttribute("checked", "true");
 
@@ -165,7 +169,7 @@ var InstallShortcut = {
                                 ImageUtils.getBufferedOutputStream(storageStream));
     iconData = { mimeType: ImageUtils.getNativeIconMimeType(), stream: storageStream.newInputStream(0) };
 
-    var params = {id: idPrefix + "@prism.app", uri: uri.value, icon: iconData, status: doStatus, location: doLocation, sidebar: "false", navigation: doNavigation, trayicon: doTrayIcon};
+    var params = {id: idPrefix + "@prism.app", name: name, uri: uri.value, icon: iconData, status: doStatus, location: doLocation, sidebar: "false", navigation: doNavigation, trayicon: doTrayIcon};
     if (this._advanced.hasOwnProperty("group"))
       params["group"] = this._advanced.group;
     else
@@ -178,6 +182,7 @@ var InstallShortcut = {
       // Only update these properties if there isn't an app bundle
       WebAppProperties.id = params.id;
       WebAppProperties.uri = params.uri;
+      WebAppProperties.name = params.name;
     }
     else {
       // FIXME

@@ -108,6 +108,7 @@ var WebAppProperties =
 {
   script : {},
   id : "",
+  name : null,
   fileTypes : [],
   uri : null,
   icon : "webapp",
@@ -118,7 +119,7 @@ var WebAppProperties =
   credits : "",
   navigation : false,
   appBundle : null,
-  flags : ["id", "uri", "icon", "status", "location", "sidebar", "trayicon", "navigation", "credits"]
+  flags : ["id", "name", "uri", "icon", "status", "location", "sidebar", "trayicon", "navigation", "credits"]
 };
 
 var WebAppInstall =
@@ -408,6 +409,7 @@ var WebAppInstall =
       // Save the params to an INI file
       var cmd = "[Parameters]\n";
       cmd += "id=" + params.id + "\n";
+      cmd += "name=" + params.name + "\n";
       cmd += "uri=" + params.uri + "\n";
       cmd += "icon=" + WebAppProperties.icon + "\n";
       cmd += "status=" + params.status + "\n";
