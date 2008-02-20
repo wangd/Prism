@@ -442,6 +442,9 @@ var WebRunner = {
       var hs = Cc["@mozilla.org/uriloader/handler-service;1"].getService(Ci.nsIHandlerService);
       var extps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService);
 
+      // Ensure login manager is up and running.
+      Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+
       // Set the 'http' handler
       var httpHandler = extps.getProtocolHandlerInfo("http");
       httpHandler.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
