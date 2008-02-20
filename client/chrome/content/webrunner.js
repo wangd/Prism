@@ -460,34 +460,33 @@ var WebRunner = {
 
     var self = this;
 
+    var xulWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIWebNavigation)
+        .QueryInterface(Ci.nsIDocShellTreeItem)
+        .treeOwner
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIXULWindow);
+
     // Do we need to handle making a web application?
     if (install) {
-      function _showInstall() {
-        var cancel = {value: true};
-        window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", WebAppProperties, cancel);
+      var cancel = {value: true};
+      window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", WebAppProperties, cancel);
 
-        // Since we needed to install and the user must have canceled, lets close webrunner
-        if (cancel.value) {
-          window.close();
-        }
-        else {
-          WebAppInstall.restart(WebAppProperties.id);
-          window.close();
-          //self._processConfig();
-        }
+      // Hide the main window so it doesn't flash on the screen before closing
+      xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
+
+      // Since we needed to install and the user must have canceled, lets close webrunner
+      if (cancel.value) {
+        window.close();
       }
-
-      setTimeout(_showInstall, 250);
+      else {
+        WebAppInstall.restart(WebAppProperties.id);
+        window.close();
+      }
     }
 
     // Hookup the browser window callbacks
-    window.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIWebNavigation)
-          .QueryInterface(Ci.nsIDocShellTreeItem)
-          .treeOwner
-          .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIXULWindow)
-          .XULBrowserWindow = this;
+    xulWindow.XULBrowserWindow = this;
 
     window.addEventListener("close", function(event) { self._handleWindowClose(event); }, false);
 
