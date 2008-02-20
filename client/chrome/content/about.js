@@ -33,7 +33,7 @@ function onload(aEvent)
     return;
 
   var bundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-  bundle = bundle.createBundle("chrome://webrunner/locale/brand/brand.properties");
+  bundle = bundle.createBundle("chrome://branding/content/brand.properties");
 
   var appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
 
