@@ -1,7 +1,9 @@
+#filter substitution
+
 pref("toolkit.defaultChromeURI", "chrome://webrunner/content/webrunner.xul");  // - main xul window
 pref("browser.chromeURL", "chrome://webrunner/content/webrunner.xul");         // - allow popup windows to open
 
-pref("general.useragent.extra.prism", "prism/0.8");
+pref("general.useragent.extra.prism", "@APP_UA_NAME@/@APP_VERSION@");
 
 /* prefwindow prefs (see: MDC - Preferences System and bug 350528) */
 pref("browser.preferences.animateFadeIn", "false");
