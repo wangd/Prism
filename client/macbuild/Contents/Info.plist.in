@@ -39,5 +39,7 @@
       <true/>
     </dict>
   </array>
+  <key>CGDisableCoalescedUpdates</key>
+  <true/>
 </dict>
 </plist>
