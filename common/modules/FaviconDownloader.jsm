@@ -92,6 +92,18 @@ FaviconDownloader.prototype = {
     var link = event.originalTarget;
     if (link.rel.toLowerCase() == "icon")
       this.loadIcon(link.type, event.originalTarget.baseURIObject.resolve(link.href));
+    if (link.rel.toLowerCase() == "icon") {
+      var mimeType = link.type;
+      var iconURISpec = event.originalTarget.baseURIObject.resolve(link.href);
+      if (mimeType == "") {
+        // No MIME type specified in the <link rel="icon"...>, get it from the MIME service
+        var mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+        var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+        var iconURI = ioService.newURI(iconURISpec, null, null);
+        mimeType = mimeService.getTypeFromURI(iconURI);
+      }
+      this.loadIcon(mimeType, iconURISpec);
+    }
   },
 
   onContentLoaded : function(event)

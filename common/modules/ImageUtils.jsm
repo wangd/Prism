@@ -90,7 +90,7 @@ var ImageUtils =
     if (os == "winnt")
       return ".ico";
     else if (os == "linux")
-      return ".xpm";
+      return ".png";
     else if (os == "darwin")
       return ".icns";
   },
@@ -102,7 +102,7 @@ var ImageUtils =
     if (os == "winnt")
       return "image/vnd.microsoft.icon";
     else if (os == "linux")
-      return "image/xpm";
+      return "image/png";
     else if (os == "darwin")
       return "image/x-icns";
   },
