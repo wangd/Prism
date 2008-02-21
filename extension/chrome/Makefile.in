@@ -47,6 +47,5 @@ DEFINES += -DAB_CD=$(MOZ_UI_LOCALE) -DPACKAGE=refractor
 
 XPI_NAME               = refractor
 USE_EXTENSION_MANIFEST = 1
-XPI_PKGNAME            = refractor
 
 include $(topsrcdir)/config/rules.mk

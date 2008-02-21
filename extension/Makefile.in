@@ -49,6 +49,7 @@ DIRS		= chrome build
 
 XPI_NAME               = refractor
 INSTALL_EXTENSION_ID   = refractor@developer.mozilla.org
+XPI_PKGNAME            = refractor
 
 DIST_FILES = install.rdf
 
