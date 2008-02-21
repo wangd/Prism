@@ -388,7 +388,7 @@ var WebAppInstall =
 
     // Launch target with webapp
     process.init(target);
-    process.run(false, ["-webapp", id, "-override", appOverride.path], 4);
+    process.run(false, ["-override", appOverride.path, "-webapp", id], 4);
   },
 
   createApplication : function(params) {
