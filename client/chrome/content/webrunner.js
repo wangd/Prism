@@ -470,7 +470,7 @@ var WebRunner = {
     // Do we need to handle making a web application?
     if (install) {
       var cancel = {value: true};
-      window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", WebAppProperties, cancel);
+      window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen", WebAppProperties, cancel);
 
       // Hide the main window so it doesn't flash on the screen before closing
       xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
