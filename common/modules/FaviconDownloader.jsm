@@ -37,6 +37,7 @@ function FaviconDownloader() {
   this._mimeType = null;
   this._callback = null;
   this._iframe = null;
+  this._haveIcon = false;
 }
 
 FaviconDownloader.prototype = {
@@ -51,6 +52,7 @@ FaviconDownloader.prototype = {
     this._iframe = iframe;
     this._callback = callback;
     this._mimeType = null;
+    this._haveIcon = false;
 
     // Hook the iframe events to the favicon loader
     this._iframe.addEventListener("DOMLinkAdded", this, false);
@@ -69,7 +71,7 @@ FaviconDownloader.prototype = {
 
   get imageStream()
   {
-    if (this._storageStream)
+    if (this._haveIcon)
       return this._storageStream.newInputStream(0);
     else
       return null;
@@ -138,6 +140,7 @@ FaviconDownloader.prototype = {
     if (statusCode == Components.results.NS_OK &&
         request.QueryInterface(Ci.nsIChannel).contentType != "text/html") {
       this._outputStream.flush();
+      this._haveIcon = true;
     }
 
     if (this._callback)
