@@ -190,11 +190,6 @@ var WebRunner = {
 
     document.title = WebAppProperties.name;
 
-    if (WebAppProperties.trayicon) {
-      var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
-      desktop.QueryInterface(Ci.nsINotificationArea).setTitle(WebAppProperties.id, document.title);
-    }
-
     if (WebAppProperties.uri)
         this._getBrowser().loadURI(WebAppProperties.uri, null, null);
   },
