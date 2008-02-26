@@ -25,7 +25,7 @@ Name: runtime; Description: XUL Runner Runtime; Types: full custom
 [Files]
 Source: ..\app\prism.exe; DestDir: {app}; Components: main; Flags: ignoreversion
 Source: ..\app\application.ini; DestDir: {app}; Components: main; Flags: ignoreversion
-Source: ..\app\chrome\*; DestDir: {app}\chrome; Components: main; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.icns,*.xpm"
+Source: ..\app\chrome\*; DestDir: {app}\chrome; Components: main; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.icns"
 Source: ..\app\defaults\*; DestDir: {app}\defaults; Components: main; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: ..\app\extensions\*; DestDir: {app}\extensions; Components: main; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: ..\app\modules\*; DestDir: {app}\modules; Components: main; Flags: ignoreversion recursesubdirs createallsubdirs

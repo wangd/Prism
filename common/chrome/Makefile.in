@@ -55,12 +55,6 @@ ICON_FILES = \
             $(NULL)
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-ICON_FILES = \
-            icons/default/webrunner.xpm   \
-            $(NULL)
-endif
-
 ICON_FILES += \
             icons/default/app.png \
             icons/default/webrunner.png   \
