@@ -119,7 +119,12 @@
     </splitter>
 
     <vbox id="box_content" flex="1">
-      <browser id="browser_content" flex="1" type="content-primary" context="popup_content" tooltip="tooltip_content"/>
+      <browser id="browser_content"
+               flex="1"
+               type="content-primary"
+               context="popup_content"
+               tooltip="tooltip_content"
+               autocompletepopup="popup_autocomplete" />
     </vbox>
   </hbox>
 

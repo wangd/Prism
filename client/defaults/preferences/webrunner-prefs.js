@@ -51,6 +51,9 @@ pref("signon.rememberSignons", true);
 pref("signon.expireMasterPassword", false);
 pref("signon.SignonFileName", "signons.txt");
 
+/* autocomplete */
+pref("browser.formfill.enable", true);
+
 /* spellcheck */
 pref("layout.spellcheckDefault", 1);
 
