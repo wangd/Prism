@@ -129,20 +129,16 @@ var WebAppInstall =
 
     var installRoot = null;
 
-    var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-    var os = xulRuntime.OS.toLowerCase();
-    if (os == "winnt") {
-      installRoot = dirSvc.get("AppData", Ci.nsIFile);
-      installRoot.append("WebApps");
-    }
-    else if (os == "linux") {
-      installRoot = dirSvc.get("Home", Ci.nsIFile);
-      installRoot.append("WebApps");
-    }
-    else if (os == "darwin") {
-      installRoot = dirSvc.get("ULibDir", Ci.nsIFile);
-      installRoot.append("WebApps");
-    }
+#ifdef XP_MACOSX
+    installRoot = dirSvc.get("ULibDir", Ci.nsIFile);
+#else
+#ifdef XP_UNIX
+    installRoot = dirSvc.get("Home", Ci.nsIFile);
+#else
+    installRoot = dirSvc.get("AppData", Ci.nsIFile);
+#endif
+#endif
+    installRoot.append("WebApps");
 
     return installRoot;
   },
@@ -152,25 +148,23 @@ var WebAppInstall =
 
     var profileRoot = null;
 
-    var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-    var os = xulRuntime.OS.toLowerCase();
-    if (os == "winnt") {
-      profileRoot = dirSvc.get("AppData", Ci.nsIFile);
-      profileRoot.append("Prism");
-    }
-    else if (os == "linux") {
-      profileRoot = dirSvc.get("Home", Ci.nsIFile);
-      profileRoot.append(".prism");
-    }
-    else if (os == "darwin") {
-      profileRoot = dirSvc.get("Home", Ci.nsIFile);
+#ifdef XP_MACOSX
+    profileRoot = dirSvc.get("Home", Ci.nsIFile);
 
-      // FIXME: these strings are probably localized on non en-US
-      profileRoot.append("Library");
-      profileRoot.append("Application Support");
+    // FIXME: these strings are probably localized on non en-US
+    profileRoot.append("Library");
+    profileRoot.append("Application Support");
 
-      profileRoot.append("Prism");
-    }
+    profileRoot.append("Prism");
+#else
+#ifdef XP_UNIX
+    profileRoot = dirSvc.get("Home", Ci.nsIFile);
+    profileRoot.append(".prism");
+#else
+    profileRoot = dirSvc.get("AppData", Ci.nsIFile);
+    profileRoot.append("Prism");
+#endif
+#endif
 
     return profileRoot;
   },
@@ -385,7 +379,7 @@ var WebAppInstall =
     var appOverride = this.getInstallRoot();
     appOverride.append(id);
     appOverride.append("override.ini");
-
+Components.utils.reportError(target.path);
     // Launch target with webapp
     process.init(target);
     process.run(false, ["-override", appOverride.path, "-webapp", id], 4);
@@ -482,99 +476,23 @@ var WebAppInstall =
       // We use the working path because of a Windows but that restricts shortcut targets to
       // 260 characters or less.
       workingPath = extensionDir.path;
+#ifndef XP_MACOSX
     }
+#else
+      target.append("firefox");
+    }
+    else {
+      target.append("prism");
+    }
+#endif
 
     arguments += "-webapp " + id;
 
-    var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-    var os = xulRuntime.OS.toLowerCase();
-    if (os == "winnt") {
-      this._createShortcutWindows(target, name, arguments, workingPath, appSandbox, locations);
-    }
-    else if (os == "linux") {
-      this._createShortcutLinux(target, name, arguments, workingPath, appSandbox, locations);
-    }
-    else if (os == "darwin") {
-      var targetAdj = target.parent.clone();
-      if (appInfo.name == "Firefox")
-        targetAdj.append("firefox");
-      else
-        targetAdj.append("prism");
-      this._createShortcutMac(targetAdj, name, arguments, workingPath, appSandbox, locations);
-    }
+    this._createShortcut(target, name, arguments, workingPath, appSandbox, locations);
   },
 
-  _createShortcutWindows : function(target, name, arguments, workingPath, root, locations) {
-    var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-
-    // Locate the webapp resources
-    var appOverride = root.clone();
-    appOverride.append("override.ini");
-
-    arguments = "-override \"" + appOverride.path + "\" " + arguments;
-    if (workingPath.length)
-      arguments = "-app application.ini " + arguments;
-
-    var appIcon = root.clone();
-    appIcon.append("icons");
-    appIcon.append("default");
-    appIcon.append(WebAppProperties.icon + ImageUtils.getNativeIconExtension());
-
-    var directory = null;
-    for (var i=0; i<locations.length; i++)
-    {
-      if (locations[i] == "desktop") {
-        directory = dirSvc.get("Desk", Ci.nsIFile);
-      }
-      else if (locations[i] == "programs") {
-        directory = dirSvc.get("Progs", Ci.nsIFile);
-        directory.append("Web Apps");
-      }
-      else if (locations[i] == "quicklaunch") {
-        directory = dirSvc.get("QuickLaunch", Ci.nsIFile);
-      }
-      else {
-        continue;
-      }
-
-      desktop.createShortcut(name, target, directory, workingPath, arguments, "", appIcon);
-    }
-  },
-
-  _createShortcutLinux : function(target, name, arguments, workingPath, root, locations) {
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-
-    // Locate the webapp resources
-    var appOverride = root.clone();
-    appOverride.append("override.ini");
-
-    arguments = "-override \"" + appOverride.path + "\" " + arguments;
-    if (workingPath.length)
-      arguments = "-app \"" + workingPath + "/application.ini\" " + arguments;
-
-    var appIcon = root.clone();
-    appIcon.append("icons");
-    appIcon.append("default");
-    appIcon.append(WebAppProperties.icon + ImageUtils.getNativeIconExtension());
-
-    var file = dirSvc.get("Desk", Ci.nsIFile);
-    file.append(name + ".desktop");
-    if (file.exists())
-      file.remove(false);
-    file.create(Ci.nsIFile.NORMAL_FILE_TYPE, PR_PERMS_FILE);
-
-    var cmd = "[Desktop Entry]\n";
-    cmd += "Name=" + name + "\n";
-    cmd += "Type=Application\n";
-    cmd += "Comment=Web Application\n";
-    cmd += "Exec=" + target.path + " " + arguments + "\n";
-    cmd += "Icon=" + appIcon.path + "\n";
-
-    FileIO.stringToFile(cmd, file);
-  },
-
-  _createShortcutMac : function(target, name, arguments, workingPath, root, locations) {
+#ifdef XP_MACOSX
+  _createShortcut : function(target, name, arguments, workingPath, root, locations) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
     // Locate the webapp resources
@@ -597,7 +515,6 @@ var WebAppInstall =
     }
     if (locations.indexOf("applications") > -1) {
       var apps = dirSvc.get("LocApp", Ci.nsIFile);
-      //apps.append("Web Apps");
       if (!apps.exists())
         apps.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
       bundle = this._createBundle(target, name, arguments, appIcon, apps);
@@ -652,6 +569,79 @@ var WebAppInstall =
 
     return bundle;
   },
+#else
+#ifdef XP_UNIX
+  _createShortcut : function(target, name, arguments, workingPath, root, locations) {
+    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+
+    // Locate the webapp resources
+    var appOverride = root.clone();
+    appOverride.append("override.ini");
+
+    arguments = "-override \"" + appOverride.path + "\" " + arguments;
+    if (workingPath.length)
+      arguments = "-app \"" + workingPath + "/application.ini\" " + arguments;
+
+    var appIcon = root.clone();
+    appIcon.append("icons");
+    appIcon.append("default");
+    appIcon.append(WebAppProperties.icon + ImageUtils.getNativeIconExtension());
+
+    var file = dirSvc.get("Desk", Ci.nsIFile);
+    file.append(name + ".desktop");
+    if (file.exists())
+      file.remove(false);
+    file.create(Ci.nsIFile.NORMAL_FILE_TYPE, PR_PERMS_FILE);
+
+    var cmd = "[Desktop Entry]\n";
+    cmd += "Name=" + name + "\n";
+    cmd += "Type=Application\n";
+    cmd += "Comment=Web Application\n";
+    cmd += "Exec=" + target.path + " " + arguments + "\n";
+    cmd += "Icon=" + appIcon.path + "\n";
+
+    FileIO.stringToFile(cmd, file);
+  },
+#else
+  _createShortcut : function(target, name, arguments, workingPath, root, locations) {
+    var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
+    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+
+    // Locate the webapp resources
+    var appOverride = root.clone();
+    appOverride.append("override.ini");
+
+    arguments = "-override \"" + appOverride.path + "\" " + arguments;
+    if (workingPath.length)
+      arguments = "-app application.ini " + arguments;
+
+    var appIcon = root.clone();
+    appIcon.append("icons");
+    appIcon.append("default");
+    appIcon.append(WebAppProperties.icon + ImageUtils.getNativeIconExtension());
+
+    var directory = null;
+    for (var i=0; i<locations.length; i++)
+    {
+      if (locations[i] == "desktop") {
+        directory = dirSvc.get("Desk", Ci.nsIFile);
+      }
+      else if (locations[i] == "programs") {
+        directory = dirSvc.get("Progs", Ci.nsIFile);
+        directory.append("Web Apps");
+      }
+      else if (locations[i] == "quicklaunch") {
+        directory = dirSvc.get("QuickLaunch", Ci.nsIFile);
+      }
+      else {
+        continue;
+      }
+
+      desktop.createShortcut(name, target, directory, workingPath, arguments, "", appIcon);
+    }
+  },
+#endif
+#endif
 
   getExtensionDirectory : function(dirSvc)
   {
