@@ -8,7 +8,7 @@
         id="about"
         title="About"
         buttons="accept"
-        width="300" height="380">
+        width="300" height="400">
   <script type="application/x-javascript" src="chrome://webrunner/content/about.js"/>
 
   <vbox align="center">
