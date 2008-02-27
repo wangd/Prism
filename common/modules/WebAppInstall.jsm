@@ -551,7 +551,7 @@ var WebAppInstall =
 
     arguments = "-override \"" + appOverride.path + "\" " + arguments;
     if (workingPath.length)
-      arguments = "-app " + workingPath + "/application.ini " + arguments;
+      arguments = "-app \"" + workingPath + "/application.ini\" " + arguments;
 
     var appIcon = root.clone();
     appIcon.append("icons");
@@ -583,7 +583,7 @@ var WebAppInstall =
 
     arguments = "-override \"" + appOverride.path + "\" " + arguments;
     if (workingPath.length)
-      arguments = "-app " + workingPath + "/application.ini " + arguments;
+      arguments = "-app \"" + workingPath + "/application.ini\" " + arguments;
 
     var appIcon = root.clone();
     appIcon.append("icons");
