@@ -76,8 +76,10 @@
     <key id="key_close" modifiers="accel" key="w" command="cmd_close"/>
     <key id="key_quit" modifiers="accel" key="q" command="cmd_quit"/>
     <key id="key_print" modifiers="accel" key="p" command="cmd_print"/>
+#ifdef XP_MACOSX
     <key id="key_hideThisApp" key="&hideThisApp.commandkey;" modifiers="&hideThisApp.modifiers;"/>
     <key id="key_hideOtherApps" key="&hideOtherApps.commandkey;" modifiers="&hideOtherApps.modifiers;"/>
+#endif
   </keyset>
 
   <popupset>
