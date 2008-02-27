@@ -1,4 +1,4 @@
-<!ENTITY app.title                  "Prism">
+<!ENTITY app.title                  "&brandShortName;">
 
 <!ENTITY commands.tooltip           "Commands">
 <!ENTITY file.label                 "File">
@@ -17,8 +17,17 @@
 <!ENTITY home.label                 "Home">
 <!ENTITY reload.label               "Reload">
 <!ENTITY close.label                "Close">
-<!ENTITY quit.label                 "Quit Prism">
-<!ENTITY about.label                "About Prism">
+<!ENTITY quit.label                 "Quit &brandShortName;">
+<!ENTITY about.label                "About &brandShortName;">
 <!ENTITY console.label              "Error Console">
 <!ENTITY install.label              "Install Shortcut">
 <!ENTITY tools.label                "Tools">
+
+<!ENTITY servicesMenu.label         "Services">
+<!ENTITY hideThisApp.label          "Hide &brandShortName;">
+<!ENTITY hideThisApp.commandkey     "H">
+<!ENTITY hideThisApp.modifiers      "accel">
+<!ENTITY hideOtherApps.label        "Hide Others">
+<!ENTITY hideOtherApps.commandkey   "H">
+<!ENTITY hideOtherApps.modifiers    "accel,alt">
+<!ENTITY showAllApps.label          "Show All">
