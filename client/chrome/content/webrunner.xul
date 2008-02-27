@@ -107,6 +107,7 @@
       <menu id="menu_file" label="&file.label;">
         <menupopup>
 #ifdef XP_MACOSX
+          <menuitem id="aboutName" label="&about.label;" oncommand="WebRunner.doCommand('cmd_about');"/>
           <menuitem id="menu_mac_services" label="&servicesMenu.label;"/>
           <menuitem id="menu_mac_hide_app" label="&hideThisApp.label;" key="key_hideThisApp"/>
           <menuitem id="menu_mac_hide_others" label="&hideOtherApps.label;" key="key_hideOtherApps"/>
