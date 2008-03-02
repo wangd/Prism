@@ -379,7 +379,7 @@ var WebAppInstall =
     var appOverride = this.getInstallRoot();
     appOverride.append(id);
     appOverride.append("override.ini");
-Components.utils.reportError(target.path);
+
     // Launch target with webapp
     process.init(target);
     process.run(false, ["-override", appOverride.path, "-webapp", id], 4);

@@ -21,6 +21,7 @@
 # Contributor(s):
 #   Dave Townsend <dtownsend@oxymoronical.com>
 #   Matthew Gertner <matthew@allpeers.com>
+#   Fredrik Larsson <nossralf@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,11 +47,11 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = chrome
 
 EXTRA_JS_MODULES = \
-  $(srcdir)/modules/ImageUtils.jsm \
   $(srcdir)/modules/FaviconDownloader.jsm \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \
+  $(srcdir)/modules/ImageUtils.jsm \
   $(srcdir)/modules/WebAppInstall.jsm \
   $(NULL)
 

@@ -464,20 +464,15 @@ var WebRunner = {
 
     // Do we need to handle making a web application?
     if (install) {
-      var cancel = {value: true};
-      window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen", WebAppProperties, cancel);
+      // If the install is successful, launch the webapp
+      var allowLaunch = {value: true};
+      window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "dialog=no,centerscreen", WebAppProperties, allowLaunch);
 
       // Hide the main window so it doesn't flash on the screen before closing
       xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
 
-      // Since we needed to install and the user must have canceled, lets close webrunner
-      if (cancel.value) {
-        window.close();
-      }
-      else {
-        WebAppInstall.restart(WebAppProperties.id);
-        window.close();
-      }
+      // Since we are installing, we need to close the application
+      window.close();
     }
 
     // Hookup the browser window callbacks

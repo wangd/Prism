@@ -20,6 +20,7 @@
  * Contributor(s):
  *   Mark Finkle, <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
  *   Matthew Gertner <matthew@allpeers.com>
+ *   Fredrik Larsson <nossralf@gmail.com>
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -85,26 +86,23 @@ var InstallShortcut = {
     }
 
     // Configure the options based on the OS
-    // FIXME: Use XUL Preprocessor?
-    var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-    var os = xulRuntime.OS.toLowerCase();
-    if (os == "winnt") {
-      document.getElementById("applications").hidden = true;
-      document.getElementById("dock").hidden = true;
-    }
-    else if (os == "linux") {
-      document.getElementById("programs").hidden = true;
-      document.getElementById("quicklaunch").hidden = true;
-      document.getElementById("trayicon").hidden = true;
+#ifdef XP_MACOSX
+    document.getElementById("programs").hidden = true;
+    document.getElementById("quicklaunch").hidden = true;
+    document.getElementById("trayicon").hidden = true;
+#else
+#ifdef XP_UNIX
+    document.getElementById("programs").hidden = true;
+    document.getElementById("quicklaunch").hidden = true;
+    document.getElementById("trayicon").hidden = true;
 
-      document.getElementById("applications").hidden = true;
-      document.getElementById("dock").hidden = true;
-    }
-    else if (os == "darwin") {
-      document.getElementById("programs").hidden = true;
-      document.getElementById("quicklaunch").hidden = true;
-      document.getElementById("trayicon").hidden = true;
-    }
+    document.getElementById("applications").hidden = true;
+    document.getElementById("dock").hidden = true;
+#else
+    document.getElementById("applications").hidden = true;
+    document.getElementById("dock").hidden = true;
+#endif
+#endif
   },
 
   cleanup: function() {
@@ -195,13 +193,13 @@ var InstallShortcut = {
     WebAppProperties.navigation = params.navigation;
     WebAppProperties.trayicon = params.trayicon;
 
-    if (window.arguments && window.arguments.length == 2) {
-      // Let the caller know we actually installed a web application
-      window.arguments[1].value = false;
-    }
-
     // Make any desired shortcuts
     WebAppInstall.createShortcut(name, WebAppProperties.id, shortcuts.split(","));
+
+    if (window.arguments && window.arguments.length == 2) {
+      // Assume we should launch the webapp
+      WebAppInstall.restart(WebAppProperties.id);
+    }
 
     return true;
   },

@@ -20,6 +20,7 @@
  * Contributor(s):
  *   Matthew Gertner <matthew@allpeers.com>
  *   Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
+ *   Fredrik Larsson <nossralf@gmail.com>
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -85,38 +86,41 @@ var ImageUtils =
 
   getNativeIconExtension : function()
   {
-    var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-    var os = xulRuntime.OS.toLowerCase();
-    if (os == "winnt")
-      return ".ico";
-    else if (os == "linux")
-      return ".png";
-    else if (os == "darwin")
-      return ".icns";
+#ifdef XP_MACOSX
+    return ".icns";
+#else
+#ifdef XP_UNIX
+    return ".png";
+#else
+    return ".ico";
+#endif
+#endif
   },
 
   getNativeIconMimeType : function()
   {
-    var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-    var os = xulRuntime.OS.toLowerCase();
-    if (os == "winnt")
-      return "image/vnd.microsoft.icon";
-    else if (os == "linux")
-      return "image/png";
-    else if (os == "darwin")
-      return "image/x-icns";
+#ifdef XP_MACOSX
+    return "image/x-icns";
+#else
+#ifdef XP_UNIX
+    return "image/png";
+#else
+    return "image/vnd.microsoft.icon";
+#endif
+#endif
   },
 
   getNativeThrobberSpec : function()
   {
-    var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-    var os = xulRuntime.OS.toLowerCase();
-    if (os == "winnt")
-      return "chrome://global/skin/throbber/Throbber-small.gif";
-    else if (os == "linux")
-      return "chrome://global/skin/throbber/Throbber-small.gif";
-    else if (os == "darwin")
-      return "chrome://global/skin/icons/loading_16_grey.gif";
+#ifdef XP_MACOSX
+    return "chrome://global/skin/icons/loading_16_grey.gif";
+#else
+#ifdef XP_UNIX
+    return "chrome://global/skin/throbber/Throbber-small.gif";
+#else
+    return "chrome://global/skin/throbber/Throbber-small.gif";
+#endif
+#endif
   },
 
   getMimeTypeFromExtension : function(imageExt) {
