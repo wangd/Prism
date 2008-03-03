@@ -58,6 +58,7 @@ endif
 ICON_FILES += \
             icons/default/app.png \
             icons/default/install-shortcut.png   \
+            icons/default/install-shortcut48.png   \
             $(NULL)
 
 
