@@ -13,12 +13,13 @@
  *
  * The Original Code is Prism Extension.
  *
- * The Initial Developer of the Original Code is Cesar Oliveira
- *  <a.sacred.line@gmail.com>.
+ * The Initial Developer of the Original Code is  is Mozilla Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Cesar Oliveira <a.sacred.line@gmail.com>
+ *   Matthew Gertner <matthew@allpeers.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -106,16 +107,14 @@ var PrismWebAppDownload = {
   },
 
   onLocationChange : function(webProgress, request, location) { },
-
   onProgressChange : function(webProgress, request, curSelfProgress, maxSelfProgress, curTotalProgress, maxTotalProgress) { },
-
   onSecurityChange : function(webProgress, request, state) { },
 
-   onStateChange : function(webProgress, request, stateFlags, status) {
-     if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+  onStateChange : function(webProgress, request, stateFlags, status) {
+    if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
       this.install(this.targetFile);
-     }
-   },
+    }
+  },
 
   onStatusChange : function(webProgress, request, status, message) { },
 
@@ -150,11 +149,13 @@ PrismWebApps.prototype = {
         break;
     }
   },
+
   onLinkAdded : function(event) {
     var tag = event.originalTarget;
-    if (tag.rel.toLowerCase() == 'webapp')
+    if (tag.rel.toLowerCase() == "webapp")
       this.webappCount++;
   },
+
   onContentLoaded : function(event) {
     var notificationbox = gBrowser.getNotificationBox();
     if (this.webappCount > 0 && notificationbox.getNotificationWithValue("refractor") == null) {
@@ -172,6 +173,7 @@ PrismWebApps.prototype = {
       );
     }
   },
+
   fillPopupList : function(event)
   {
     var popup = event.target;
@@ -184,7 +186,7 @@ PrismWebApps.prototype = {
     for (var i=0; i<links.length; i++) {
       if (links[i].rel == "webapp") {
         var menuitem = document.createElement("menuitem");
-        var label = this.strings.getFormattedString("prismNotificationMenu", [ links[i].getAttribute("name") ]);
+        var label = this.strings.getFormattedString("prismNotificationMenu", [ links[i].getAttribute("title") ]);
         menuitem.setAttribute("label", label);
         menuitem.value = links[i].href;
         menuitem.addEventListener("command", this, false);
@@ -192,6 +194,7 @@ PrismWebApps.prototype = {
       }
     }
   },
+
   installWebApp : function(event)
   {
     var webappSpec = event.target.value;
@@ -210,12 +213,14 @@ var PrismWebListener = {
       return this;
     throw Components.results.NS_NOINTERFACE;
   },
+
   onLocationChange : function (webProgress, request, loc) {
     // Make sure that this is really a new request (and not changing tabs or something)
     if (request) {
       new PrismWebApps(webProgress.DOMWindow.document);
     }
   },
+
   onProgressChange : function() {},
   onSecurityChange : function() {},
   onStateChange : function() {},
