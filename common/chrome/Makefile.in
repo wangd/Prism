@@ -45,21 +45,19 @@ include $(DEPTH)/config/autoconf.mk
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ICON_FILES  = \
-            icons/default/webrunner.ico   \
+            icons/default/install-shortcut.ico   \
             $(NULL)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 ICON_FILES = \
-            icons/default/webrunner.icns  \
+            icons/default/install-shortcut.icns  \
             $(NULL)
 endif
 
 ICON_FILES += \
             icons/default/app.png \
-            icons/default/webrunner.png   \
-            icons/default/webrunner32.png \
-            icons/default/webrunner48.png \
+            icons/default/install-shortcut.png   \
             $(NULL)
 
 

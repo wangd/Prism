@@ -20,4 +20,4 @@ refractor.jar:
   locale/@AB_CD@/install-advanced.dtd           (../../common/chrome/locale/@AB_CD@/install-advanced.dtd)
   locale/@AB_CD@/install-advanced.properties    (../../common/chrome/locale/@AB_CD@/install-advanced.properties)
   skin/classic/install-shortcut.css             (../../common/chrome/skin/standard/install-shortcut.css)
-  skin/classic/webrunner48.png                  (../../common/chrome/icons/default/webrunner48.png)
+  skin/classic/install-shortcut48.png           (../../common/chrome/icons/default/install-shortcut48.png)
