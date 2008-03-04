@@ -1,7 +1,0 @@
-To checkout the prism source from trunk, execute the following subversion
-command :
-
-svn export http://svn.mozilla.org/projects/webrunner/trunk/app prism
-
-You also need to overwrite prism/modules/WebAppInstall.jsm with
-extras/WebAppInstall.jsm
