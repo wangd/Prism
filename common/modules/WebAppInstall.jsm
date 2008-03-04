@@ -476,15 +476,7 @@ var WebAppInstall =
       // We use the working path because of a Windows but that restricts shortcut targets to
       // 260 characters or less.
       workingPath = extensionDir.path;
-#ifndef XP_MACOSX
     }
-#else
-      target.append("firefox");
-    }
-    else {
-      target.append("prism");
-    }
-#endif
 
     arguments += "-webapp " + id;
 
@@ -562,7 +554,7 @@ var WebAppInstall =
     macos.append("MacOS");
     macos.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
 
-    var cmd = "#!/bin/sh\nexec " + target.path + " " + arguments;
+    var cmd = "#!/bin/sh\nexec \"" + target.path + "\" " + arguments;
     var script = macos.clone();
     script.append(name);
     FileIO.stringToFile(cmd, script, 0755);
@@ -597,7 +589,7 @@ var WebAppInstall =
     cmd += "Name=" + name + "\n";
     cmd += "Type=Application\n";
     cmd += "Comment=Web Application\n";
-    cmd += "Exec=" + target.path + " " + arguments + "\n";
+    cmd += "Exec=\"" + target.path + "\" " + arguments + "\n";
     cmd += "Icon=" + appIcon.path + "\n";
 
     FileIO.stringToFile(cmd, file);
