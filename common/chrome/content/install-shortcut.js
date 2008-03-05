@@ -38,6 +38,7 @@ var InstallShortcut = {
   _userIcon : null,
   _iframe : null,
   _mode : "edit",
+  _launch : false,
   _faviconDownloader : new FaviconDownloader,
 
   init : function() {
@@ -45,6 +46,7 @@ var InstallShortcut = {
 
     // Check the dialog mode
     this._mode = (window.arguments && window.arguments.length == 2) ? "install" : "edit";
+    this._launch = (window.arguments && window.arguments.length == 2) ? window.arguments[1].value : false;
 
     // Default the UI from the given config
     if (WebAppProperties.uri) {
@@ -204,7 +206,7 @@ var InstallShortcut = {
     // Make any desired shortcuts
     WebAppInstall.createShortcut(name, WebAppProperties.id, shortcuts.split(","));
 
-    if (this._mode == "install") {
+    if (this._launch) {
       // We should launch the webapp
       WebAppInstall.restart(WebAppProperties.id);
     }

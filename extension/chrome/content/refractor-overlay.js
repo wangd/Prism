@@ -42,7 +42,9 @@ var Prism = {
       WebAppProperties.uri = gBrowser.contentDocument.location.href;
       WebAppProperties.appBundle = null;
     }
-    window.openDialog("chrome://refractor/content/install-shortcut.xul", "install", "centerscreen,modal", WebAppProperties);
+
+    var allowLaunch = {value: false};
+    window.openDialog("chrome://refractor/content/install-shortcut.xul", "install", "centerscreen,modal", WebAppProperties, allowLaunch);
   },
   onLoad : function() {
     var uriloader = Cc["@mozilla.org/uriloader;1"].getService(Ci.nsIURILoader);
