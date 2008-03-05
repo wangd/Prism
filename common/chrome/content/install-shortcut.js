@@ -52,6 +52,11 @@ var InstallShortcut = {
     if (WebAppProperties.uri) {
       document.getElementById("uri").value = WebAppProperties.uri;
       document.getElementById("name").focus();
+
+      // Fetch the favicon since we have a URI, only if this is not a webapp bundle
+      if (!WebAppProperties.appBundle) {
+        setTimeout(function() { self.onUriChange(); }, 100);
+      }
     }
 
     if (WebAppProperties.name) {
@@ -79,15 +84,6 @@ var InstallShortcut = {
 
       // Display the default application icon
       this.onIconReady();
-    }
-    else {
-      // We are hiding the URL textbox, but still need to fire the icon preview
-      if (WebAppProperties.appBundle) {
-        this.onIconReady();
-      }
-      else {
-        setTimeout(function() { self.onUriChange(); }, 0);
-      }
     }
 
     // Configure the options based on the OS
