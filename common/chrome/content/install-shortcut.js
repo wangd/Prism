@@ -164,9 +164,10 @@ var InstallShortcut = {
     // Get the icon stream which is either the default icon or the favicon
     var iconData = this.getIcon();
     var storageStream = ImageUtils.createStorageStream();
-    ImageUtils.createNativeIcon(iconData.stream, iconData.mimeType,
-                                ImageUtils.getBufferedOutputStream(storageStream));
-    iconData = { mimeType: ImageUtils.getNativeIconMimeType(), stream: storageStream.newInputStream(0) };
+    if (iconData.mimeType != ImageUtils.getNativeIconMimeType()) {
+      ImageUtils.createNativeIcon(iconData.stream, iconData.mimeType, ImageUtils.getBufferedOutputStream(storageStream));
+      iconData = { mimeType: ImageUtils.getNativeIconMimeType(), stream: storageStream.newInputStream(0) };
+    }
 
     var params = {id: idPrefix + "@prism.app", name: name, uri: uri.value, icon: iconData, status: doStatus, location: doLocation, sidebar: "false", navigation: doNavigation, trayicon: doTrayIcon};
 
