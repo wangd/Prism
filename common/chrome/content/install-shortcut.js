@@ -37,11 +37,14 @@ var InstallShortcut = {
   _advanced : {},
   _userIcon : null,
   _iframe : null,
+  _mode : "edit",
   _faviconDownloader : new FaviconDownloader,
 
   init : function() {
-    // Check the dialog mode
     var self = this;
+
+    // Check the dialog mode
+    this._mode = (window.arguments && window.arguments.length == 2) ? "install" : "edit";
 
     // Default the UI from the given config
     if (WebAppProperties.uri) {
@@ -56,7 +59,7 @@ var InstallShortcut = {
     // Default to use the favicon
     document.getElementById("icon_favicon").setAttribute("checked", "true");
 
-    if (window.arguments && window.arguments.length == 2) {
+    if (this._mode == "install") {
       var bundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
       bundle = bundle.createBundle("chrome://@PACKAGE@/locale/install-shortcut.properties");
       document.title = bundle.GetStringFromName("dialog.title");
@@ -168,26 +171,31 @@ var InstallShortcut = {
     iconData = { mimeType: ImageUtils.getNativeIconMimeType(), stream: storageStream.newInputStream(0) };
 
     var params = {id: idPrefix + "@prism.app", name: name, uri: uri.value, icon: iconData, status: doStatus, location: doLocation, sidebar: "false", navigation: doNavigation, trayicon: doTrayIcon};
+
+    // Use the id from the bundle, if we have one
+    if (WebAppProperties.appBundle) {
+      params.id = WebAppProperties.id;
+    }
+
+    // Setup the app group
     if (this._advanced.hasOwnProperty("group"))
       params["group"] = this._advanced.group;
     else
       params["group"] = name;
 
-    if (!WebAppProperties.appBundle) {
-      // Make the web application in the profile folder
-      WebAppInstall.createApplication(params);
+    if (this._mode == "install") {
+      // If a webapp bundle was preinstalled, don't clean the folder. We want to
+      // overwrite only some files. For non-webapp bundles, clean the folder.
+      var clean = (WebAppProperties.appBundle == null);
 
-      // Only update these properties if there isn't an app bundle
-      WebAppProperties.id = params.id;
-      WebAppProperties.uri = params.uri;
-      WebAppProperties.name = params.name;
-    }
-    else {
-      // FIXME
-      // Might need to change the app's icon if the user picked a different one
+      // Make the web application in the profile folder
+      WebAppInstall.createApplication(params, clean);
     }
 
     // Update the caller's config
+    WebAppProperties.id = params.id;
+    WebAppProperties.uri = params.uri;
+    WebAppProperties.name = params.name;
     WebAppProperties.status = params.status;
     WebAppProperties.location = params.location;
     WebAppProperties.navigation = params.navigation;
@@ -196,8 +204,8 @@ var InstallShortcut = {
     // Make any desired shortcuts
     WebAppInstall.createShortcut(name, WebAppProperties.id, shortcuts.split(","));
 
-    if (window.arguments && window.arguments.length == 2) {
-      // Assume we should launch the webapp
+    if (this._mode == "install") {
+      // We should launch the webapp
       WebAppInstall.restart(WebAppProperties.id);
     }
 

@@ -152,8 +152,10 @@
         <menupopup id="popup_main">
           <menuitem id="menuitem_print" command="cmd_print"/>
           <menuitem id="menuitem_pageSetup" command="cmd_pageSetup"/>
+          <!--
           <menuseparator/>
           <menuitem id="menuitem_install" command="cmd_install"/>
+          -->
           <menuseparator/>
           <menu id="menu_tools" label="&tools.label;">
             <menupopup id="popup_tools">

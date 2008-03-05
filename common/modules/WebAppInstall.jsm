@@ -273,7 +273,7 @@ var WebAppInstall =
         var xulRuntime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
         var iconExt = ImageUtils.getNativeIconExtension();
 
-        // Now we will build the webapp folder in the profile
+        // Now we will unpack the bundle into the webapp folder
         var appSandbox = this.getInstallRoot();
         appSandbox.append(WebAppProperties.id);
         if (appSandbox.exists())
@@ -351,13 +351,14 @@ var WebAppInstall =
           // webapp.ini doesn't have its own icon, so we substitute the
           // default icon instead
           var defaultIcon = dirSvc.get("resource:app", Ci.nsIFile);
+          var defaultIconName = "app" + iconExt;
 
           defaultIcon.append("chrome");
           defaultIcon.append("icons");
           defaultIcon.append("default");
-          defaultIcon.append(iconName);
+          defaultIcon.append(defaultIconName);
 
-          defaultIcon.copyTo(appIcon, "");
+          defaultIcon.copyTo(appIcon, iconName);
         }
         WebAppProperties.appBundle = appSandbox;
       }
@@ -385,7 +386,7 @@ var WebAppInstall =
     process.run(false, ["-override", appOverride.path, "-webapp", id], 4);
   },
 
-  createApplication : function(params) {
+  createApplication : function(params, clean) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
     // Creating a webapp install requires an ID
@@ -393,9 +394,14 @@ var WebAppInstall =
       // Now we will build the webapp folder in the profile
       var appSandbox = this.getInstallRoot();
       appSandbox.append(params.id);
-      if (appSandbox.exists())
+
+      // Remove any existing webapp folder if we want a clean install
+      if (appSandbox.exists() && clean)
         appSandbox.remove(true);
-      appSandbox.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
+
+      // Make sure the folder exists
+      if (!appSandbox.exists())
+        appSandbox.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
 
       var appINI = appSandbox.clone();
       appINI.append("webapp.ini");
