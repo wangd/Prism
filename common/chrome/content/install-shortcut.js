@@ -163,8 +163,8 @@ var InstallShortcut = {
 
     // Get the icon stream which is either the default icon or the favicon
     var iconData = this.getIcon();
-    var storageStream = ImageUtils.createStorageStream();
     if (iconData.mimeType != ImageUtils.getNativeIconMimeType()) {
+      var storageStream = ImageUtils.createStorageStream();
       ImageUtils.createNativeIcon(iconData.stream, iconData.mimeType, ImageUtils.getBufferedOutputStream(storageStream));
       iconData = { mimeType: ImageUtils.getNativeIconMimeType(), stream: storageStream.newInputStream(0) };
     }
