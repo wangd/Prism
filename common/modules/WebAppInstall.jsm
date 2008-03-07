@@ -135,7 +135,7 @@ var WebAppInstall =
 #else
 #ifdef XP_UNIX
     installRoot = dirSvc.get("Home", Ci.nsIFile);
-    installRoot.append(".webApps");
+    installRoot.append(".webapps");
 #else
     installRoot = dirSvc.get("AppData", Ci.nsIFile);
     installRoot.append("WebApps");
