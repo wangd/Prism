@@ -131,14 +131,16 @@ var WebAppInstall =
 
 #ifdef XP_MACOSX
     installRoot = dirSvc.get("ULibDir", Ci.nsIFile);
+    installRoot.append("WebApps");
 #else
 #ifdef XP_UNIX
     installRoot = dirSvc.get("Home", Ci.nsIFile);
+    installRoot.append(".webApps");
 #else
     installRoot = dirSvc.get("AppData", Ci.nsIFile);
-#endif
-#endif
     installRoot.append("WebApps");
+#endif
+#endif
 
     return installRoot;
   },
