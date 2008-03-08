@@ -158,8 +158,15 @@ var InstallShortcut = {
     var doStatus = document.getElementById("status").checked ? true : false;
     var doNavigation = document.getElementById("navigation").checked ? true : false;
     var doTrayIcon = document.getElementById("trayicon").checked ? true : false;
+
+    // Start transforming the name into the ID
     var idPrefix = name.toLowerCase();
-    idPrefix = idPrefix.replace(" ", ".", "g");
+
+    // Replace spaces with dots for file system safety
+    idPrefix = idPrefix.replace(/ /g, ".");
+
+    // Remove other invalid characters that are fine for shortcut name, but bad for ID
+    idPrefix = idPrefix.replace(/[\'\(\)\#\~\&\;\`\!\%]/g, "");
 
     // Get the icon stream which is either the default icon or the favicon
     var iconData = this.getIcon();
