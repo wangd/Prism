@@ -246,7 +246,14 @@ var InstallShortcut = {
                         createInstance(Ci.nsIFileInputStream);
       inputStream.init(defaultIcon, 0x01, 00004, null);
 
-      icon.stream = inputStream;
+      // Create an in memory stream to hold the image data. We can't count on the
+      // file existing until it's time to create application.
+      var storageStream = ImageUtils.createStorageStream();
+      var bufferedOutput = ImageUtils.getBufferedOutputStream(storageStream);
+      bufferedOutput.writeFrom(inputStream, inputStream.available());
+      bufferedOutput.flush();
+
+      icon.stream = storageStream.newInputStream(0);
       icon.mimeType = ImageUtils.getNativeIconMimeType();
     }
     else {
