@@ -188,6 +188,7 @@ var WebRunner = {
           keys[i].parentNode.removeChild(keys[i]);
     }
 
+    // Default the name of the window to the webapp name
     document.title = WebAppProperties.name;
 
     if (WebAppProperties.uri)
@@ -316,6 +317,13 @@ var WebRunner = {
 
     if (!canShow)
       aEvent.preventDefault();
+  },
+
+  _domTitleChanged : function(aEvent) {
+    if (aEvent.target != this._getBrowser().contentDocument)
+      return;
+
+    document.title = aEvent.target.title;
   },
 
   _isLinkExternal : function(aLink) {
@@ -481,8 +489,9 @@ var WebRunner = {
     window.addEventListener("close", function(event) { self._handleWindowClose(event); }, false);
 
     var browser = this._getBrowser();
-    browser.addEventListener("dragover", function(aEvent) { self._dragOver(aEvent); }, true)
-    browser.addEventListener("dragdrop", function(aEvent) { self._dragDrop(aEvent); }, true)
+    browser.addEventListener("DOMTitleChanged", function(aEvent) { self._domTitleChanged(aEvent); }, true);
+    browser.addEventListener("dragover", function(aEvent) { self._dragOver(aEvent); }, true);
+    browser.addEventListener("dragdrop", function(aEvent) { self._dragDrop(aEvent); }, true);
     browser.webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
 
     this._processConfig();
