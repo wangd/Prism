@@ -39,7 +39,6 @@
         id="webrunner"
         windowtype="webrunner"
         title="&app.title;"
-        width="750" height="550"
         screenX="10" screenY="10">
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
