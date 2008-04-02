@@ -38,61 +38,19 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
-interface nsIApplicationTile;
-interface nsIFile;
-interface nsINativeMenu;
-
 /**
- * Desktop environment-specific actions.
+ * Support for platform-native menus.
  */
-[scriptable, uuid(86f7332c-f4fd-4a30-946d-433596d79304)]
-interface nsIDesktopEnvironment : nsISupports
+[scriptable, uuid(9d3547d0-ff55-11dc-95ff-0800200c9a66)]
+interface nsINativeMenu : nsISupports
 {
   /**
-   * The application tile for the current application.
-   * On Mac this is the dock tile, on Windows the system tray icon.
-   *
-   * @returns null if there is no application tile.
+   * Add the item with the specified id from the associated document.
   **/
-  readonly attribute nsIApplicationTile applicationTile;
+  void addMenuItem(in AString id);
 
   /**
-   * Create a shortcut for the application.
-   *
-   * @param name Name of the shortcut.
-   * @param targetPath Path to the application we are linking to
-   * @param location Directory where the shortcut should be created.
-   * @param workingPath Directory the application should be run in
-   *    when the shortcut is executed.
-   * @param arguments Command-line parameters to pass to the app.
-   * @param description Human-readable description.
-   * @param icon Icon to use for the shortcut.
+   * Remove the item with the specified id.
   **/
-  nsIFile createShortcut(
-    in AString name,
-    in nsIFile target,
-    in nsIFile location,
-    in AString workingPath,
-    in AString arguments,
-    in AString description,
-    in nsIFile icon
-  );
-
-  const unsigned short zLevelTop = 1;
-  const unsigned short zLevelBottom = 2;
-  const unsigned short zLevelAlwaysOnTop = 3;
-
-  /**
-   * Change the Z order of the window relative to other windows on the desktop.
-  **/
-  void setZLevel(in nsIDOMWindow window, in unsigned short level);
-
-  /**
-   * Get the system menu for the specified window.
-   *
-   * @param window the window for which we want the system menu.
-   * @returns null if there is no system menu.
-  **/
-  nsINativeMenu getSystemMenu(in nsIDOMWindow window);
+  void removeMenuItem(in AString id);
 };

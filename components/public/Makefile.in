@@ -61,7 +61,7 @@ XPIDLSRCS	= \
     nsIApplicationTile.idl \
     nsIDesktopEnvironment.idl \
     nsINativeIcon.idl \
+    nsINativeMenu.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-

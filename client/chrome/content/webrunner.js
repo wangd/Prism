@@ -506,6 +506,13 @@ var WebRunner = {
 
       // Needed for linux or the menubar doesn't hide
       document.getElementById("menu_file").hidden = true;
+
+      // Add the about item to the system menu (if there is one)
+      var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
+      var systemMenu = desktop.getSystemMenu(window);
+      if (systemMenu) {
+        systemMenu.addMenuItem("aboutName");
+      }
     }
 
     if (WebAppProperties.trayicon)

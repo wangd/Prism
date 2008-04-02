@@ -36,55 +36,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDesktopEnvironment.h"
+#include "nsINativeMenu.h"
 
+#include "nsInterfaceHashtable.h"
+#include "nsHashKeys.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsIDirectoryService.h"
-#include "nsINotificationArea.h"
-#include "nsIObserver.h"
+#include "nsStringAPI.h"
+#include "nsTArray.h"
 
-class nsIComponentManager;
-class nsIFile;
-class nsINativeMenu;
-struct nsModuleComponentInfo;
+#include <windows.h>
 
-#define NS_DESKTOPENVIRONMENT_CID \
-{ /* 3c748b50-beae-11dc-95ff-0800200c9a66 */         \
-     0x3c748b50,                                     \
-     0xbeae,                                         \
-     0x11dc,                                         \
-    {0x95, 0xff, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66} \
-}
-#define NS_DESKTOPENVIRONMENT_CONTRACTID "@mozilla.org/desktop-environment;1"
+class nsIDOMDocument;
+class nsIDOMElement;
 
-// Desktop integration for Windows platforms.
-class nsDesktopEnvironment : public nsIDesktopEnvironment,
-                             public nsIDirectoryServiceProvider,
-                             public nsIObserver,
-                             public nsINotificationArea
+// Encapsulation of system menu on Windows
+class nsSystemMenu : public nsINativeMenu
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDESKTOPENVIRONMENT
-  NS_DECL_NSIDIRECTORYSERVICEPROVIDER
-  NS_DECL_NSIOBSERVER
-  NS_FORWARD_NSINOTIFICATIONAREA(mNotificationArea->)
+  NS_DECL_NSINATIVEMENU
 
-  nsDesktopEnvironment();
+  nsSystemMenu(HWND hWnd, nsIDOMDocument* aDocument);
+  ~nsSystemMenu();
 
-  nsresult Init();
+  nsresult OnItemSelected(PRUint32 itemIndex, PRBool* preventDefault);
 
-  static NS_METHOD OnRegistration(nsIComponentManager *aCompMgr,
-    nsIFile *aPath, const char *registryLocation, const char *componentType,
-    const nsModuleComponentInfo *info);
-
-  static NS_METHOD OnUnregistration(nsIComponentManager *aCompMgr,
-    nsIFile *aPath, const char *registryLocation,
-    const nsModuleComponentInfo *info);
+  static nsresult GetSystemMenu(HWND hWnd, nsIDOMDocument* aDocument, nsINativeMenu** _retval);
+  static LRESULT APIENTRY WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 private:
-  ~nsDesktopEnvironment();
 
 protected:
-  nsCOMPtr<nsINotificationArea> mNotificationArea;
+  HWND mWnd;
+  nsCOMPtr<nsIDOMDocument> mDocument;
+  WNDPROC mWndProc;
+  nsCOMArray<nsIDOMElement> mItems;
+
+  static nsInterfaceHashtable<nsUint32HashKey, nsSystemMenu> mSystemMenuMap;
 };

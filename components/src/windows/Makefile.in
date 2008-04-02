@@ -66,6 +66,7 @@ CPPSRCS = \
     nsDesktopEnvironmentWin.cpp \
     nsNotificationArea.cpp \
     nsOSIntegrationModule.cpp \
+    nsSystemMenu.cpp \
     $(NULL)
 
 EXTRA_DSO_LDOPTS = \
