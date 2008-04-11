@@ -28,7 +28,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/JSON.jsm");
-Components.utils.import("resource://app/modules/WebAppInstall.jsm");
+Components.utils.import("resource://prism-runtime/modules/WebAppProperties.jsm");
 
 window.addEventListener("load", function() { WebRunner.startup(); }, false);
 window.addEventListener("unload", function() { WebRunner.shutdown(); }, false);
@@ -124,47 +124,45 @@ var WebRunner = {
       // Save using JSON format
       if (WebAppProperties.hasOwnProperty("id")) {
         var json = JSON.toString(settings);
-        var file = WebAppInstall.getInstallRoot();
-        file.append(WebAppProperties.id);
+        var file = WebAppProperties.getAppRoot();
         file.append("localstore.json");
         FileIO.stringToFile(json, file);
       }
   },
 
   _loadSettings : function() {
-      // Load using JSON format
-      var settings;
-      if (WebAppProperties.hasOwnProperty("id")) {
-        var file = WebAppInstall.getInstallRoot();
-        file.append(WebAppProperties.id);
-        file.append("localstore.json");
-        if (file.exists()) {
-          var json = FileIO.fileToString(file);
-          settings = JSON.fromString(json);
+    // Load using JSON format
+    var settings;
+    if (WebAppProperties.hasOwnProperty("id")) {
+      var file = WebAppProperties.getAppRoot();
+      file.append("localstore.json");
+      if (file.exists()) {
+        var json = FileIO.fileToString(file);
+        settings = JSON.fromString(json);
 
-          if (settings.window) {
-            switch (settings.window.state) {
-              case window.STATE_MAXIMIZED:
-                window.maximize();
-                break;
-              case window.STATE_MINIMIZED:
-                // Do nothing if window was closed minimized
-                break;
-              case window.STATE_NORMAL:
-                window.moveTo(settings.window.screenX, settings.window.screenY);
-                window.resizeTo(settings.window.width, settings.window.height);
-                break;
-            }
-          }
-
-          if (settings.sidebar) {
-            document.getElementById("splitter_sidebar").setAttribute("state", settings.sidebar.visible ? "open" : "collapsed");
-            document.getElementById("box_sidebar").width = settings.sidebar.width;
+        if (settings.window) {
+          switch (settings.window.state) {
+            case window.STATE_MAXIMIZED:
+              window.maximize();
+              break;
+            case window.STATE_MINIMIZED:
+              // Do nothing if window was closed minimized
+              break;
+            case window.STATE_NORMAL:
+              window.moveTo(settings.window.screenX, settings.window.screenY);
+              window.resizeTo(settings.window.width, settings.window.height);
+              break;
           }
         }
-      }
-  },
 
+        if (settings.sidebar) {
+          document.getElementById("splitter_sidebar").setAttribute("state", settings.sidebar.visible ? "open" : "collapsed");
+          document.getElementById("box_sidebar").width = settings.sidebar.width;
+        }
+      }
+    }
+  },
+  
   _delayedStartup : function() {
     this._loadSettings();
 
@@ -432,8 +430,6 @@ var WebRunner = {
     var install = false;
 
     if (window.arguments && window.arguments[0]) {
-      this.handleCommandLine(window.arguments[0].QueryInterface(Ci.nsICommandLine));
-
       install = window.arguments[0].handleFlag("install-webapp", false);
       if (!install)
         install = (WebAppProperties.uri == null || WebAppProperties.name == null);
@@ -474,7 +470,7 @@ var WebRunner = {
     if (install) {
       // If the install is successful, launch the webapp
       var allowLaunch = {value: true};
-      window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "dialog=no,centerscreen", WebAppProperties, allowLaunch);
+      window.openDialog("chrome://newapp/content/install-shortcut.xul", "install", "dialog=no,centerscreen", WebAppProperties, allowLaunch);
 
       // Hide the main window so it doesn't flash on the screen before closing
       xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
@@ -521,57 +517,8 @@ var WebRunner = {
     setTimeout(function() { self._delayedStartup(); }, 0);
   },
 
-  handleCommandLine : function(aCmdLine) {
-    if (!aCmdLine)
-      return;
-
-    var file = null;
-
-    // Check for a webapp profile
-    var webapp = aCmdLine.handleFlagWithParam("webapp", false);
-    if (webapp) {
-      // Check for a bundle first
-      try {
-        file = aCmdLine.resolveFile(webapp);
-      }
-      catch (ex) {
-        // Ouch, not a file
-        file = null;
-      }
-
-      // Do we have a valid file? or did it fail?
-      if (!file || !file.exists()) {
-        // Its not a bundle. look for an installed webapp
-        var appSandbox = WebAppInstall.getInstallRoot();
-        appSandbox.append(webapp);
-        if (appSandbox.exists())
-          file = appSandbox.clone();
-      }
-    }
-
-    // Check for an OSX launch
-    if (!file) {
-      var uri = aCmdLine.handleFlagWithParam("url", false);
-      if (uri) {
-        uri = aCmdLine.resolveURI(uri);
-        file = uri.QueryInterface(Ci.nsIFileURL).file;
-      }
-    }
-
-    if (file && file.exists()) {
-      // Bundles are files and need to be installed
-      if (!file.isDirectory())
-        file = WebAppInstall.install(file);
-
-      WebAppInstall.init(file);
-    }
-
-    WebAppInstall.readCommandLine(aCmdLine);
-  },
-
   showTrayIcon : function() {
-    var appIcon = WebAppInstall.getInstallRoot();
-    appIcon.append(WebAppProperties.id);
+    var appIcon = WebAppProperties.getAppRoot();
     appIcon.append("icons");
     appIcon.append("default");
     appIcon.append(WebAppProperties.icon + ".ico");
@@ -583,6 +530,17 @@ var WebRunner = {
     var notificationArea = desktop.QueryInterface(Ci.nsINotificationArea);
     notificationArea.showIcon(WebAppProperties.id, iconUri, this);
     notificationArea.setTitle(WebAppProperties.id, document.title);
+  },
+
+  showSplashScreen : function() {
+    // Display the splash screen, if any
+    if (WebAppProperties.splashscreen) {
+      var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+      var splashFile = WebAppProperties.getAppRoot();
+      splashFile.append(WebAppProperties.splashscreen);
+      var splashUri = ioService.newFileURI(splashFile);
+      document.getElementById("browser_content").setAttribute("src", splashUri.spec);
+    }
   },
 
   shutdownQuery : function() {
@@ -652,7 +610,7 @@ var WebRunner = {
         window.open("chrome://global/content/console.xul", "_blank", "chrome,extrachrome,dependent,menubar,resizable,scrollbars,status,toolbar");
         break;
       case "cmd_install":
-        window.openDialog("chrome://webrunner/content/install-shortcut.xul", "install", "centerscreen,modal", WebAppProperties);
+        window.openDialog("chrome://newapp/content/install-shortcut.xul", "install", "centerscreen,modal", WebAppProperties);
         break;
       case "cmd_addons":
         const EMTYPE = "Extension:Manager";

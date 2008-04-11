@@ -29,6 +29,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+Components.utils.import("resource://prism-runtime/modules/WebAppProperties.jsm");
 Components.utils.import("resource://prism/modules/ImageUtils.jsm");
 Components.utils.import("resource://prism/modules/WebAppInstall.jsm");
 Components.utils.import("resource://prism/modules/FaviconDownloader.jsm");
@@ -195,11 +196,11 @@ var InstallShortcut = {
       var clean = (WebAppProperties.appBundle == null);
 
       // Make the web application in the profile folder
+      WebAppProperties.id = params.id;
       WebAppInstall.createApplication(params, clean);
     }
 
     // Update the caller's config
-    WebAppProperties.id = params.id;
     WebAppProperties.uri = params.uri;
     WebAppProperties.name = params.name;
     WebAppProperties.status = params.status;
@@ -208,11 +209,11 @@ var InstallShortcut = {
     WebAppProperties.trayicon = params.trayicon;
 
     // Make any desired shortcuts
-    WebAppInstall.createShortcut(name, WebAppProperties.id, shortcuts.split(","));
+    var shortcut = WebAppInstall.createShortcut(name, WebAppProperties.id, shortcuts.split(","));
 
     if (this._launch) {
       // We should launch the webapp
-      WebAppInstall.restart(WebAppProperties.id);
+      WebAppInstall.restart(WebAppProperties.id, shortcut);
     }
 
     return true;
@@ -307,7 +308,7 @@ var InstallShortcut = {
   onIconReady : function() {
     var icon = this.getIcon();
     var iconDataURI = ImageUtils.makeDataURL(icon.stream, icon.mimeType);
-    image = document.getElementById("icon");
+    var image = document.getElementById("icon");
     image.setAttribute("src", iconDataURI);
   },
 

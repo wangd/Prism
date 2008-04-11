@@ -15,7 +15,7 @@
 # The Original Code is Operating System Integration extension.
 #
 # The Initial Developer of the Original Code is
-# Matthew Gertner
+# Matthew Gertner 
 # Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
@@ -36,21 +36,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE    = $(MOZ_APP_NAME)_win
-
-EXPORTS = \
-		$(NULL)
-
-XPIDLSRCS	= \
-    nsINotificationArea.idl \
-		$(NULL)
+DIRS		= public src
 
 include $(topsrcdir)/config/rules.mk
-

@@ -1,0 +1,27 @@
+#filter substitution
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>prism-runtime@developer.mozilla.org</em:id>
+    <em:version>@APP_VERSION@</em:version>
+
+    <em:targetApplication>
+      <!-- Prism -->
+      <Description>
+        <em:id>prism@developer.mozilla.org</em:id>
+        <em:minVersion>@APP_VERSION@</em:minVersion>
+        <em:maxVersion>@APP_VERSION@</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <em:appManaged>true</em:appManaged>
+
+    <!-- front-end metadata -->
+    <em:name>Prism Runtime</em:name>
+    <em:description>Shared runtime for Prism.</em:description>
+    <em:creator>mozilla.org</em:creator>
+    <em:homepageURL>http://developer.mozilla.org/en/docs/Prism</em:homepageURL>
+  </Description>
+</RDF>

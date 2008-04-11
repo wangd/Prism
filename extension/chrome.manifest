@@ -1,6 +1,0 @@
-content	prism-ext	chrome/content/
-locale	prism-ext	en-US		chrome/locale/en-US/
-skin	prism-ext	classic/1.0	chrome/skin/
-
-overlay	chrome://browser/content/browser.xul	chrome://prism-ext/content/ff-overlay.xul
-overlay	chrome://browser/content/browser.xul	chrome://prism-ext/content/wp-overlay.xul

@@ -53,11 +53,8 @@ XPI_PKGNAME            = refractor
 
 DIST_FILES = install.rdf
 
+EXTRA_PP_JS_MODULES = \
+  $(srcdir)/../common/modules/WebAppProperties.jsm \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
-
-libs::
-	if test ! -d $(FINAL_TARGET)/components; then \
-		$(NSINSTALL) -D $(FINAL_TARGET)/components; \
-	fi
-
-	$(INSTALL) $(DIST)/bin/components/* $(FINAL_TARGET)/components

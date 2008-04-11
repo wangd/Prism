@@ -38,7 +38,9 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="webrunner"
         windowtype="webrunner"
-        title="&app.title;">
+        title="&app.title;"
+        width="750" height="550"
+        >
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
@@ -142,6 +144,10 @@
     </vbox>
   </hbox>
 
+  <script>
+    WebRunner.showSplashScreen();
+  </script>
+  
   <statusbar id="statusbar">
     <statusbarpanel id="status" label="" crop="end" flex="1"/>
     <progressmeter id="progress" mode="determined" value="0" hidden="true"/>

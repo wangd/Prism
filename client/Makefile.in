@@ -43,10 +43,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = chrome
-
-PREF_JS_EXPORTS = $(srcdir)/defaults/preferences/webrunner-prefs.js
-
 DIST_FILES  = application.ini
 
 include $(topsrcdir)/config/rules.mk

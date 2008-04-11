@@ -4,8 +4,8 @@ webrunner.jar:
 % content webrunner %content/
 % content branding %branding/
 % locale branding @AB_CD@ %branding/
-% overlay  chrome://webrunner/content/webrunner.xul chrome://webrunner/content/overlays/inspector.xul
-% resource prism ..
+% overlay chrome://webrunner/content/webrunner.xul chrome://webrunner/content/overlays/inspector.xul
+% resource prism-runtime .
   content/about.xul                    (content/about.xul)
   content/about.js                     (content/about.js)
 * content/webrunner.xul                (content/webrunner.xul)

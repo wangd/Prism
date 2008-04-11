@@ -43,6 +43,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= components common client extension
+DIRS		= runtime newapp client extension
 
 include $(topsrcdir)/config/rules.mk

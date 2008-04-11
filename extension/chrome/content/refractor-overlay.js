@@ -35,6 +35,7 @@
  *****************************************************************************/
 
 Components.utils.import("resource://prism/modules/WebAppInstall.jsm");
+Components.utils.import("resource://prism/modules/WebAppProperties.jsm");
 
 var Prism = {
   convertToApplication : function(useDocumentHref) {
@@ -90,7 +91,7 @@ var PrismWebAppDownload = {
 
   install : function(file) {
     var packageDir = WebAppInstall.install(file);
-    WebAppInstall.init(packageDir);
+    WebAppProperties.init(packageDir);
     Prism.convertToApplication(false);
   },
 

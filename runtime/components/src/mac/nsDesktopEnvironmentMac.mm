@@ -148,3 +148,10 @@ NS_IMETHODIMP nsDesktopEnvironment::GetApplicationTile(nsIApplicationTile** _ret
  
   return NS_OK;
 }
+
+NS_IMETHODIMP nsDesktopEnvironment::GetSystemMenu(nsIDOMWindow* aWindow, nsINativeMenu** _retval)
+{
+  NS_ENSURE_ARG(_retval);
+  *_retval = 0;
+  return NS_OK;
+}

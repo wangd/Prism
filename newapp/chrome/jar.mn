@@ -1,18 +1,19 @@
 #filter substitution
 
-webrunner.jar:
-% content webrunner %content/
+newapp.jar:
+% content newapp %content/
+% resource prism ..
 * content/install-shortcut.js          (content/install-shortcut.js)
 * content/install-shortcut.xul         (content/install-shortcut.xul)
   content/install-advanced.js          (content/install-advanced.js)
 * content/install-advanced.xul         (content/install-advanced.xul)
 
 classic.jar:
-% skin webrunner classic/1.0 %
+% skin newapp classic/1.0 %
   install-shortcut.css                 (skin/standard/install-shortcut.css)
 
 @AB_CD@.jar:
-% locale webrunner @AB_CD@ %
+% locale newapp @AB_CD@ %
   install-shortcut.dtd                 (locale/@AB_CD@/install-shortcut.dtd)
   install-shortcut.properties          (locale/@AB_CD@/install-shortcut.properties)
   install-advanced.dtd                 (locale/@AB_CD@/install-advanced.dtd)

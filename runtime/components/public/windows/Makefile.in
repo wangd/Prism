@@ -36,32 +36,21 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE    = $(MOZ_APP_NAME)
-XPIDL_MODULE = $(MOZ_APP_NAME)
-
-ifeq ($(OS_ARCH),WINNT)
-DIRS = windows
-endif
-
-ifeq ($(OS_ARCH),Darwin)
-DIRS = mac
-endif
+MODULE    = $(MOZ_APP_NAME)_win
 
 EXPORTS = \
 		$(NULL)
 
 XPIDLSRCS	= \
-    nsIApplicationTile.idl \
-    nsIDesktopEnvironment.idl \
-    nsINativeIcon.idl \
-    nsINativeMenu.idl \
+    nsINotificationArea.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
