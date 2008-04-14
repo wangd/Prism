@@ -84,7 +84,6 @@ libs repackage:: application.ini
 	$(RM) $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/mangle $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/shlibsign
 	cp $(LIBXUL_DIST)/bin/xulrunner$(BIN_SUFFIX) $(DIST)/$(APP_NAME).app/Contents/MacOS/$(APP_BINARY)
 	rsync -a --exclude nsinstall --copy-unsafe-links $(LIBXUL_DIST)/XUL.framework $(DIST)/$(APP_NAME).app/Contents/Frameworks
-	echo -n APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 #	remove CVS dirs from packaged app
 	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
 
