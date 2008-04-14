@@ -533,7 +533,7 @@ var WebAppInstall =
         continue;
       }
 
-      return desktop.createShortcut(name, target, directory, extensionDir.path, arguments, "", appIcon);
+      return desktop.createShortcut(name, target, directory, extensionDir ? extensionDir.path : "", arguments, "", appIcon);
     }
   },
 #endif
