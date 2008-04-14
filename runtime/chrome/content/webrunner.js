@@ -167,8 +167,8 @@ var WebRunner = {
     this._loadSettings();
 
     WebAppProperties.script["host"] = HostUI;
-    if (WebAppProperties.script.startup)
-      WebAppProperties.script.startup();
+    if (WebAppProperties.script.load)
+      WebAppProperties.script.load();
   },
 
   _processConfig : function() {

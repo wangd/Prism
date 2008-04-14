@@ -144,6 +144,9 @@ WebRunnerCommandLineHandler.prototype = {
       if (value != null)
         WebAppProperties.setParameter(key, value);
     }
+    
+    if (WebAppProperties.script.startup)
+      WebAppProperties.script.startup();
   },
 
   helpInfo : "",
