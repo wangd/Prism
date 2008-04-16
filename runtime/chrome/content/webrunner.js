@@ -98,6 +98,8 @@ var HostUI = {
 var WebRunner = {
   _ios : null,
   _tld : null,
+  _currentDomain : null,
+  _windowCreator : null,
 
   _getBrowser : function() {
     return document.getElementById("browser_content");
@@ -325,21 +327,27 @@ var WebRunner = {
   },
 
   _isLinkExternal : function(aLink) {
-    var isExternal = true;
+    var isExternal;
     if (aLink instanceof HTMLAnchorElement) {
       if (aLink.target == "_self" || aLink.target == "_top") {
         isExternal = false;
       }
       else {
-        var linkDomain = this._tld.getBaseDomain(this._ios.newURI(aLink.href, null, null).QueryInterface(Ci.nsIURL));
-        var currentDomain = this._tld.getBaseDomain(this._getBrowser().currentURI);
-        if (linkDomain == currentDomain)
-          isExternal = false;
+        isExternal = this._isURIExternal(this._ios.newURI(aLink.href, null, null));
       }
     }
     return isExternal;
   },
-
+  
+  _isURIExternal : function(aURI) {
+    var linkDomain = this._tld.getBaseDomain(aURI.QueryInterface(Ci.nsIURL));
+    // Can't use browser.currentURI since it causes reentrancy into the docshell.
+    if (linkDomain == this._currentDomain)
+      return false;
+    else
+      return true;
+  },
+  
   _dragOver : function(aEvent)
   {
     var dragService = Cc["@mozilla.org/widget/dragservice;1"].getService(Ci.nsIDragService);
@@ -395,6 +403,11 @@ var WebRunner = {
     if (WebAppProperties.script.dropFiles)
       WebAppProperties.script.dropFiles(uris);
   },
+  
+  _loadExternalURI : function(aURI) {
+    var extps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService);
+    extps.loadURI(aURI, null);
+  },
 
   _domClick : function(aEvent)
   {
@@ -414,9 +427,8 @@ var WebRunner = {
       // default browser.
       var resolvedURI = this._ios.newURI(link.href, null, null);
 
-      var extps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService);
+      this._loadExternalURI(resolvedURI);
 
-      extps.loadURI(resolvedURI, null);
       aEvent.preventDefault();
       aEvent.stopPropagation();
     }
@@ -491,7 +503,17 @@ var WebRunner = {
     browser.webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
 
     this._processConfig();
+    
+    // Remember the base domain of the web app
+    var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+    var uri = uriFixup.createFixupURI(WebAppProperties.uri, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
+    this._currentDomain = this._tld.getBaseDomain(uri);
 
+    // Register ourselves as the default window creator so we can control handling of external links
+    this._windowCreator = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIWindowCreator);
+    var windowWatcher = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher);
+    windowWatcher.setWindowCreator(this);
+    
     document.getElementById("popup_content").addEventListener("popupshowing", self._popupShowing, false);
     document.getElementById("tooltip_content").addEventListener("popupshowing", self._tooltipShowing, false);
 
@@ -765,6 +787,23 @@ var WebRunner = {
       desktopEnv.setZLevel(window, Ci.nsIDesktopEnvironment.zLevelTop);
     }
   },
+  
+  createChromeWindow : function(parent, chromeFlags) {
+    // Always use the app runner implementation
+    return this._windowCreator.createChromeWindow(parent, chromeFlags);
+  },
+  
+  createChromeWindow2 : function(parent, chromeFlags, contextFlags, uri, cancel) {
+    if (this._isURIExternal(uri)) {
+      // Use default app to open external URIs
+      this._loadExternalURI(uri);
+      cancel.value = true;
+    }
+    else {
+      return this._windowCreator.QueryInterface(Ci.nsIWindowCreator).
+        createChromeWindow2(parent, chromeFlags, contextFlags, uri, cancel);
+    }
+  },
 
   // We need to advertize that we support weak references.  This is done simply
   // by saying that we QI to nsISupportsWeakReference.  XPConnect will take
@@ -772,8 +811,10 @@ var WebRunner = {
   QueryInterface: function(aIID) {
     if (aIID.equals(Ci.nsIWebProgressListener) ||
         aIID.equals(Ci.nsISupportsWeakReference) ||
-        aIID.Equals(Ci.nsIXULBrowserWindow) ||
-        aIID.Equals(Ci.nsINotificationAreaListener) ||
+        aIID.equals(Ci.nsIXULBrowserWindow) ||
+        aIID.equals(Ci.nsIWindowCreator) ||
+        aIID.equals(Ci.nsIWindowCreator2) ||
+        aIID.equals(Ci.nsINotificationAreaListener) ||
         aIID.equals(Ci.nsISupports))
       return this;
 
