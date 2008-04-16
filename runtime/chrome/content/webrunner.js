@@ -541,6 +541,11 @@ var WebRunner = {
       var splashUri = ioService.newFileURI(splashFile);
       document.getElementById("browser_content").setAttribute("src", splashUri.spec);
     }
+    
+   // Give the user script the chance to do additional processing before
+   // the page loads
+   if (WebAppProperties.script.preload)
+     WebAppProperties.script.preload();
   },
 
   shutdownQuery : function() {
