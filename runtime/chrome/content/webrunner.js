@@ -326,6 +326,15 @@ var WebRunner = {
     document.title = aEvent.target.title;
   },
 
+  _getBaseDomain : function(aUri) {
+    if (aUri.host == "localhost") {
+      return aUri.host;
+    }
+    else {
+      return this._tld.getBaseDomain(aUri.QueryInterface(Ci.nsIURL));
+    }
+  },
+
   _isLinkExternal : function(aLink) {
     var isExternal;
     if (aLink instanceof HTMLAnchorElement) {
@@ -340,7 +349,7 @@ var WebRunner = {
   },
   
   _isURIExternal : function(aURI) {
-    var linkDomain = this._tld.getBaseDomain(aURI.QueryInterface(Ci.nsIURL));
+    var linkDomain = this._getBaseDomain(aURI);
     // Can't use browser.currentURI since it causes reentrancy into the docshell.
     if (linkDomain == this._currentDomain)
       return false;
@@ -507,7 +516,7 @@ var WebRunner = {
     // Remember the base domain of the web app
     var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
     var uri = uriFixup.createFixupURI(WebAppProperties.uri, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
-    this._currentDomain = this._tld.getBaseDomain(uri);
+    this._currentDomain = this._getBaseDomain(uri);
 
     // Register ourselves as the default window creator so we can control handling of external links
     this._windowCreator = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIWindowCreator);
@@ -794,13 +803,13 @@ var WebRunner = {
   },
   
   createChromeWindow2 : function(parent, chromeFlags, contextFlags, uri, cancel) {
-    if (this._isURIExternal(uri)) {
+    if ((uri.scheme != "chrome") && this._isURIExternal(uri)) {
       // Use default app to open external URIs
       this._loadExternalURI(uri);
       cancel.value = true;
     }
     else {
-      return this._windowCreator.QueryInterface(Ci.nsIWindowCreator).
+      return this._windowCreator.QueryInterface(Ci.nsIWindowCreator2).
         createChromeWindow2(parent, chromeFlags, contextFlags, uri, cancel);
     }
   },
