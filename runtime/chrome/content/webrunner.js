@@ -514,10 +514,12 @@ var WebRunner = {
     this._processConfig();
     
     // Remember the base domain of the web app
-    var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
-    var uri = uriFixup.createFixupURI(WebAppProperties.uri, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
-    this._currentDomain = this._getBaseDomain(uri);
-
+    if (WebAppProperties.uri) {
+      var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+      var uri = uriFixup.createFixupURI(WebAppProperties.uri, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
+      this._currentDomain = this._getBaseDomain(uri);
+    }
+    
     // Register ourselves as the default window creator so we can control handling of external links
     this._windowCreator = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIWindowCreator);
     var windowWatcher = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher);
