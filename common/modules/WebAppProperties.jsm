@@ -84,7 +84,7 @@ IconProvider.prototype = {
 
   getFiles: function(prop, persistent) {
     if (prop == NS_APP_CHROME_DIR_LIST) {
-      return new ArrayEnumerator([this._folder]);
+      return new ArrayEnumerator([this._folder.clone()]);
     }
     else {
       return Components.results.NS_ERROR_FAILURE;
