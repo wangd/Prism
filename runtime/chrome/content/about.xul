@@ -6,7 +6,7 @@
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="about"
-        title="About"
+        title="&dialog.title;"
         buttons="accept"
         width="300" height="400">
   <script type="application/x-javascript" src="chrome://webrunner/content/about.js"/>

@@ -65,7 +65,7 @@
     <command id="cmd_quit" label="&quit.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_console" label="&console.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_install" label="&install.label;" oncommand="WebRunner.doCommand(this.id);"/>
-    <command id="cmd_addons" label="Add-ons" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_addons" label="&addons.label;" oncommand="WebRunner.doCommand(this.id);"/>
   </commandset>
 
   <keyset id="keyset_app">
@@ -117,8 +117,16 @@
         </menupopup>
       </menu>
     </menubar>
-    <toolbar id="locationbar">
-      <textbox id="location" flex="1" readonly="true"/>
+    <toolbar id="toolbar_main" mode="icons">
+      <toolbarbutton id="tool_back" tooltiptext="&back.label;" command="cmd_back"/>
+      <toolbarbutton id="tool_forward" tooltiptext="&forward.label;" command="cmd_forward"/>
+      <toolbarseparator/>
+      <toolbarbutton id="tool_home" tooltiptext="&home.label;" command="cmd_home"/>
+      <toolbarbutton id="tool_reload" tooltiptext="&reload.label;" command="cmd_reload"/>
+      <toolbarseparator/>
+      <toolbaritem id="urlbar-container" flex="1">
+        <textbox id="urlbar" flex="1" readonly="true"/>
+      </toolbaritem>
     </toolbar>
   </toolbox>
 
@@ -147,31 +155,31 @@
   <script>
     WebRunner.showSplashScreen();
   </script>
-  
+
   <statusbar id="statusbar">
     <statusbarpanel id="status" label="" crop="end" flex="1"/>
     <progressmeter id="progress" mode="determined" value="0" hidden="true"/>
     <statusbarpanel id="security" class="statusbarpanel-iconic-text"/>
-      <toolbarbutton id="button_commands" type="menu" tooltiptext="&commands.tooltip;">
-        <menupopup id="popup_main">
-          <menuitem id="menuitem_print" command="cmd_print"/>
-          <menuitem id="menuitem_pageSetup" command="cmd_pageSetup"/>
-          <!--
-          <menuseparator/>
-          <menuitem id="menuitem_install" command="cmd_install"/>
-          -->
-          <menuseparator/>
-          <menu id="menu_tools" label="&tools.label;">
-            <menupopup id="popup_tools">
-              <menuitem id="menuitem_addons" command="cmd_addons"/>
-              <menuseparator/>
-              <menuitem id="menuitem_console" command="cmd_console"/>
-            </menupopup>
-          </menu>
-          <menuseparator/>
-          <menuitem id="menuitem_about" command="cmd_about"/>
-        </menupopup>
-      </toolbarbutton>
+    <toolbarbutton id="button_commands" type="menu" tooltiptext="&commands.tooltip;">
+      <menupopup id="popup_main">
+        <menuitem id="menuitem_print" command="cmd_print"/>
+        <menuitem id="menuitem_pageSetup" command="cmd_pageSetup"/>
+        <!--
+        <menuseparator/>
+        <menuitem id="menuitem_install" command="cmd_install"/>
+        -->
+        <menuseparator/>
+        <menu id="menu_tools" label="&tools.label;">
+          <menupopup id="popup_tools">
+            <menuitem id="menuitem_addons" command="cmd_addons"/>
+            <menuseparator/>
+            <menuitem id="menuitem_console" command="cmd_console"/>
+          </menupopup>
+        </menu>
+        <menuseparator/>
+        <menuitem id="menuitem_about" command="cmd_about"/>
+      </menupopup>
+    </toolbarbutton>
   </statusbar>
 
 </window>

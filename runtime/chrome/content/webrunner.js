@@ -164,7 +164,7 @@ var WebRunner = {
       }
     }
   },
-  
+
   _delayedStartup : function() {
     this._loadSettings();
 
@@ -176,7 +176,7 @@ var WebRunner = {
   _processConfig : function() {
     // Process commandline parameters
     document.documentElement.setAttribute("id", WebAppProperties.icon);
-    document.getElementById("locationbar").hidden = !WebAppProperties.location;
+    document.getElementById("toolbar_main").hidden = !WebAppProperties.location;
     document.getElementById("box_sidebar").hidden = !WebAppProperties.sidebar;
     document.getElementById("splitter_sidebar").hidden = !WebAppProperties.sidebar;
 
@@ -347,7 +347,7 @@ var WebRunner = {
     }
     return isExternal;
   },
-  
+
   _isURIExternal : function(aURI) {
     var linkDomain = this._getBaseDomain(aURI);
     // Can't use browser.currentURI since it causes reentrancy into the docshell.
@@ -356,7 +356,7 @@ var WebRunner = {
     else
       return true;
   },
-  
+
   _dragOver : function(aEvent)
   {
     var dragService = Cc["@mozilla.org/widget/dragservice;1"].getService(Ci.nsIDragService);
@@ -412,7 +412,7 @@ var WebRunner = {
     if (WebAppProperties.script.dropFiles)
       WebAppProperties.script.dropFiles(uris);
   },
-  
+
   _loadExternalURI : function(aURI) {
     var extps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService);
     extps.loadURI(aURI, null);
@@ -512,19 +512,19 @@ var WebRunner = {
     browser.webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
 
     this._processConfig();
-    
+
     // Remember the base domain of the web app
     if (WebAppProperties.uri) {
       var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
       var uri = uriFixup.createFixupURI(WebAppProperties.uri, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
       this._currentDomain = this._getBaseDomain(uri);
     }
-    
+
     // Register ourselves as the default window creator so we can control handling of external links
     this._windowCreator = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIWindowCreator);
     var windowWatcher = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher);
     windowWatcher.setWindowCreator(this);
-    
+
     document.getElementById("popup_content").addEventListener("popupshowing", self._popupShowing, false);
     document.getElementById("tooltip_content").addEventListener("popupshowing", self._tooltipShowing, false);
 
@@ -574,7 +574,7 @@ var WebRunner = {
       var splashUri = ioService.newFileURI(splashFile);
       document.getElementById("browser_content").setAttribute("src", splashUri.spec);
     }
-    
+
    // Give the user script the chance to do additional processing before
    // the page loads
    if (WebAppProperties.script.preload)
@@ -654,13 +654,12 @@ var WebRunner = {
         const EMTYPE = "Extension:Manager";
 
         var aOpenMode = "extensions";
-        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                           .getService(Components.interfaces.nsIWindowMediator);
+        var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
         var needToOpen = true;
         var windowType = EMTYPE + "-" + aOpenMode;
         var windows = wm.getEnumerator(windowType);
         while (windows.hasMoreElements()) {
-          var theEM = windows.getNext().QueryInterface(Components.interfaces.nsIDOMWindowInternal);
+          var theEM = windows.getNext().QueryInterface(Ci.nsIDOMWindowInternal);
           if (theEM.document.documentElement.getAttribute("windowtype") == windowType) {
             theEM.focus();
             needToOpen = false;
@@ -751,7 +750,15 @@ var WebRunner = {
 
   // This method is called to indicate a change to the current location.
   onLocationChange: function(aWebProgress, aRequest, aLocation) {
-    document.getElementById("location").value = aLocation.spec;
+    var urlbar = document.getElementById("urlbar");
+    urlbar.value = aLocation.spec;
+
+    var browser = this._getBrowser();
+    var back = document.getElementById("cmd_back");
+    var forward = document.getElementById("cmd_forward");
+
+    back.setAttribute("disabled", !browser.canGoBack);
+    forward.setAttribute("disabled", !browser.canGoForward);
   },
 
   // This method is called to indicate a status changes for the currently
@@ -798,12 +805,12 @@ var WebRunner = {
       desktopEnv.setZLevel(window, Ci.nsIDesktopEnvironment.zLevelTop);
     }
   },
-  
+
   createChromeWindow : function(parent, chromeFlags) {
     // Always use the app runner implementation
     return this._windowCreator.createChromeWindow(parent, chromeFlags);
   },
-  
+
   createChromeWindow2 : function(parent, chromeFlags, contextFlags, uri, cancel) {
     if ((uri.scheme != "chrome") && this._isURIExternal(uri)) {
       // Use default app to open external URIs

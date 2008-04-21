@@ -19,6 +19,7 @@ classic.jar:
   about.css                            (skin/standard/about.css)
   webrunner.css                        (skin/standard/webrunner.css)
   images/gear.png                      (skin/standard/images/gear.png)
+  images/toolbar.png                   (skin/standard/images/toolbar.png)
   images/secure-broken.png             (skin/standard/images/secure-broken.png)
   images/secure.png                    (skin/standard/images/secure.png)
   resources/calendar28.png             (skin/standard/resources/calendar28.png)

@@ -22,6 +22,7 @@
 <!ENTITY console.label              "Error Console">
 <!ENTITY install.label              "Install Shortcut">
 <!ENTITY tools.label                "Tools">
+<!ENTITY addons.label               "Add-ons">
 
 <!ENTITY servicesMenu.label         "Services">
 <!ENTITY hideThisApp.label          "Hide &brandShortName;">
