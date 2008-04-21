@@ -3,7 +3,7 @@
 <!ENTITY dialog.caption      "Web Application">
 <!ENTITY uri.label           "URL:">
 <!ENTITY name.label          "Name:">
-<!ENTITY location.label      "Show location bar">
+<!ENTITY location.label      "Show navigation bar">
 <!ENTITY status.label        "Show status messages and progress">
 <!ENTITY navigation.label    "Enable navigation keys">
 <!ENTITY trayicon.label      "Display in the notification area">
