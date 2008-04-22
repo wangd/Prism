@@ -29,68 +29,10 @@ const Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/JSON.jsm");
 Components.utils.import("resource://prism-runtime/modules/WebAppProperties.jsm");
+Components.utils.import("resource://prism-runtime/modules/HostUI.jsm");
 
 window.addEventListener("load", function() { WebRunner.startup(); }, false);
 window.addEventListener("unload", function() { WebRunner.shutdown(); }, false);
-
-/**
- * Simple host API exposed to the web application script files.
- */
-var HostUI = {
-  log : function(aMsg) {
-    var console = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
-    console.logStringMessage(aMsg);
-  },
-
-  getBrowser : function() {
-    return document.getElementById("browser_content");
-  },
-
-  showAlert : function(aImage, aTitle, aMsg) {
-    var alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-    alerts.showAlertNotification(aImage, aTitle, aMsg, false, "", null);
-  },
-
-  getResource : function(aResource) {
-    var resourceSpec = "chrome://webrunner/skin/resources/" + aResource;
-    return resourceSpec;
-  },
-
-  playSound : function(aSound) {
-    var sound = Cc["@mozilla.org/sound;1"].createInstance(Ci.nsISound);
-    if (aSound == "beep") {
-      sound.beep();
-    }
-    else if (aSound.indexOf("://") == -1) {
-      sound.playSystemSound(aSound);
-    }
-    else
-    {
-      var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-      sound.play(ioService.newURI(aSound, null, null));
-    }
-  },
-
-  getAttention : function() {
-    window.getAttention();
-  },
-
-  sidebar : {
-    get visible() {
-      return document.getElementById("splitter_sidebar").getAttribute("state") == "open";
-    },
-
-    set visible(show) {
-      document.getElementById("splitter_sidebar").setAttribute("state", show ? "open" : "collapsed");
-    },
-
-    add : function(title, uri) {
-      document.getElementById("box_sidebar").href = uri;
-      document.getElementById("label_sidebar").value = title;
-      document.getElementById("browser_sidebar").setAttribute("src", uri);
-    }
-  }
-};
 
 /**
  * Main application code.
@@ -167,9 +109,22 @@ var WebRunner = {
   },
 
   _delayedStartup : function() {
+    this._prepareWebAppScript();
+  
+    if (WebAppProperties.uri) {
+      // Give the user script the chance to do additional processing before
+      // the page loads
+      if (WebAppProperties.script.preload) {
+        if (!WebAppProperties.script.preload())
+          // Preload failed so don't load the web app URI.
+          return;
+      }
+
+      this._getBrowser().loadURI(WebAppProperties.uri, null, null);
+    }
+    
     this._loadSettings();
 
-    WebAppProperties.script["host"] = HostUI;
     if (WebAppProperties.script.load)
       WebAppProperties.script.load();
   },
@@ -191,9 +146,6 @@ var WebRunner = {
 
     // Default the name of the window to the webapp name
     document.title = WebAppProperties.name;
-
-    if (WebAppProperties.uri)
-        this._getBrowser().loadURI(WebAppProperties.uri, null, null);
   },
 
   _handleWindowClose : function(event) {
@@ -444,6 +396,14 @@ var WebRunner = {
     }
   },
 
+  _prepareWebAppScript : function()
+  {
+   WebAppProperties.script["XMLHttpRequest"] = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1");
+   WebAppProperties.script["window"] = window;
+   WebAppProperties.script["WebAppProperties"] = WebAppProperties;
+   WebAppProperties.script["host"] = HostUI;
+  },
+
   startup : function()
   {
     this._ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
@@ -575,11 +535,6 @@ var WebRunner = {
       var splashUri = ioService.newFileURI(splashFile);
       document.getElementById("browser_content").setAttribute("src", splashUri.spec);
     }
-
-   // Give the user script the chance to do additional processing before
-   // the page loads
-   if (WebAppProperties.script.preload)
-     WebAppProperties.script.preload();
   },
 
   shutdownQuery : function() {

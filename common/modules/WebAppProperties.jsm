@@ -118,13 +118,19 @@ var WebAppProperties =
   splashscreen : null,
   navigation : false,
   appBundle : null,
+  appRoot : null,
   flags : ["id", "name", "uri", "icon", "status", "location", "sidebar", "trayicon", "navigation", "credits", "splashscreen"],
 
   getAppRoot : function() {
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    var appRoot = dirSvc.get("WebAppD", Ci.nsIFile);
-    appRoot.append(this.id);
-    return appRoot;
+    if (this.appRoot) {
+      return this.appRoot.clone();
+    }
+    else {
+      var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);    
+      var appRoot = dirSvc.get("WebAppD", Ci.nsIFile);
+      appRoot.append(this.id);
+      return appRoot;
+    }
   },
 
   setParameter: function(aName, aValue) {
@@ -165,6 +171,8 @@ var WebAppProperties =
   },
 
   init : function(aFile) {
+    this.appRoot = aFile.clone();
+    
     var appSandbox = aFile.clone();
 
     // Read the INI settings
@@ -196,9 +204,9 @@ var WebAppProperties =
     }
 
     // Initialize the icon provider
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIDirectoryService);
     var iconProvider = new IconProvider(aFile);
-    dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(iconProvider);
+    dirSvc.registerProvider(iconProvider);
   }
 };
 

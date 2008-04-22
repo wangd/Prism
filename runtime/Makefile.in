@@ -54,6 +54,10 @@ DEFINES += -DAPP_NAME=$(MOZ_APP_DISPLAYNAME) -DAPP_VERSION=$(MOZ_APP_VERSION) -D
 
 PREF_JS_EXPORTS = $(srcdir)/defaults/preferences/preferences.js
 
+EXTRA_JS_MODULES = \
+  $(srcdir)/modules/HostUI.jsm \
+  $(NULL)
+  
 EXTRA_PP_JS_MODULES = \
   $(srcdir)/../common/modules/WebAppProperties.jsm \
   $(NULL)
