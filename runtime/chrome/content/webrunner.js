@@ -98,6 +98,7 @@ var HostUI = {
 var WebRunner = {
   _ios : null,
   _tld : null,
+  _xulWindow : null,
   _currentDomain : null,
   _windowCreator : null,
 
@@ -480,7 +481,7 @@ var WebRunner = {
 
     var self = this;
 
-    var xulWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+    this._xulWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIWebNavigation)
         .QueryInterface(Ci.nsIDocShellTreeItem)
         .treeOwner
@@ -494,14 +495,14 @@ var WebRunner = {
       window.openDialog("chrome://newapp/content/install-shortcut.xul", "install", "dialog=no,centerscreen", WebAppProperties, allowLaunch);
 
       // Hide the main window so it doesn't flash on the screen before closing
-      xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
+      this._xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
 
       // Since we are installing, we need to close the application
       window.close();
     }
 
     // Hookup the browser window callbacks
-    xulWindow.XULBrowserWindow = this;
+    this._xulWindow.XULBrowserWindow = this;
 
     window.addEventListener("close", function(event) { self._handleWindowClose(event); }, false);
 
@@ -597,6 +598,14 @@ var WebRunner = {
 
     if (WebAppProperties.script.shutdown)
       WebAppProperties.script.shutdown();
+  },
+  
+  tryClose : function()
+  {
+    var contentViewer = this._xulWindow.docShell.contentViewer;
+    if (contentViewer && !contentViewer.permitUnload()) {
+      return false;
+    }
   },
 
   doCommand : function(aCmd) {
