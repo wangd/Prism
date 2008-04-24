@@ -32,7 +32,6 @@ Components.utils.import("resource://prism-runtime/modules/WebAppProperties.jsm")
 Components.utils.import("resource://prism-runtime/modules/HostUI.jsm");
 
 window.addEventListener("load", function() { WebRunner.startup(); }, false);
-window.addEventListener("unload", function() { WebRunner.shutdown(); }, false);
 
 /**
  * Main application code.
@@ -409,35 +408,44 @@ var WebRunner = {
     this._ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     this._tld = Cc["@mozilla.org/network/effective-tld-service;1"].getService(Ci.nsIEffectiveTLDService);
 
+    // Configure the window's chrome
+    this._processConfig();
+
+    if (!window.arguments || !window.arguments[0] || !(window.arguments[0] instanceof Ci.nsICommandLine)) {
+      // Not the main window, so we're done
+      return;
+    }
+
+    // Add the unload handler for the main page
+    window.addEventListener("unload", function() { WebRunner.shutdown(); }, false);
+
     var install = false;
 
-    if (window.arguments && window.arguments[0]) {
-      install = window.arguments[0].handleFlag("install-webapp", false);
-      if (!install)
-        install = (WebAppProperties.uri == null || WebAppProperties.name == null);
+    install = window.arguments[0].handleFlag("install-webapp", false);
+    if (!install)
+      install = (WebAppProperties.uri == null || WebAppProperties.name == null);
 
-      // Set the windowtype attribute here, so we always know which window is the main window
-      document.documentElement.setAttribute("windowtype", "webrunner:main");
+    // Set the windowtype attribute here, so we always know which window is the main window
+    document.documentElement.setAttribute("windowtype", "webrunner:main");
 
-      // Hack to get the mime handler initialized correctly so the content handler dialog doesn't appear
-      var hs = Cc["@mozilla.org/uriloader/handler-service;1"].getService(Ci.nsIHandlerService);
-      var extps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService);
+    // Hack to get the mime handler initialized correctly so the content handler dialog doesn't appear
+    var hs = Cc["@mozilla.org/uriloader/handler-service;1"].getService(Ci.nsIHandlerService);
+    var extps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService);
 
-      // Ensure login manager is up and running.
-      Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+    // Ensure login manager is up and running.
+    Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
-      // Set the 'http' handler
-      var httpHandler = extps.getProtocolHandlerInfo("http");
-      httpHandler.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
-      httpHandler.alwaysAskBeforeHandling = false;
-      hs.store(httpHandler);
+    // Set the 'http' handler
+    var httpHandler = extps.getProtocolHandlerInfo("http");
+    httpHandler.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
+    httpHandler.alwaysAskBeforeHandling = false;
+    hs.store(httpHandler);
 
-      // Set the 'https' handler
-      var httpsHandler = extps.getProtocolHandlerInfo("https");
-      httpsHandler.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
-      httpsHandler.alwaysAskBeforeHandling = false;
-      hs.store(httpsHandler);
-    }
+    // Set the 'https' handler
+    var httpsHandler = extps.getProtocolHandlerInfo("https");
+    httpsHandler.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
+    httpsHandler.alwaysAskBeforeHandling = false;
+    hs.store(httpsHandler);
 
     var self = this;
 
@@ -471,8 +479,6 @@ var WebRunner = {
     browser.addEventListener("dragover", function(aEvent) { self._dragOver(aEvent); }, true);
     browser.addEventListener("dragdrop", function(aEvent) { self._dragDrop(aEvent); }, true);
     browser.webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
-
-    this._processConfig();
 
     // Remember the base domain of the web app
     if (WebAppProperties.uri) {
