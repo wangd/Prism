@@ -40,9 +40,9 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDirectoryService.h"
-#include "nsINotificationArea.h"
 #include "nsIObserver.h"
 
+class nsIApplicationTile;
 class nsIComponentManager;
 class nsIFile;
 class nsINativeMenu;
@@ -60,15 +60,13 @@ struct nsModuleComponentInfo;
 // Desktop integration for Windows platforms.
 class nsDesktopEnvironment : public nsIDesktopEnvironment,
                              public nsIDirectoryServiceProvider,
-                             public nsIObserver,
-                             public nsINotificationArea
+                             public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDESKTOPENVIRONMENT
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
   NS_DECL_NSIOBSERVER
-  NS_FORWARD_NSINOTIFICATIONAREA(mNotificationArea->)
 
   nsDesktopEnvironment();
 
@@ -86,5 +84,5 @@ private:
   ~nsDesktopEnvironment();
 
 protected:
-  nsCOMPtr<nsINotificationArea> mNotificationArea;
+  nsCOMPtr<nsIApplicationTile> mNotificationArea;
 };

@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matthew Gertner <matthew@allpeers.com> (Original author)
+ *   Matthew Gertner <matthew.gertner@gmail.com> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,28 +35,56 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+/* Development of this Contribution was supported by Yahoo! Inc. */
 
 #include <Carbon/Carbon.h>
 
 #include "nsDockTile.h"
+#include "nsArrayEnumerator.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMWindow.h"
+#include "nsINativeMenu.h"
 
 #include "nsStringAPI.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDockTile, nsIApplicationTile)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsDockTile, nsIApplicationTile, nsINativeMenu, nsISecurityCheckedComponent)
 
-nsDockTile::nsDockTile()
+nsDockTile::nsDockTile(nsIDOMWindow* aWindow)
 {
+  mWindow = aWindow;
 }
 
 nsDockTile::~nsDockTile()
 {
 }
 
-NS_IMETHODIMP nsDockTile::SetIcon(nsIFile* aIcon)
+NS_IMETHODIMP nsDockTile::SetTitle(const nsAString& aTitle)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsDockTile::GetTitle(nsAString& aTitle)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsDockTile::GetMenu(nsINativeMenu** _retval)
+{
+  return this->QueryInterface(NS_GET_IID(nsINativeMenu), (void**) _retval);
+}
+
+NS_IMETHODIMP nsDockTile::SetImageSpec(const nsAString& aImageSpec)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsDockTile::GetImageSpec(nsAString& aImageSpec)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+  
 NS_IMETHODIMP nsDockTile::SetBadgeText(const nsAString& aBadgeText)
 {
   if (aBadgeText.IsEmpty())
@@ -181,4 +209,90 @@ NS_IMETHODIMP nsDockTile::SetBadgeText(const nsAString& aBadgeText)
   ::CGContextFlush(context);
  
   return NS_OK;
+}
+
+NS_IMETHODIMP nsDockTile::GetBadgeText(nsAString& aBadgeText)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsDockTile::Show(nsIDOMWindow* aWindow)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsDockTile::Hide()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsDockTile::GetItems(nsISimpleEnumerator** _retval)
+{
+  return NS_NewArrayEnumerator(_retval, mItems);
+}
+
+NS_IMETHODIMP nsDockTile::AddMenuItem(const nsAString& aId)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDOMDocument> document;
+  rv = mWindow->GetDocument(getter_AddRefs(document));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIDOMElement> element;
+  rv = document->GetElementById(aId, getter_AddRefs(element));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mItems.AppendObject(element))
+    return NS_ERROR_FAILURE;
+  else
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsDockTile::RemoveMenuItem(const nsAString& aId)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDOMDocument> document;
+  rv = mWindow->GetDocument(getter_AddRefs(document));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIDOMElement> element;
+  rv = document->GetElementById(aId, getter_AddRefs(element));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (!mItems.RemoveObject(element))
+    return NS_ERROR_NOT_AVAILABLE;
+  else
+    return NS_OK;
+}
+
+static char* cloneAllAccess()
+{
+  static const char allAccess[] = "AllAccess";
+  return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));
+}
+
+static char* cloneNoAccess()
+{
+  static const char noAccess[] = "NoAccess";
+  return (char*)nsMemory::Clone(noAccess, sizeof(noAccess));
+}
+
+NS_IMETHODIMP nsDockTile::CanCreateWrapper(const nsIID* iid, char **_retval) {
+    *_retval = cloneAllAccess();
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsDockTile::CanCallMethod(const nsIID *iid, const PRUnichar *methodName, char **_retval) {
+    *_retval = cloneAllAccess();
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsDockTile::CanGetProperty(const nsIID *iid, const PRUnichar *propertyName, char **_retval) {
+    *_retval = cloneAllAccess();
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsDockTile::CanSetProperty(const nsIID *iid, const PRUnichar *propertyName, char **_retval) {
+    *_retval = cloneNoAccess();
+    return NS_OK;
 }

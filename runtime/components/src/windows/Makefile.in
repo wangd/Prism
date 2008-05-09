@@ -58,6 +58,8 @@ REQUIRES	= \
     appshell \
     docshell \
     widget \
+    dom \
+    caps \
     prism_win \
     $(NULL)
 

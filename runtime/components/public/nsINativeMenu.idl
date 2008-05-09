@@ -38,19 +38,26 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMWindow;
+interface nsISimpleEnumerator;
+
 /**
  * Support for platform-native menus.
  */
 [scriptable, uuid(9d3547d0-ff55-11dc-95ff-0800200c9a66)]
 interface nsINativeMenu : nsISupports
 {
+  readonly attribute nsISimpleEnumerator items;
+
   /**
-   * Add the item with the specified id from the associated document.
+   * Add the item to the menu.
+   *
+   * @param id ID of the element in the document
   **/
   void addMenuItem(in AString id);
 
   /**
-   * Remove the item with the specified id.
+   * Remove the item from the menu.
   **/
   void removeMenuItem(in AString id);
 };

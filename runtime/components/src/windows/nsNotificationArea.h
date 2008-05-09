@@ -22,7 +22,7 @@
  *   Mark Yen <mook.moz+cvs.mozilla.org@gmail.com>, Original author
  *   Brad Peterson <b_peterson@yahoo.com>, Original author
  *   Daniel Glazman <daniel.glazman@disruptive-innovations.com>
- *   Matthew Gertner <matthew@allpeers.com>
+ *   Matthew Gertner <matthew.gertner@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
+ 
 #ifndef ULONG_PTR
 #define ULONG_PTR DWORD
 #endif
@@ -54,39 +54,39 @@
 #include <windows.h>
 #include <shellapi.h>
 
-#include "nsINotificationArea.h"
+#include "nsIApplicationTile.h"
 #include "nsIDOMEventListener.h"
+#include "nsINativeMenu.h"
+#include "nsISecurityCheckedComponent.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
+#include "nsTArray.h"
 
+class nsIDOMElement;
+class nsIDOMDocument;
+class nsIDOMEventTarget;
 class nsIDOMWindow;
 class nsIURI;
-class nsIXULWindow;
-class nsIDOMAbstractView;
-class nsIDOMDocumentEvent;
-class nsIDOMElement;
-class nsIDOMEvent;
-class nsIDOMEventTarget;
-class nsIURI;
 
-class nsNotificationArea : public nsINotificationArea
+class nsNotificationArea : public nsIApplicationTile, public nsINativeMenu, public nsISecurityCheckedComponent
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSINOTIFICATIONAREA
+  NS_DECL_NSIAPPLICATIONTILE
+  NS_DECL_NSINATIVEMENU
+  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
-  nsNotificationArea();
-
-private:
-  ~nsNotificationArea();
+  nsNotificationArea(nsIDOMWindow* aWindow);
+  virtual ~nsNotificationArea();
 
 protected:
-  nsresult AddTrayIcon(nsIURI* iconURI, const nsAString& iconId,
-    nsINotificationAreaListener* listener);
+  nsresult AddTrayIcon(nsIURI* iconURI);
   nsresult GetIconForWnd(HWND hwnd, HICON& result);
   nsresult GetIconForURI(nsIURI* iconURI, HICON& result);
-  nsresult CreateListenerWindow(HWND* listenerWindow,
-    nsINotificationAreaListener* listener);
+  nsresult CreateListenerWindow(HWND* listenerWindow);
+  nsresult GetElementById(const nsAString& aId, nsIDOMElement** _retval);
+  static void ShowPopupMenu(HWND hwnd, HMENU hmenu);
+  static nsresult DispatchMenuEvent(nsNotificationArea* notificationArea, WORD menuId);
 
   static LRESULT CALLBACK WindowProc(
     HWND hwnd,
@@ -97,11 +97,18 @@ protected:
 
   /* additional members */
   static ATOM s_wndClass;
-  nsDataHashtable<nsStringHashKey, NOTIFYICONDATAW> mIconDataMap;
+  NOTIFYICONDATAW mIconData;
 
   /* window property constants */
   static const TCHAR* S_PROPINST;
   static const TCHAR* S_PROPPROC;
+
+  /* menu */
+  HMENU mMenu;
+  nsString mImageSpec;
+  nsString mTitle;
+  PRUint32 mLastMenuId;
+  nsCOMPtr<nsIDOMWindow> mWindow;
 };
 
 #endif // nsNotificationArea_h__

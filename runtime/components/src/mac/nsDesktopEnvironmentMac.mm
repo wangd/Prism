@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matthew Gertner <matthew@allpeers.com> (Original author)
+ *   Matthew Gertner <matthew.gertner@gmail.com> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,17 +35,179 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+/* Development of this Contribution was supported by Yahoo! Inc. */
 
 #import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 
 #include "nsDesktopEnvironmentMac.h"
 
 #include "nsCOMPtr.h"
 #include "nsDockTile.h"
+#include "nsICategoryManager.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentEvent.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIFile.h"
+#include "nsINativeMenu.h"
+#include "nsIObserverService.h"
 #include "nsIProperties.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringAPI.h"
+
+@interface DOMElementWrapper : NSObject
+{
+  nsIDOMElement* mElement;
+}
+
+- (id)initWithElement:(nsIDOMElement*)element;
+- (nsIDOMElement*)element;
+
+@end
+
+@implementation DOMElementWrapper
+
+- (id)initWithElement:(nsIDOMElement*)element
+{
+  mElement = element;
+  NS_ADDREF(mElement);
+  return self;
+}
+
+- (void)dealloc
+{
+  NS_RELEASE(mElement);
+  [super dealloc];
+}
+
+- (nsIDOMElement*)element
+{
+  return mElement;
+}
+
+@end
+
+@interface DockMenuDelegate : NSObject
+{
+  id mOldDelegate;
+  nsINativeMenu* mDockMenu;
+}
+
+- (id)initWithDockMenu:(nsINativeMenu*)dockMenu;
+
+@end
+
+@implementation DockMenuDelegate
+
+- (id)initWithDockMenu:(nsINativeMenu*)dockMenu
+{
+  mDockMenu = dockMenu;
+  NS_ADDREF(mDockMenu);
+  mOldDelegate = [[NSApplication sharedApplication] delegate];
+  return self;
+}
+
+- (NSMenu *)applicationDockMenu:(NSApplication *)sender
+{
+  NSMenu* menu = [mOldDelegate applicationDockMenu:sender];
+  
+  PRBool first = PR_TRUE;
+  
+  nsCOMPtr<nsISimpleEnumerator> items;
+  if (NS_SUCCEEDED(mDockMenu->GetItems(getter_AddRefs(items)))) {
+    PRBool more;
+    while (NS_SUCCEEDED(items->HasMoreElements(&more)) && more) {
+      nsCOMPtr<nsISupports> supports;
+      if (NS_SUCCEEDED(items->GetNext(getter_AddRefs(supports)))) {
+        nsCOMPtr<nsIDOMElement> element(do_QueryInterface(supports));
+        if (element) {
+          nsAutoString label;
+          if (NS_SUCCEEDED(element->GetAttribute(NS_LITERAL_STRING("label"), label))) {
+            if (first) {
+              [menu addItem:[NSMenuItem separatorItem]];
+              first = PR_FALSE;
+            }
+            NSMenuItem *menuItem = [[NSMenuItem alloc]
+                                     initWithTitle:[NSString stringWithCharacters:label.get() length:label.Length()]
+                                     action:@selector(dockMenuItemSelected:)
+                                     keyEquivalent:@""];
+            [menuItem setTarget:self];
+            [menuItem setRepresentedObject:[[DOMElementWrapper alloc] initWithElement:element]];
+            [menu addItem:menuItem];
+            [menuItem release];
+          }
+        }
+      }
+    }
+  }
+  
+  return menu;
+}
+
+- (void)dockMenuItemSelected:(id)sender
+{
+  nsCOMPtr<nsIDOMElement> element = [[sender representedObject] element];
+  nsCOMPtr<nsIDOMDocument> document;
+  if (NS_FAILED(element->GetOwnerDocument(getter_AddRefs(document))))
+    return;
+    
+  nsCOMPtr<nsIDOMDocumentEvent> documentEvent(do_QueryInterface(document));
+  if (!documentEvent)
+    return;
+
+  nsCOMPtr<nsIDOMEvent> event;
+  if (NS_FAILED(documentEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event))))
+    return;
+
+  if (NS_FAILED(event->InitEvent(NS_LITERAL_STRING("DOMActivate"), PR_TRUE, PR_TRUE)))
+    return;
+
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(element));
+  if (!target)
+    return;
+
+  PRBool preventDefault;
+  target->DispatchEvent(event, &preventDefault);
+}
+
+- (BOOL)respondsToSelector:(SEL)aSelector
+{
+  BOOL responds = [super respondsToSelector:aSelector];
+
+  if(!responds)
+    responds = [mOldDelegate respondsToSelector:aSelector];
+         
+  return responds;
+}
+
+- (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+  if ([mOldDelegate respondsToSelector:[anInvocation selector]])
+    [anInvocation invokeWithTarget:mOldDelegate];
+  else
+    [super forwardInvocation:anInvocation];
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+  if ([[self class] instancesRespondToSelector:aSelector])
+    return [[self class] instanceMethodSignatureForSelector:aSelector];
+  else if ([mOldDelegate respondsToSelector:aSelector])
+    return [mOldDelegate methodSignatureForSelector:aSelector];
+  else
+    return [super methodSignatureForSelector: aSelector];
+}
+
+- (void)dealloc
+{
+  NS_RELEASE(mDockMenu);
+  [super dealloc];
+}
+
+@end
 
 NS_IMPL_ISUPPORTS2(nsDesktopEnvironment, nsIDesktopEnvironment, nsIMacDock)
 
@@ -72,6 +234,27 @@ NS_IMETHODIMP nsDesktopEnvironment::CreateShortcut(
   NS_ENSURE_ARG(aLocation);
 
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsDesktopEnvironment::GetApplicationTile(nsIDOMWindow* aWindow, nsIApplicationTile** _retval)
+{
+  nsresult rv;
+  if (!mDockTile) {
+    mDockTile = new nsDockTile(aWindow);
+    NS_ENSURE_TRUE(mDockTile, NS_ERROR_OUT_OF_MEMORY);
+    
+    // Register our delegate for dock menu customization
+    nsCOMPtr<nsINativeMenu> dockMenu;
+    rv = mDockTile->GetMenu(getter_AddRefs(dockMenu));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    id delegate = [[DockMenuDelegate alloc] initWithDockMenu:dockMenu];
+    [[NSApplication sharedApplication] setDelegate:delegate];
+  }
+  
+  *_retval = mDockTile;
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDesktopEnvironment::SetZLevel(nsIDOMWindow* aWindow, PRUint16 aLevel)
@@ -133,19 +316,6 @@ NS_IMETHODIMP nsDesktopEnvironment::AddApplication(nsIFile* aAppBundle)
 
 NS_IMETHODIMP nsDesktopEnvironment::RemoveApplication(nsIFile* aAppBundle)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDesktopEnvironment::GetApplicationTile(nsIApplicationTile** _retval)
-{
-  if (!mDockTile)
-  {
-    mDockTile = new nsDockTile;
-    NS_ENSURE_TRUE(mDockTile, NS_ERROR_OUT_OF_MEMORY);
-  }
- 
-  NS_ADDREF(*_retval = mDockTile);
- 
   return NS_OK;
 }
 

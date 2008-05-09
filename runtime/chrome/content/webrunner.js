@@ -21,9 +21,10 @@
  *   Mark Finkle, <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
  *   Wladimir Palant <trev@adblockplus.org>
  *   Sylvain Pasche <sylvain.pasche@gmail.com>
+ *   Matthew Gertner <matthew.gertner@gmail.com>
  *
  * ***** END LICENSE BLOCK ***** */
-
+ 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
@@ -119,13 +120,17 @@ var WebRunner = {
           return;
       }
 
+      // Call the script's load() function once the page has finished loading
+      if (WebAppProperties.script.load)
+        this._getBrowser().addEventListener("DOMContentLoaded", WebAppProperties.script.load, true);
+      
       this._getBrowser().loadURI(WebAppProperties.uri, null, null);
+      
+      if (WebAppProperties.trayicon)
+        this.showTrayIcon();
     }
     
     this._loadSettings();
-
-    if (WebAppProperties.script.load)
-      WebAppProperties.script.load();
   },
 
   _processConfig : function() {
@@ -279,11 +284,17 @@ var WebRunner = {
   },
 
   _getBaseDomain : function(aUri) {
-    if (aUri.host == "localhost") {
-      return aUri.host;
+    try {
+      if (aUri.host == "localhost") {
+        return aUri.host;
+      }
+      else {
+        return this._tld.getBaseDomain(aUri.QueryInterface(Ci.nsIURL));
+      }
     }
-    else {
-      return this._tld.getBaseDomain(aUri.QueryInterface(Ci.nsIURL));
+    catch(e) {
+      // Don't know how to get the domain for this URL
+      return null;
     }
   },
 
@@ -397,10 +408,15 @@ var WebRunner = {
 
   _prepareWebAppScript : function()
   {
-   WebAppProperties.script["XMLHttpRequest"] = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1");
-   WebAppProperties.script["window"] = window;
-   WebAppProperties.script["WebAppProperties"] = WebAppProperties;
-   WebAppProperties.script["host"] = HostUI;
+    // Initialize the platform glue
+    var browser = this._getBrowser();
+    // Use createInstance since we're overloaded the factory to always use a singleton
+    var platformGlue = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
+    
+    WebAppProperties.script["XMLHttpRequest"] = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1");
+    WebAppProperties.script["window"] = browser.contentWindow;
+    WebAppProperties.script["properties"] = WebAppProperties;
+    WebAppProperties.script["host"] = HostUI;
   },
 
   startup : function()
@@ -502,17 +518,7 @@ var WebRunner = {
 
       // Needed for linux or the menubar doesn't hide
       document.getElementById("menu_file").hidden = true;
-
-      // Add the about item to the system menu (if there is one)
-      var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
-      var systemMenu = desktop.getSystemMenu(window);
-      if (systemMenu) {
-        systemMenu.addMenuItem("aboutName");
-      }
     }
-
-    if (WebAppProperties.trayicon)
-      this.showTrayIcon();
 
     setTimeout(function() { self._delayedStartup(); }, 0);
   },
@@ -527,9 +533,10 @@ var WebRunner = {
     var iconUri = ioService.newFileURI(appIcon);
 
     var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
-    var notificationArea = desktop.QueryInterface(Ci.nsINotificationArea);
-    notificationArea.showIcon(WebAppProperties.id, iconUri, this);
-    notificationArea.setTitle(WebAppProperties.id, document.title);
+    var icon = desktop.getApplicationTile(this._getBrowser().contentWindow);
+    icon.imageSpec = iconUri.spec;
+    icon.title = document.title;
+    icon.show();
   },
 
   showSplashScreen : function() {
@@ -552,9 +559,9 @@ var WebRunner = {
   shutdown : function()
   {
     if (WebAppProperties.trayicon) {
-      var desktop = Cc["@mozilla.org/desktop-environment;1"].
-        getService(Ci.nsIDesktopEnvironment);
-      desktop.QueryInterface(Ci.nsINotificationArea).hideIcon(WebAppProperties.id);
+      var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
+      var icon = desktop.getApplicationTile(this._getBrowser().contentWindow);
+      icon.hide();
     }
 
     if (WebAppProperties.script.shutdown)
@@ -695,7 +702,10 @@ var WebRunner = {
     }
 
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+        WebAppProperties.script["window"] = aWebProgress.DOMWindow;
+      }
+      else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         var domDocument = aWebProgress.DOMWindow.document;
         this.attachDocument(domDocument);
       }
@@ -769,20 +779,13 @@ var WebRunner = {
     }
   },
 
-  onNotificationAreaClick : function(button, clickCount) {
-    if (button == 0 && clickCount == 2) {
-      var desktopEnv = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
-      desktopEnv.setZLevel(window, Ci.nsIDesktopEnvironment.zLevelTop);
-    }
-  },
-
   createChromeWindow : function(parent, chromeFlags) {
     // Always use the app runner implementation
     return this._windowCreator.createChromeWindow(parent, chromeFlags);
   },
 
   createChromeWindow2 : function(parent, chromeFlags, contextFlags, uri, cancel) {
-    if ((uri.scheme != "chrome") && this._isURIExternal(uri)) {
+    if (uri && (uri.scheme != "chrome") && this._isURIExternal(uri)) {
       // Use default app to open external URIs
       this._loadExternalURI(uri);
       cancel.value = true;
@@ -802,7 +805,6 @@ var WebRunner = {
         aIID.equals(Ci.nsIXULBrowserWindow) ||
         aIID.equals(Ci.nsIWindowCreator) ||
         aIID.equals(Ci.nsIWindowCreator2) ||
-        aIID.equals(Ci.nsINotificationAreaListener) ||
         aIID.equals(Ci.nsISupports))
       return this;
 

@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matthew Gertner <matthew@allpeers.com> (Original author)
+ *   Matthew Gertner <matthew.gertner@gmail.com> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,11 +35,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+/* Development of this Contribution was supported by Yahoo! Inc. */
 
 #include "nsDesktopEnvironmentWin.h"
 
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIApplicationTile.h"
 #include "nsIBaseWindow.h"
 #include "nsICategoryManager.h"
 #include "nsIDocShell.h"
@@ -112,8 +115,8 @@ nsresult GetHWNDForDOMWindow(nsIDOMWindow* aWindow, HWND* hWnd)
   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsDesktopEnvironment, nsIDesktopEnvironment,
-  nsIDirectoryServiceProvider, nsIObserver, nsINotificationArea)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsDesktopEnvironment, nsIDesktopEnvironment,
+  nsIDirectoryServiceProvider, nsIObserver)
 
 nsDesktopEnvironment::nsDesktopEnvironment()
 {
@@ -125,9 +128,6 @@ nsDesktopEnvironment::~nsDesktopEnvironment()
 
 nsresult nsDesktopEnvironment::Init()
 {
-  mNotificationArea = new nsNotificationArea();
-  NS_ENSURE_TRUE(mNotificationArea, NS_ERROR_OUT_OF_MEMORY);
-
   return NS_OK;
 }
 
@@ -249,6 +249,19 @@ NS_IMETHODIMP nsDesktopEnvironment::CreateShortcut(
   return CallQueryInterface(shortcutFile, _retval);
 }
 
+NS_IMETHODIMP nsDesktopEnvironment::GetApplicationTile(nsIDOMWindow* aWindow, nsIApplicationTile** _retval)
+{
+  NS_ENSURE_ARG(aWindow);
+
+  if (!mNotificationArea) {
+    mNotificationArea = new nsNotificationArea(aWindow);
+    NS_ENSURE_TRUE(mNotificationArea, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  NS_ADDREF(*_retval = mNotificationArea);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDesktopEnvironment::SetZLevel(nsIDOMWindow* aWindow,
   PRUint16 aLevel)
 {
@@ -277,11 +290,6 @@ NS_IMETHODIMP nsDesktopEnvironment::GetSystemMenu(nsIDOMWindow* aWindow, nsINati
   NS_ENSURE_SUCCESS(rv, rv);
 
   return nsSystemMenu::GetSystemMenu(hWnd, document, _retval);
-}
-
-NS_IMETHODIMP nsDesktopEnvironment::GetApplicationTile(nsIApplicationTile** _retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsDesktopEnvironment::Observe(nsISupports* aSubject,

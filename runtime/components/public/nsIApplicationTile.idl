@@ -38,7 +38,9 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMWindow;
 interface nsIFile;
+interface nsINativeMenu;
 
 /**
  * Operating system tile (i.e. icon) representing the application. Examples are
@@ -48,12 +50,35 @@ interface nsIFile;
 interface nsIApplicationTile : nsISupports
 {
   /**
-   * Specify a new icon for the tile.
-  **/
-  void setIcon(in nsIFile icon);
+   * Title of the tile.
+   */
+  attribute AString title;
 
   /**
-   * Add a badge to the tile with the specified text.
-  **/
-  void setBadgeText(in AString badgeText);
+   * Menu associated with the tile.
+   */
+  readonly attribute nsINativeMenu menu;
+  
+  /**
+   * Image represented by the tile.
+   */
+  attribute AString imageSpec;
+
+  /**
+   * Text used to badge the tile.
+   */
+  attribute AString badgeText;
+
+  /**
+   * Show the application tile in the appropriate location (tray, dock, etc.).
+   * Note: it would be nice if the tile could get the window automatically from
+   * the platform glue, but apparently we'll have to port nsPlatformGlue.js to C++
+   * if we want that.
+   */
+  void show();
+
+  /**
+   * Hide the application tile.
+   */
+  void hide();
 };

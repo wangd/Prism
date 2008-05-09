@@ -1,10 +1,9 @@
 #filter substitution
 
 webrunner.jar:
-% content webrunner %content/
+% content webrunner %content/ xpcnativewrappers=no
 % content branding %branding/
 % locale branding @AB_CD@ %branding/
-% overlay chrome://webrunner/content/webrunner.xul chrome://webrunner/content/overlays/inspector.xul
 % resource prism-runtime .
   content/about.xul                    (content/about.xul)
   content/about.js                     (content/about.js)

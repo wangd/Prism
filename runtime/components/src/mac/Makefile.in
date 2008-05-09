@@ -53,6 +53,7 @@ REQUIRES	= \
     string \
     gfx \
     necko \
+    caps \
     prism_mac \
 		$(NULL)
 

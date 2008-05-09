@@ -38,6 +38,7 @@
 
 #include "nsSystemMenu.h"
 
+#include "nsArrayEnumerator.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMElement.h"
@@ -121,6 +122,12 @@ NS_IMETHODIMP nsSystemMenu::RemoveMenuItem(const nsAString& aId)
   mItems.RemoveObjectAt(index);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSystemMenu::GetItems(nsISimpleEnumerator** _retval)
+{
+  return NS_NewArrayEnumerator(_retval, mItems);
 }
 
 nsresult nsSystemMenu::OnItemSelected(PRUint32 itemIndex, PRBool* preventDefault)

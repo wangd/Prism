@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matthew Gertner <matthew@allpeers.com> (Original author)
+ *   Matthew Gertner <matthew.gertner@gmail.com> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,6 +35,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+/* Development of this Contribution was supported by Yahoo! Inc. */
 
 #include "nsISupports.idl"
 
@@ -49,14 +51,6 @@ interface nsINativeMenu;
 [scriptable, uuid(86f7332c-f4fd-4a30-946d-433596d79304)]
 interface nsIDesktopEnvironment : nsISupports
 {
-  /**
-   * The application tile for the current application.
-   * On Mac this is the dock tile, on Windows the system tray icon.
-   *
-   * @returns null if there is no application tile.
-  **/
-  readonly attribute nsIApplicationTile applicationTile;
-
   /**
    * Create a shortcut for the application.
    *
@@ -78,6 +72,11 @@ interface nsIDesktopEnvironment : nsISupports
     in AString description,
     in nsIFile icon
   );
+
+  /**
+   * Create a new application tile for this desktop.
+   */
+  nsIApplicationTile getApplicationTile(in nsIDOMWindow window);
 
   const unsigned short zLevelTop = 1;
   const unsigned short zLevelBottom = 2;

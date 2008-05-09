@@ -41,11 +41,21 @@
 #include "nsNotificationArea.h"
 #include "imgIContainer.h"
 #include "imgITools.h"
+#include "nsArrayEnumerator.h"
 #include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsCOMArray.h"
 #include "nsMemory.h"
 #include "nsIBufferedStreams.h"
 #include "nsIChannel.h"
+#include "nsIDOMAbstractView.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentEvent.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMWindow.h"
 #include "nsINativeIcon.h"
 #include "nsIIOService.h"
 #include "nsIURI.h"
@@ -70,18 +80,23 @@ ATOM nsNotificationArea::s_wndClass = NULL;
   PR_END_MACRO
 
 // this can be WM_USER + anything
-#define WM_TRAYICON (WM_USER + 0x17b6)
+#define WM_TRAYICON         (WM_USER + 0x17b6)
+#define MENU_ITEM_BASE_ID   1000
 
-NS_IMPL_ISUPPORTS1(nsNotificationArea, nsINotificationArea)
+NS_IMPL_ISUPPORTS3(nsNotificationArea, nsIApplicationTile, nsINativeMenu, nsISecurityCheckedComponent)
 
-nsNotificationArea::nsNotificationArea()
+nsNotificationArea::nsNotificationArea(nsIDOMWindow* aWindow) : mMenu(NULL)
 {
-  /* member initializers and constructor code */
-  mIconDataMap.Init();
+  memset(&mIconData, 0, sizeof(NOTIFYICONDATAW));
+  mWindow = aWindow;
+  mLastMenuId = MENU_ITEM_BASE_ID;
 }
 
 nsNotificationArea::~nsNotificationArea()
 {
+  if (mMenu)
+    ::DestroyMenu(mMenu);
+
   BOOL windowClassUnregistered = ::UnregisterClass(
     (LPCTSTR)nsNotificationArea::s_wndClass,
     ::GetModuleHandle(NULL));
@@ -90,70 +105,67 @@ nsNotificationArea::~nsNotificationArea()
 }
 
 NS_IMETHODIMP
-nsNotificationArea::ShowIcon(
-  const nsAString& aIconId,
-  nsIURI* aImageURI,
-  nsINotificationAreaListener* aListener
-)
+nsNotificationArea::Show()
 {
+  NS_ENSURE_STATE(mWindow);
   nsresult rv;
 
-  NOTIFYICONDATAW notifyIconData;
-  if (mIconDataMap.Get(aIconId, &notifyIconData))
-    // Already have an entry so just change the image
+  if (mImageSpec.IsEmpty())
+    // It would be great to use the window's icon automatically here.
+    // At worst we could do this using the native Win32 API or grovel through the icons/default directory.
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIIOService>
+    ioService(do_GetService("@mozilla.org/network/io-service;1", &rv));
+  nsCOMPtr<nsIURI> imageURI;
+  rv = ioService->NewURI(NS_ConvertUTF16toUTF8(mImageSpec), nsnull, nsnull, getter_AddRefs(imageURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mIconData.cbSize)
   {
     HICON hicon;
-    rv = GetIconForURI(aImageURI, hicon);
+    rv = GetIconForURI(imageURI, hicon);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    notifyIconData.hIcon = hicon;
-    MK_ENSURE_NATIVE(Shell_NotifyIconW(NIM_MODIFY, &notifyIconData));
+    mIconData.hIcon = hicon;
+    MK_ENSURE_NATIVE(Shell_NotifyIconW(NIM_MODIFY, &mIconData));
 
     return NS_OK;
   }
 
-  rv = AddTrayIcon(aImageURI, aIconId, aListener);
+  rv = AddTrayIcon(imageURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNotificationArea::HideIcon(const nsAString& iconId)
+nsNotificationArea::Hide()
 {
-  NOTIFYICONDATAW notifyIconData;
-  if (!mIconDataMap.Get(iconId, &notifyIconData))
+  if (!mIconData.cbSize)
     // can't find the icon data
     return NS_ERROR_NOT_AVAILABLE;
 
-  if (notifyIconData.hWnd) {
-    nsINotificationAreaListener* listener =
-      (nsINotificationAreaListener *) GetProp(notifyIconData.hWnd, S_PROPINST);
-    NS_RELEASE(listener);
-
-    ::DestroyWindow(notifyIconData.hWnd);
+  if (mIconData.hWnd) {
+    ::DestroyWindow(mIconData.hWnd);
   }
 
-  Shell_NotifyIconW(NIM_DELETE, &notifyIconData);
+  Shell_NotifyIconW(NIM_DELETE, &mIconData);
 
-  mIconDataMap.Remove(iconId);
+  memset(&mIconData, 0, sizeof(NOTIFYICONDATAW));
 
   return NS_OK;
 }
 
 nsresult
-nsNotificationArea::AddTrayIcon(nsIURI* iconURI,
-                                const nsAString& iconId,
-                                nsINotificationAreaListener* listener)
+nsNotificationArea::AddTrayIcon(nsIURI* iconURI)
 {
   nsresult rv;
 
-  NOTIFYICONDATAW notifyIconData;
-  memset(&notifyIconData, 0, sizeof(NOTIFYICONDATAW));
-  notifyIconData.cbSize = sizeof(NOTIFYICONDATAW);
-  notifyIconData.uCallbackMessage = WM_TRAYICON;
-  notifyIconData.uID = 1;
-  notifyIconData.uFlags = NIF_MESSAGE | NIF_ICON;
+  mIconData.cbSize = sizeof(NOTIFYICONDATAW);
+  mIconData.uCallbackMessage = WM_TRAYICON;
+  mIconData.uID = 1;
+  mIconData.uFlags = NIF_MESSAGE | NIF_ICON;
 
   HICON hicon = NULL;
   if (iconURI)
@@ -165,39 +177,153 @@ nsNotificationArea::AddTrayIcon(nsIURI* iconURI,
   if (!hicon)
     return NS_ERROR_FAILURE;
 
-  notifyIconData.hIcon = hicon;
+  mIconData.hIcon = hicon;
 
   HWND listenerWindow;
-  rv = CreateListenerWindow(&listenerWindow, listener);
+  rv = CreateListenerWindow(&listenerWindow);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // add the icon
-  notifyIconData.hWnd = listenerWindow;
-  MK_ENSURE_NATIVE(Shell_NotifyIconW(NIM_ADD, &notifyIconData));
-
-  mIconDataMap.Put(iconId, notifyIconData);
+  mIconData.hWnd = listenerWindow;
+  MK_ENSURE_NATIVE(Shell_NotifyIconW(NIM_ADD, &mIconData));
 
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsNotificationArea::SetTitle(const nsAString& iconId, const nsAString& title)
+nsNotificationArea::SetTitle(const nsAString& aTitle)
 {
-  NOTIFYICONDATAW notifyIconData;
-  if (!mIconDataMap.Get(iconId, &notifyIconData))
-    return NS_ERROR_NOT_AVAILABLE;
+  mTitle = aTitle;
 
-  notifyIconData.uFlags = NIF_TIP;
-  PRUint32 length = title.Length();
+  if (!mIconData.cbSize)
+    // We'll set the title later when we display the tray icon.
+    return NS_OK;
+
+  mIconData.uFlags = NIF_TIP;
+  PRUint32 length = aTitle.Length();
   if (length > 64)
     length = 64;
 
-  wcsncpy(notifyIconData.szTip, nsString(title).get(), length);
+  wcsncpy(mIconData.szTip, nsString(aTitle).get(), length);
 
-  MK_ENSURE_NATIVE(Shell_NotifyIconW(NIM_MODIFY, &notifyIconData));
+  MK_ENSURE_NATIVE(Shell_NotifyIconW(NIM_MODIFY, &mIconData));
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNotificationArea::GetTitle(nsAString& aTitle)
+{
+  aTitle = mTitle;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNotificationArea::GetMenu(nsINativeMenu** _retval)
+{
+  return QueryInterface(NS_GET_IID(nsINativeMenu), (void**) _retval);
+}
+
+NS_IMETHODIMP
+nsNotificationArea::SetImageSpec(const nsAString& aImageSpec)
+{
+  mImageSpec = aImageSpec;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNotificationArea::GetImageSpec(nsAString& aImageSpec)
+{
+  aImageSpec = mImageSpec;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNotificationArea::SetBadgeText(const nsAString& aBadgeText)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNotificationArea::GetBadgeText(nsAString& aBadgeText)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNotificationArea::AddMenuItem(const nsAString& aId)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDOMElement> element;
+  rv = GetElementById(aId, getter_AddRefs(element));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsAutoString label;
+  rv = element->GetAttribute(NS_LITERAL_STRING("label"), label);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mMenu) {
+    mMenu = ::CreatePopupMenu();
+    NS_ENSURE_TRUE(mMenu, NS_ERROR_FAILURE);
+  }
+  
+  PRUint32 itemId = mLastMenuId++;
+  
+  ::AppendMenuW(mMenu, MF_STRING, itemId, label.get());
+  
+  // Set the pointer to the element
+  MENUITEMINFO itemInfo;
+  itemInfo.cbSize = sizeof(itemInfo);
+  itemInfo.fMask = MIIM_DATA;
+  itemInfo.dwItemData = (DWORD_PTR) (nsIDOMElement *) element;
+  ::SetMenuItemInfo(mMenu, itemId, FALSE, &itemInfo);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNotificationArea::RemoveMenuItem(const nsAString& aId)
+{
+  NS_ENSURE_STATE(mMenu);
+
+  nsresult rv;
+  nsCOMPtr<nsIDOMElement> element;
+  rv = GetElementById(aId, getter_AddRefs(element));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  MENUITEMINFO itemInfo;
+  itemInfo.cbSize = sizeof(itemInfo);
+  itemInfo.fMask = MIIM_DATA;
+  PRUint32 i;
+  for (i=0; ::GetMenuItemInfo(mMenu, i, TRUE, &itemInfo); i++) {
+    if ((nsIDOMElement *) itemInfo.dwItemData == (nsIDOMElement *) element) {
+      ::RemoveMenu(mMenu, i, MF_BYPOSITION);
+      return NS_OK;
+    }
+  }
+  
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsNotificationArea::GetItems(nsISimpleEnumerator** _retval)
+{
+  NS_ENSURE_STATE(mMenu);
+
+  nsresult rv;
+  nsCOMArray<nsIDOMElement> items;
+  
+  MENUITEMINFO itemInfo;
+  itemInfo.cbSize = sizeof(itemInfo);
+  itemInfo.fMask = MIIM_DATA;
+  PRUint32 i;
+  for (i=0; ::GetMenuItemInfo(mMenu, i, TRUE, &itemInfo); i++) {
+    if (!items.AppendObject((nsIDOMElement *) itemInfo.dwItemData))
+      return NS_ERROR_FAILURE;
+  }
+  
+  return NS_NewArrayEnumerator(_retval, items);
 }
 
 nsresult
@@ -249,6 +375,19 @@ nsNotificationArea::GetIconForURI(nsIURI* iconURI, HICON& result)
 }
 
 nsresult
+nsNotificationArea::GetElementById(const nsAString& aId, nsIDOMElement** _retval)
+{
+  NS_ENSURE_STATE(mWindow);
+
+  nsresult rv;
+  nsCOMPtr<nsIDOMDocument> document;
+  rv = mWindow->GetDocument(getter_AddRefs(document));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return document->GetElementById(aId, _retval);
+}
+
+nsresult
 nsNotificationArea::GetIconForWnd(HWND hwnd, HICON& result)
 {
   result = (HICON)::SendMessage(hwnd, WM_GETICON, ICON_SMALL, NULL);
@@ -267,8 +406,7 @@ nsNotificationArea::GetIconForWnd(HWND hwnd, HICON& result)
 
 nsresult
 nsNotificationArea::CreateListenerWindow(
-  HWND* listenerWindow,
-  nsINotificationAreaListener* listener
+  HWND* listenerWindow
 )
 {
   ::SetLastError(0);
@@ -312,8 +450,7 @@ nsNotificationArea::CreateListenerWindow(
     MK_ENSURE_NATIVE(*listenerWindow);
   }
 
-  MK_ENSURE_NATIVE(::SetProp(*listenerWindow, S_PROPINST, (HANDLE) listener));
-  NS_ADDREF(listener);
+  MK_ENSURE_NATIVE(::SetProp(*listenerWindow, S_PROPINST, (HANDLE) this));
 
   return NS_OK;
 }
@@ -347,75 +484,127 @@ nsNotificationArea::WindowProc(HWND hwnd,
 
   bool handled = true;
 
-  PRUint16 button;
-  PRUint16 clickCount;
+  nsRefPtr<nsNotificationArea> notificationArea;
+  notificationArea = (nsNotificationArea *)  GetProp(hwnd, S_PROPINST);
+
+  if (!notificationArea)
+    return TRUE;
 
   switch(uMsg) {
     case WM_TRAYICON:
       break;
     case WM_CREATE:
-      return 0;
-    case WM_NCCREATE:
-      return true;
-    default:
-      handled = false;
-  }
-
-  nsCOMPtr<nsINotificationAreaListener> listener;
-  if (handled) {
-    listener = (nsINotificationAreaListener *) GetProp(hwnd, S_PROPINST);
-  }
-
-  if (!listener)
-    handled = false;
-
-  if (uMsg == WM_TRAYICON && handled) {
-    switch (lParam) {
-      case WM_LBUTTONUP:
-        button = 0;
-        clickCount = 1;
-        break;
-      case WM_RBUTTONUP:
-        button = 2;
-        clickCount = 1;
-        break;
-      case WM_MBUTTONUP:
-        button = 1;
-        clickCount = 1;
-        break;
-      case WM_CONTEXTMENU:
-        button = 2;
-        clickCount = 1;
-        break;
-      case WM_LBUTTONDBLCLK:
-        button = 0;
-        clickCount = 2;
-        break;
-      case WM_MBUTTONDBLCLK:
-        button = 1;
-        clickCount = 2;
-        break;
-      case WM_RBUTTONDBLCLK:
-        button = 2;
-        clickCount = 2;
-        break;
-      default:
-        handled = false;
-        break;
-    }
-
-    if (handled) {
-      listener->OnNotificationAreaClick(button, clickCount);
-
-      PostMessage(hwnd, WM_NULL, 0, 0);
       return FALSE;
-    }
+    case WM_NCCREATE:
+      return TRUE;
+    case WM_COMMAND:
+      if (HIWORD(wParam) == 0)
+        DispatchMenuEvent(notificationArea, LOWORD(wParam));
+      return FALSE;
+    default:
+      return ::CallWindowProc(DefWindowProc, hwnd, uMsg, wParam, lParam);
   }
 
-  return ::CallWindowProc(
-    DefWindowProc,
-    hwnd,
-    uMsg,
-    wParam,
-    lParam);
+  switch (lParam) {
+    case WM_RBUTTONDOWN:
+      if (notificationArea->mMenu) {
+        ShowPopupMenu(hwnd, notificationArea->mMenu);
+      }
+      break;
+  }
+
+  PostMessage(hwnd, WM_NULL, 0, 0);
+
+  return FALSE;
+}
+
+void nsNotificationArea::ShowPopupMenu(HWND hwnd, HMENU hmenu) {
+  POINT pos;
+  ::GetCursorPos(&pos);
+
+  ::TrackPopupMenu(hmenu, TPM_RIGHTALIGN, pos.x, pos.y, 0, hwnd, NULL);
+}
+
+nsresult nsNotificationArea::DispatchMenuEvent(nsNotificationArea* notificationArea, WORD menuId)
+{
+  NS_ENSURE_ARG(notificationArea);
+  NS_ENSURE_STATE(notificationArea->mWindow);
+  NS_ENSURE_STATE(notificationArea->mMenu);
+
+  nsresult rv;
+
+  nsCOMPtr<nsIDOMDocument> document;
+  rv = notificationArea->mWindow->GetDocument(getter_AddRefs(document));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMDocumentEvent> documentEvent(do_QueryInterface(document, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMDocumentView> documentView(do_QueryInterface(document, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMAbstractView> abstractView;
+  rv = documentView->GetDefaultView(getter_AddRefs(abstractView));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMEvent> event;
+  rv = documentEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = event->InitEvent(NS_LITERAL_STRING("DOMActivate"), PR_TRUE, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  MENUITEMINFO itemInfo;
+  itemInfo.cbSize = sizeof(itemInfo);
+  itemInfo.fMask = MIIM_DATA;
+  if (!::GetMenuItemInfo(notificationArea->mMenu, menuId, FALSE, &itemInfo))
+    return NS_ERROR_NOT_AVAILABLE;
+    
+  nsCOMPtr<nsIDOMElement> element = (nsIDOMElement *) itemInfo.dwItemData;
+
+  PRBool ret;
+  nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(element, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = eventTarget->DispatchEvent(event, &ret);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+static char* cloneAllAccess()
+{
+  static const char allAccess[] = "AllAccess";
+  return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));
+}
+
+static char* cloneNoAccess()
+{
+  static const char noAccess[] = "NoAccess";
+  return (char*)nsMemory::Clone(noAccess, sizeof(noAccess));
+}
+
+NS_IMETHODIMP nsNotificationArea::CanCreateWrapper(const nsIID* iid, char **_retval) {
+  *_retval = cloneAllAccess();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNotificationArea::CanCallMethod(const nsIID *iid, const PRUnichar *methodName, char **_retval) {
+  *_retval = cloneAllAccess();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNotificationArea::CanGetProperty(const nsIID *iid, const PRUnichar *propertyName, char **_retval) {
+  *_retval = cloneAllAccess();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNotificationArea::CanSetProperty(const nsIID *iid, const PRUnichar *propertyName, char **_retval) {
+  if (iid->Equals(NS_GET_IID(nsIApplicationTile))) {
+    *_retval = cloneAllAccess();
+  }
+  else {
+    *_retval = cloneNoAccess();
+  }
+  return NS_OK;
 }

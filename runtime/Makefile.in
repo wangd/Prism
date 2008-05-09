@@ -62,8 +62,6 @@ EXTRA_PP_JS_MODULES = \
   $(srcdir)/../common/modules/WebAppProperties.jsm \
   $(NULL)
 
-EXTRA_PP_COMPONENTS = components/nsCommandLineHandler.js
-  
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DAPP_VERSION=$(MOZ_APP_VERSION)

@@ -41,6 +41,9 @@
 #include "nsCOMPtr.h"
 
 class nsIApplicationTile;
+class nsIComponentManager;
+class nsIFile;
+struct nsModuleComponentInfo;
 
 #define NS_DESKTOPENVIRONMENT_CID \
 { /* 4851f430-c43a-11dc-95ff-0800200c9a66 */         \
