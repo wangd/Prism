@@ -236,7 +236,7 @@ NS_IMETHODIMP nsDesktopEnvironment::CreateShortcut(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsDesktopEnvironment::GetApplicationTile(nsIDOMWindow* aWindow, nsIApplicationTile** _retval)
+NS_IMETHODIMP nsDesktopEnvironment::GetApplicationTile(nsIDOMWindow* aWindow, nsIApplicationIcon** _retval)
 {
   nsresult rv;
   if (!mDockTile) {

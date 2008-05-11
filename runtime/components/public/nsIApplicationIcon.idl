@@ -47,7 +47,7 @@ interface nsINativeMenu;
  * Mac OS X dock tiles and Windows system tray icons.
  */
 [scriptable, uuid(9c25e3d0-c432-11dc-95ff-0800200c9a66)]
-interface nsIApplicationTile : nsISupports
+interface nsIApplicationIcon : nsISupports
 {
   /**
    * Title of the tile.

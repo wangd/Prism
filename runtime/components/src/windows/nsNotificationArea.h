@@ -54,7 +54,7 @@
 #include <windows.h>
 #include <shellapi.h>
 
-#include "nsIApplicationTile.h"
+#include "nsIApplicationIcon.h"
 #include "nsIDOMEventListener.h"
 #include "nsINativeMenu.h"
 #include "nsISecurityCheckedComponent.h"
@@ -68,11 +68,11 @@ class nsIDOMEventTarget;
 class nsIDOMWindow;
 class nsIURI;
 
-class nsNotificationArea : public nsIApplicationTile, public nsINativeMenu, public nsISecurityCheckedComponent
+class nsNotificationArea : public nsIApplicationIcon, public nsINativeMenu, public nsISecurityCheckedComponent
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIAPPLICATIONTILE
+  NS_DECL_NSIAPPLICATIONICON
   NS_DECL_NSINATIVEMENU
   NS_DECL_NSISECURITYCHECKEDCOMPONENT
 

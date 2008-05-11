@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIApplicationTile.h"
+#include "nsIApplicationIcon.h"
 #include "nsINativeMenu.h"
 #include "nsISecurityCheckedComponent.h"
 
@@ -48,11 +48,11 @@ class nsIDOMWindow;
 class nsIDOMElement;
 
 // OS X dock tile
-class nsDockTile : public nsIApplicationTile, public nsINativeMenu, public nsISecurityCheckedComponent
+class nsDockTile : public nsIApplicationIcon, public nsINativeMenu, public nsISecurityCheckedComponent
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIAPPLICATIONTILE
+  NS_DECL_NSIAPPLICATIONICON
   NS_DECL_NSINATIVEMENU
   NS_DECL_NSISECURITYCHECKEDCOMPONENT
 

@@ -55,7 +55,7 @@ EXPORTS = \
     $(NULL)
 
 XPIDLSRCS	= \
-    nsIApplicationTile.idl \
+    nsIApplicationIcon.idl \
     nsIDesktopEnvironment.idl \
     nsINativeIcon.idl \
     nsINativeMenu.idl \

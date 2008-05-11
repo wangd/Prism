@@ -40,7 +40,7 @@
 #include "nsIMacDock.h"
 #include "nsCOMPtr.h"
 
-class nsIApplicationTile;
+class nsIApplicationIcon;
 class nsIComponentManager;
 class nsIFile;
 struct nsModuleComponentInfo;
@@ -68,5 +68,5 @@ private:
   ~nsDesktopEnvironment();
 
 protected:
-  nsCOMPtr<nsIApplicationTile> mDockTile;
+  nsCOMPtr<nsIApplicationIcon> mDockTile;
 };

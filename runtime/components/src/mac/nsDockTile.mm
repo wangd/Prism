@@ -49,7 +49,7 @@
 
 #include "nsStringAPI.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsDockTile, nsIApplicationTile, nsINativeMenu, nsISecurityCheckedComponent)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsDockTile, nsIApplicationIcon, nsINativeMenu, nsISecurityCheckedComponent)
 
 nsDockTile::nsDockTile(nsIDOMWindow* aWindow)
 {
@@ -216,7 +216,7 @@ NS_IMETHODIMP nsDockTile::GetBadgeText(nsAString& aBadgeText)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsDockTile::Show(nsIDOMWindow* aWindow)
+NS_IMETHODIMP nsDockTile::Show()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -42,7 +42,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIApplicationTile;
+interface nsIApplicationIcon;
 interface nsIDOMWindow;
 interface nsIWebProgress;
 
@@ -100,5 +100,5 @@ interface nsIPlatformGlue : nsISupports
   /**
    * Access to application tile icon (notification area or dock).
    */
-  nsIApplicationTile icon();
+  nsIApplicationIcon icon();
 };

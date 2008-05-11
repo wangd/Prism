@@ -41,7 +41,7 @@
 #include "nsISupports.idl"
 
 interface nsIDOMWindow;
-interface nsIApplicationTile;
+interface nsIApplicationIcon;
 interface nsIFile;
 interface nsINativeMenu;
 
@@ -76,7 +76,7 @@ interface nsIDesktopEnvironment : nsISupports
   /**
    * Create a new application tile for this desktop.
    */
-  nsIApplicationTile getApplicationTile(in nsIDOMWindow window);
+  nsIApplicationIcon getApplicationTile(in nsIDOMWindow window);
 
   const unsigned short zLevelTop = 1;
   const unsigned short zLevelBottom = 2;

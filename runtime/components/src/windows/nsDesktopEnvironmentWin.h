@@ -42,7 +42,7 @@
 #include "nsIDirectoryService.h"
 #include "nsIObserver.h"
 
-class nsIApplicationTile;
+class nsIApplicationIcon;
 class nsIComponentManager;
 class nsIFile;
 class nsINativeMenu;
@@ -84,5 +84,5 @@ private:
   ~nsDesktopEnvironment();
 
 protected:
-  nsCOMPtr<nsIApplicationTile> mNotificationArea;
+  nsCOMPtr<nsIApplicationIcon> mNotificationArea;
 };

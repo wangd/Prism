@@ -83,7 +83,7 @@ ATOM nsNotificationArea::s_wndClass = NULL;
 #define WM_TRAYICON         (WM_USER + 0x17b6)
 #define MENU_ITEM_BASE_ID   1000
 
-NS_IMPL_ISUPPORTS3(nsNotificationArea, nsIApplicationTile, nsINativeMenu, nsISecurityCheckedComponent)
+NS_IMPL_ISUPPORTS3(nsNotificationArea, nsIApplicationIcon, nsINativeMenu, nsISecurityCheckedComponent)
 
 nsNotificationArea::nsNotificationArea(nsIDOMWindow* aWindow) : mMenu(NULL)
 {
@@ -600,7 +600,7 @@ NS_IMETHODIMP nsNotificationArea::CanGetProperty(const nsIID *iid, const PRUnich
 }
 
 NS_IMETHODIMP nsNotificationArea::CanSetProperty(const nsIID *iid, const PRUnichar *propertyName, char **_retval) {
-  if (iid->Equals(NS_GET_IID(nsIApplicationTile))) {
+  if (iid->Equals(NS_GET_IID(nsIApplicationIcon))) {
     *_retval = cloneAllAccess();
   }
   else {
