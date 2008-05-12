@@ -249,7 +249,7 @@ NS_IMETHODIMP nsDesktopEnvironment::CreateShortcut(
   return CallQueryInterface(shortcutFile, _retval);
 }
 
-NS_IMETHODIMP nsDesktopEnvironment::GetApplicationTile(nsIDOMWindow* aWindow, nsIApplicationIcon** _retval)
+NS_IMETHODIMP nsDesktopEnvironment::GetApplicationIcon(nsIDOMWindow* aWindow, nsIApplicationIcon** _retval)
 {
   NS_ENSURE_ARG(aWindow);
 
