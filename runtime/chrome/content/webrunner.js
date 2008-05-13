@@ -533,7 +533,7 @@ var WebRunner = {
     var iconUri = ioService.newFileURI(appIcon);
 
     var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
-    var icon = desktop.getApplicationTile(this._getBrowser().contentWindow);
+    var icon = desktop.getApplicationIcon(this._getBrowser().contentWindow);
     icon.imageSpec = iconUri.spec;
     icon.title = document.title;
     icon.show();
@@ -560,7 +560,7 @@ var WebRunner = {
   {
     if (WebAppProperties.trayicon) {
       var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
-      var icon = desktop.getApplicationTile(this._getBrowser().contentWindow);
+      var icon = desktop.getApplicationIcon(this._getBrowser().contentWindow);
       icon.hide();
     }
 
