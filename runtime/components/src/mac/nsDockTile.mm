@@ -293,6 +293,11 @@ NS_IMETHODIMP nsDockTile::CanGetProperty(const nsIID *iid, const PRUnichar *prop
 }
 
 NS_IMETHODIMP nsDockTile::CanSetProperty(const nsIID *iid, const PRUnichar *propertyName, char **_retval) {
+  if (iid->Equals(NS_GET_IID(nsIApplicationIcon))) {
+    *_retval = cloneAllAccess();
+  }
+  else {
     *_retval = cloneNoAccess();
-    return NS_OK;
+  }
+  return NS_OK;
 }
