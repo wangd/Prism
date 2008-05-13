@@ -244,7 +244,7 @@ PlatformGlue.prototype = {
     
     if (!this._icon) {
       var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
-      this._icon = desktop.getApplicationTile(this._window);
+      this._icon = desktop.getApplicationIcon(this._window);
     }
     return this._icon;
   }  
