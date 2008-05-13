@@ -362,7 +362,7 @@ var WebRunner = {
           uri = this._ios.newURI(str.data.split("\n")[0], null, null);
         }
         else {
-          var file = dataObj.value.QueryInterface(Ci.nsIFile);
+          var file = data.value.QueryInterface(Ci.nsIFile);
           if (file)
             uri = this._ios.newFileURI(file);
         }
@@ -412,6 +412,8 @@ var WebRunner = {
     var browser = this._getBrowser();
     // Use createInstance since we're overloaded the factory to always use a singleton
     var platformGlue = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
+    
+    HostUI._document = document;
     
     WebAppProperties.script["XMLHttpRequest"] = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1");
     WebAppProperties.script["window"] = browser.contentWindow;
@@ -702,7 +704,7 @@ var WebRunner = {
     }
 
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_TRANSFERRING) {
         WebAppProperties.script["window"] = aWebProgress.DOMWindow;
       }
       else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {

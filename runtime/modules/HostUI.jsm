@@ -32,13 +32,15 @@ EXPORTED_SYMBOLS = ["HostUI"];
  * Simple host API exposed to the web application script files.
  */
 var HostUI = {
+  _document : null,
+
   log : function(aMsg) {
     var console = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
     console.logStringMessage(aMsg);
   },
 
   getBrowser : function() {
-    return document.getElementById("browser_content");
+    return this._document.getElementById("browser_content");
   },
   
   showAlert : function(aImage, aTitle, aMsg) {
@@ -72,17 +74,17 @@ var HostUI = {
 
   sidebar : {
     get visible() {
-      return document.getElementById("splitter_sidebar").getAttribute("state") == "open";
+      return this._document.getElementById("splitter_sidebar").getAttribute("state") == "open";
     },
 
     set visible(show) {
-      document.getElementById("splitter_sidebar").setAttribute("state", show ? "open" : "collapsed");
+      this._document.getElementById("splitter_sidebar").setAttribute("state", show ? "open" : "collapsed");
     },
 
     add : function(title, uri) {
-      document.getElementById("box_sidebar").href = uri;
-      document.getElementById("label_sidebar").value = title;
-      document.getElementById("browser_sidebar").setAttribute("src", uri);
+      this._document.getElementById("box_sidebar").href = uri;
+      this._document.getElementById("label_sidebar").value = title;
+      this._document.getElementById("browser_sidebar").setAttribute("src", uri);
     }
   }
 };
