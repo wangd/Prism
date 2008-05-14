@@ -314,7 +314,7 @@ var WebRunner = {
   _isURIExternal : function(aURI) {
     var linkDomain = this._getBaseDomain(aURI);
     // Can't use browser.currentURI since it causes reentrancy into the docshell.
-    if (linkDomain == this._currentDomain)
+    if (!linkDomain || (linkDomain == this._currentDomain))
       return false;
     else
       return true;
