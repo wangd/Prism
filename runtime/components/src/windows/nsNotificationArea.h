@@ -67,6 +67,7 @@ class nsIDOMDocument;
 class nsIDOMEventTarget;
 class nsIDOMWindow;
 class nsIURI;
+class nsIXULWindow;
 
 class nsNotificationArea : public nsIApplicationIcon, public nsINativeMenu, public nsISecurityCheckedComponent
 {
@@ -85,8 +86,16 @@ protected:
   nsresult GetIconForURI(nsIURI* iconURI, HICON& result);
   nsresult CreateListenerWindow(HWND* listenerWindow);
   nsresult GetElementById(const nsAString& aId, nsIDOMElement** _retval);
+  static nsresult DispatchEvent(nsIDOMWindow* aDOMWindow, nsIDOMEventTarget* aEventTarget, const nsAString& aType,
+    PRBool* aPreventDefault);
   static void ShowPopupMenu(HWND hwnd, HMENU hmenu);
-  static nsresult DispatchMenuEvent(nsNotificationArea* notificationArea, WORD menuId);
+
+  static LRESULT CALLBACK ListenerWindowProc(
+    HWND hwnd,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam
+    );
 
   static LRESULT CALLBACK WindowProc(
     HWND hwnd,
@@ -102,6 +111,7 @@ protected:
   /* window property constants */
   static const TCHAR* S_PROPINST;
   static const TCHAR* S_PROPPROC;
+  static const TCHAR* S_PROPBEHAVIOR;
 
   /* menu */
   HMENU mMenu;

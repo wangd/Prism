@@ -49,6 +49,9 @@ interface nsINativeMenu;
 [scriptable, uuid(9c25e3d0-c432-11dc-95ff-0800200c9a66)]
 interface nsIApplicationIcon : nsISupports
 {
+  const PRUint32 HIDE_ON_MINIMIZE = 1;
+  const PRUint32 HIDE_ON_CLOSE = 2;
+
   /**
    * Title of the tile.
    */
@@ -68,6 +71,11 @@ interface nsIApplicationIcon : nsISupports
    * Text used to badge the tile.
    */
   attribute AString badgeText;
+
+  /**
+   * Specify window behavior, can currently minimize and close to icon (assuming platform support).
+   */
+  attribute PRUint32 behavior;
 
   /**
    * Show the application tile in the appropriate location (tray, dock, etc.).

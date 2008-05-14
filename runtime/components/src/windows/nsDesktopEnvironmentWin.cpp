@@ -69,52 +69,6 @@
 
 #define MAX_BUF 4096
 
-// Retrieves the HWND associated with a DOM window
-nsresult GetHWNDForDOMWindow(nsIDOMWindow* aWindow, HWND* hWnd)
-{
-  NS_ENSURE_ARG(hWnd);
-
-  nsresult rv;
-  nsCOMPtr<nsIInterfaceRequestor>
-    requestor(do_QueryInterface(aWindow, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIWebNavigation> nav;
-  rv = requestor->GetInterface(NS_GET_IID(nsIWebNavigation),
-    getter_AddRefs(nav));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(nav, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  requestor = do_QueryInterface(treeOwner, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIXULWindow> xulWindow;
-  rv = requestor->GetInterface(NS_GET_IID(nsIXULWindow), getter_AddRefs(xulWindow));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDocShell> docShell;
-  rv = xulWindow->GetDocShell(getter_AddRefs(docShell));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(docShell, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nativeWindow theNativeWindow;
-  rv = baseWindow->GetParentNativeWindow( &theNativeWindow );
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *hWnd = reinterpret_cast<HWND>(theNativeWindow);
-  NS_ENSURE_TRUE(hWnd, NS_ERROR_UNEXPECTED);
-
-  return NS_OK;
-}
-
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsDesktopEnvironment, nsIDesktopEnvironment,
   nsIDirectoryServiceProvider, nsIObserver)
 
@@ -270,7 +224,7 @@ NS_IMETHODIMP nsDesktopEnvironment::SetZLevel(nsIDOMWindow* aWindow,
 
   nsresult rv;
   HWND hWnd;
-  rv = GetHWNDForDOMWindow(aWindow, &hWnd);
+  rv = GetHWNDForDOMWindow(aWindow, (void *) &hWnd);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetForegroundWindow(hWnd);
@@ -282,7 +236,7 @@ NS_IMETHODIMP nsDesktopEnvironment::GetSystemMenu(nsIDOMWindow* aWindow, nsINati
 {
   nsresult rv;
   HWND hWnd;
-  rv = GetHWNDForDOMWindow(aWindow, &hWnd);
+  rv = GetHWNDForDOMWindow(aWindow, (void *) &hWnd);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMDocument> document;
@@ -290,6 +244,52 @@ NS_IMETHODIMP nsDesktopEnvironment::GetSystemMenu(nsIDOMWindow* aWindow, nsINati
   NS_ENSURE_SUCCESS(rv, rv);
 
   return nsSystemMenu::GetSystemMenu(hWnd, document, _retval);
+}
+
+// Retrieves the HWND associated with a DOM window
+nsresult nsDesktopEnvironment::GetHWNDForDOMWindow(nsIDOMWindow* aWindow, void* hWnd)
+{
+  NS_ENSURE_ARG(hWnd);
+
+  nsresult rv;
+  nsCOMPtr<nsIInterfaceRequestor>
+    requestor(do_QueryInterface(aWindow, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIWebNavigation> nav;
+  rv = requestor->GetInterface(NS_GET_IID(nsIWebNavigation),
+    getter_AddRefs(nav));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(nav, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  requestor = do_QueryInterface(treeOwner, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIXULWindow> xulWindow;
+  rv = requestor->GetInterface(NS_GET_IID(nsIXULWindow), getter_AddRefs(xulWindow));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocShell> docShell;
+  rv = xulWindow->GetDocShell(getter_AddRefs(docShell));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(docShell, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nativeWindow theNativeWindow;
+  rv = baseWindow->GetParentNativeWindow( &theNativeWindow );
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *((HWND *) hWnd) = reinterpret_cast<HWND>(theNativeWindow);
+  NS_ENSURE_TRUE(hWnd, NS_ERROR_UNEXPECTED);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDesktopEnvironment::Observe(nsISupports* aSubject,

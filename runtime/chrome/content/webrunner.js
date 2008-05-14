@@ -126,8 +126,13 @@ var WebRunner = {
       
       this._getBrowser().loadURI(WebAppProperties.uri, null, null);
       
-      if (WebAppProperties.trayicon)
+      if (WebAppProperties.trayicon) {
         this.showTrayIcon();
+        
+        var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
+        var icon = desktop.getApplicationIcon(this._getBrowser().contentWindow);
+        icon.behavior = Ci.nsIApplicationIcon.HIDE_ON_MINIMIZE;
+      }
     }
     
     this._loadSettings();
@@ -434,8 +439,11 @@ var WebRunner = {
       return;
     }
 
-    // Add the unload handler for the main page
+    // Add handlers for the main page
     window.addEventListener("unload", function() { WebRunner.shutdown(); }, false);
+    window.addEventListener("minimizing", function(event) { WebRunner.onMinimizing(event); }, false);
+    window.addEventListener("closing", function(event) { WebRunner.onClosing(event); }, false);
+    window.addEventListener("DOMActivate", function(event) { WebRunner.onActivate(event); }, false);
 
     var install = false;
 
@@ -576,6 +584,35 @@ var WebRunner = {
     if (contentViewer && !contentViewer.permitUnload()) {
       return false;
     }
+  },
+  
+  onMinimizing : function(event)
+  {
+    var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
+    var icon = desktop.getApplicationIcon(this._getBrowser().contentWindow);
+    if (icon.behavior | Ci.nsIApplicationIcon.HIDE_ON_MINIMIZE) {
+      this._xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
+    }
+  },
+  
+  onClosing : function(event)
+  {
+    var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
+    var icon = desktop.getApplicationIcon(this._getBrowser().contentWindow);
+    if (icon.behavior | Ci.nsIApplicationIcon.HIDE_ON_CLOSE) {
+      this._xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
+      event.preventDefault();
+    }
+  },
+  
+  onActivate : function(event)
+  {
+    this._xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = true;
+    
+    var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
+    desktop.setZLevel(window, Ci.nsIDesktopEnvironment.zLevelTop);
+    
+    window.QueryInterface(Ci.nsIDOMChromeWindow).restore();
   },
 
   doCommand : function(aCmd) {

@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matthew Gertner <matthew@allpeers.com> (Original author)
+ *   Matthew Gertner <matthew.gertner@gmail.com> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -71,6 +71,8 @@ public:
   nsDesktopEnvironment();
 
   nsresult Init();
+  
+  static nsresult GetHWNDForDOMWindow(nsIDOMWindow* aWindow, void* hWnd);
 
   static NS_METHOD OnRegistration(nsIComponentManager *aCompMgr,
     nsIFile *aPath, const char *registryLocation, const char *componentType,

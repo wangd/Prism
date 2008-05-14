@@ -22,7 +22,7 @@
  *   Mark Yen <mook.moz+cvs.mozilla.org@gmail.com>, Original author
  *   Brad Peterson <b_peterson@yahoo.com>, Original author
  *   Daniel Glazman <daniel.glazman@disruptive-innovations.com>
- *   Matthew Gertner <matthew@allpeers.com>
+ *   Matthew Gertner <matthew.gertner@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,20 +45,21 @@
 #include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMArray.h"
+#include "nsDesktopEnvironmentWin.h"
 #include "nsMemory.h"
 #include "nsIBufferedStreams.h"
 #include "nsIChannel.h"
-#include "nsIDOMAbstractView.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentEvent.h"
-#include "nsIDOMDocumentView.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMWindow.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsINativeIcon.h"
 #include "nsIIOService.h"
 #include "nsIURI.h"
+#include "nsIXULWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringAPI.h"
 
@@ -68,6 +69,8 @@ const TCHAR* nsNotificationArea::S_PROPINST =
   TEXT("_NotificationArea_INST");
 const TCHAR* nsNotificationArea::S_PROPPROC =
   TEXT("_NotificationArea_PROC");
+const TCHAR* nsNotificationArea::S_PROPBEHAVIOR =
+  TEXT("_NotificationArea_BEHAVIOR");
 
 ATOM nsNotificationArea::s_wndClass = NULL;
 
@@ -107,7 +110,6 @@ nsNotificationArea::~nsNotificationArea()
 NS_IMETHODIMP
 nsNotificationArea::Show()
 {
-  NS_ENSURE_STATE(mWindow);
   nsresult rv;
 
   if (mImageSpec.IsEmpty())
@@ -311,7 +313,6 @@ nsNotificationArea::GetItems(nsISimpleEnumerator** _retval)
 {
   NS_ENSURE_STATE(mMenu);
 
-  nsresult rv;
   nsCOMArray<nsIDOMElement> items;
   
   MENUITEMINFO itemInfo;
@@ -324,6 +325,52 @@ nsNotificationArea::GetItems(nsISimpleEnumerator** _retval)
   }
   
   return NS_NewArrayEnumerator(_retval, items);
+}
+
+NS_IMETHODIMP
+nsNotificationArea::GetBehavior(PRUint32* aBehavior)
+{
+  NS_ENSURE_STATE(mWindow);
+  
+  nsresult rv;
+  HWND hwnd;
+  rv = nsDesktopEnvironment::GetHWNDForDOMWindow(mWindow, (void *) &hwnd);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  *aBehavior = (PRUint32) GetProp(hwnd, S_PROPBEHAVIOR);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNotificationArea::SetBehavior(PRUint32 aBehavior)
+{
+  NS_ENSURE_STATE(mWindow);
+  
+  nsresult rv;
+  HWND hwnd;
+  rv = nsDesktopEnvironment::GetHWNDForDOMWindow(mWindow, (void *) &hwnd);
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  if (aBehavior) {
+    if (!GetProp(hwnd, S_PROPBEHAVIOR)) {
+      // Window isn't hooked yet
+      WNDPROC oldProc = (WNDPROC) ::SetWindowLong(hwnd, GWL_WNDPROC, (DWORD) WindowProc);
+      SetProp(hwnd, S_PROPPROC, oldProc);
+      SetProp(hwnd, S_PROPINST, mWindow);
+    }
+  }
+  else {
+    // Unhook the window since we don't have any behavior anymore
+    if (GetProp(hwnd, S_PROPBEHAVIOR)) {
+      WNDPROC oldProc = (WNDPROC) GetProp(hwnd, S_PROPPROC);
+      ::SetWindowLong(hwnd, GWL_WNDPROC, (DWORD) oldProc);
+    }
+  }
+  
+  SetProp(hwnd, S_PROPBEHAVIOR, (HANDLE) aBehavior);
+  
+  return NS_OK;
 }
 
 nsresult
@@ -405,6 +452,49 @@ nsNotificationArea::GetIconForWnd(HWND hwnd, HICON& result)
 }
 
 nsresult
+nsNotificationArea::DispatchEvent(
+  nsIDOMWindow* aDOMWindow,
+  nsIDOMEventTarget* aEventTarget,
+  const nsAString& aType,
+  PRBool* aPreventDefault)
+{
+  NS_ENSURE_ARG(aDOMWindow);
+
+  nsresult rv;
+  nsCOMPtr<nsIDOMEventTarget> eventTarget;
+  if (aEventTarget) {
+    eventTarget = aEventTarget;
+  }
+  else {
+    eventTarget = do_QueryInterface(aDOMWindow, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsCOMPtr<nsIDOMDocument> document;
+  rv = aDOMWindow->GetDocument(getter_AddRefs(document));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIDOMDocumentEvent> documentEvent(do_QueryInterface(document, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMEvent> event;
+  rv = documentEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = event->InitEvent(aType, PR_TRUE, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool ret;
+  rv = eventTarget->DispatchEvent(event, &ret);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (aPreventDefault)
+    *aPreventDefault = !ret;
+    
+  return NS_OK;
+}
+
+nsresult
 nsNotificationArea::CreateListenerWindow(
   HWND* listenerWindow
 )
@@ -416,7 +506,7 @@ nsNotificationArea::CreateListenerWindow(
   if (!nsNotificationArea::s_wndClass) {
     WNDCLASS wndClassDef;
     wndClassDef.style          = CS_NOCLOSE | CS_GLOBALCLASS;
-    wndClassDef.lpfnWndProc    = nsNotificationArea::WindowProc;
+    wndClassDef.lpfnWndProc    = nsNotificationArea::ListenerWindowProc;
     wndClassDef.cbClsExtra     = 0;
     wndClassDef.cbWndExtra     = 0;
     wndClassDef.hInstance      = hInst;
@@ -455,35 +545,12 @@ nsNotificationArea::CreateListenerWindow(
   return NS_OK;
 }
 
-// a little helper class to automatically manage our reentrancy counter
-// if we reenter WindowProc very bad things happen
-class AutoReentryBlocker
-{
-public:
-  AutoReentryBlocker(PRUint32* counter) { mCounter = counter; (*mCounter)++; }
-  ~AutoReentryBlocker() { (*mCounter)--; }
-
-protected:
-  PRUint32* mCounter;
-};
-
-static PRUint32 numberOfCallsIntoWindowProc = 0;
-
 LRESULT CALLBACK
-nsNotificationArea::WindowProc(HWND hwnd,
+nsNotificationArea::ListenerWindowProc(HWND hwnd,
                                UINT uMsg,
                                WPARAM wParam,
                                LPARAM lParam)
 {
-  if (numberOfCallsIntoWindowProc > 0)
-    // don't reenter this function ever or we could crash (if the popup
-    // frame is still being destroyed)
-    return FALSE;
-
-  AutoReentryBlocker blocker(&numberOfCallsIntoWindowProc);
-
-  bool handled = true;
-
   nsRefPtr<nsNotificationArea> notificationArea;
   notificationArea = (nsNotificationArea *)  GetProp(hwnd, S_PROPINST);
 
@@ -498,8 +565,18 @@ nsNotificationArea::WindowProc(HWND hwnd,
     case WM_NCCREATE:
       return TRUE;
     case WM_COMMAND:
-      if (HIWORD(wParam) == 0)
-        DispatchMenuEvent(notificationArea, LOWORD(wParam));
+      if (HIWORD(wParam) == 0) {
+        MENUITEMINFO itemInfo;
+        itemInfo.cbSize = sizeof(itemInfo);
+        itemInfo.fMask = MIIM_DATA;
+        if (!::GetMenuItemInfo(notificationArea->mMenu, LOWORD(wParam), FALSE, &itemInfo))
+          return NS_ERROR_NOT_AVAILABLE;
+          
+        nsCOMPtr<nsIDOMElement> element = (nsIDOMElement *) itemInfo.dwItemData;
+        nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(element));
+        
+        DispatchEvent(notificationArea->mWindow, eventTarget, NS_LITERAL_STRING("DOMActivate"), nsnull);
+      }
       return FALSE;
     default:
       return ::CallWindowProc(DefWindowProc, hwnd, uMsg, wParam, lParam);
@@ -511,6 +588,9 @@ nsNotificationArea::WindowProc(HWND hwnd,
         ShowPopupMenu(hwnd, notificationArea->mMenu);
       }
       break;
+    case WM_LBUTTONDOWN:
+      DispatchEvent(notificationArea->mWindow, nsnull, NS_LITERAL_STRING("DOMActivate"), nsnull);
+      break;
   }
 
   PostMessage(hwnd, WM_NULL, 0, 0);
@@ -518,58 +598,82 @@ nsNotificationArea::WindowProc(HWND hwnd,
   return FALSE;
 }
 
+LRESULT CALLBACK
+nsNotificationArea::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+  WNDPROC proc = (WNDPROC) GetProp(hwnd, S_PROPPROC);
+  nsIDOMWindow* domWindow = (nsIDOMWindow *) GetProp(hwnd, S_PROPINST);
+  nsAutoString typeArg;
+
+  switch (uMsg) {
+    case WM_NCLBUTTONDOWN:
+      switch(wParam) {
+        case HTMINBUTTON:
+          typeArg = NS_LITERAL_STRING("minimizing");
+          break;
+        case HTMAXBUTTON:
+          typeArg = NS_LITERAL_STRING("maximizing");
+          break;
+        case HTCLOSE:
+          typeArg = NS_LITERAL_STRING("closing");
+          break;
+      }
+      break;
+    case WM_ACTIVATE:
+      switch (LOWORD(wParam)) {
+        case WA_ACTIVE:
+        case WA_CLICKACTIVE:
+          // window is being activated
+          typeArg = NS_LITERAL_STRING("activating");
+          break;
+      }
+      break;
+    case WM_SIZE:
+      switch (wParam) {
+        case SIZE_MINIMIZED:
+          typeArg = NS_LITERAL_STRING("minimizing");
+          break;
+        default:
+          break;
+      }
+      break;
+    case WM_SYSCOMMAND:
+      switch (wParam) {
+        case SC_CLOSE:
+          // The user has clicked on the top left window icon and selected close...
+          // Or the user typed Alt+F4.
+          // Need to comment this out since right now there's no other way to close the app.
+          // If we end up adding a menu bar we might want to revisit this.
+          // typeArg = NS_LITERAL_STRING("closing");
+          break;
+      }
+      break;
+    case WM_CLOSE:
+      // Closing the window so unhook
+      ::SetWindowLong(hwnd, GWL_WNDPROC, (DWORD) proc);
+      break;
+  }
+ 
+  if (!typeArg.IsEmpty()) {
+    // dispatch the event
+    PRBool preventDefault;
+    nsresult rv;
+    rv = DispatchEvent(domWindow, nsnull, typeArg, &preventDefault);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (preventDefault)
+      // event was hooked
+      return FALSE;
+  }
+  
+  return CallWindowProc(proc, hwnd, uMsg, wParam, lParam);
+}
+
 void nsNotificationArea::ShowPopupMenu(HWND hwnd, HMENU hmenu) {
   POINT pos;
   ::GetCursorPos(&pos);
 
   ::TrackPopupMenu(hmenu, TPM_RIGHTALIGN, pos.x, pos.y, 0, hwnd, NULL);
-}
-
-nsresult nsNotificationArea::DispatchMenuEvent(nsNotificationArea* notificationArea, WORD menuId)
-{
-  NS_ENSURE_ARG(notificationArea);
-  NS_ENSURE_STATE(notificationArea->mWindow);
-  NS_ENSURE_STATE(notificationArea->mMenu);
-
-  nsresult rv;
-
-  nsCOMPtr<nsIDOMDocument> document;
-  rv = notificationArea->mWindow->GetDocument(getter_AddRefs(document));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMDocumentEvent> documentEvent(do_QueryInterface(document, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMDocumentView> documentView(do_QueryInterface(document, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMAbstractView> abstractView;
-  rv = documentView->GetDefaultView(getter_AddRefs(abstractView));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMEvent> event;
-  rv = documentEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = event->InitEvent(NS_LITERAL_STRING("DOMActivate"), PR_TRUE, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  MENUITEMINFO itemInfo;
-  itemInfo.cbSize = sizeof(itemInfo);
-  itemInfo.fMask = MIIM_DATA;
-  if (!::GetMenuItemInfo(notificationArea->mMenu, menuId, FALSE, &itemInfo))
-    return NS_ERROR_NOT_AVAILABLE;
-    
-  nsCOMPtr<nsIDOMElement> element = (nsIDOMElement *) itemInfo.dwItemData;
-
-  PRBool ret;
-  nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(element, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = eventTarget->DispatchEvent(event, &ret);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
 }
 
 static char* cloneAllAccess()
