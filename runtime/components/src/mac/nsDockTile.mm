@@ -62,12 +62,12 @@ nsDockTile::~nsDockTile()
 
 NS_IMETHODIMP nsDockTile::SetTitle(const nsAString& aTitle)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDockTile::GetTitle(nsAString& aTitle)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDockTile::GetMenu(nsINativeMenu** _retval)
@@ -77,12 +77,12 @@ NS_IMETHODIMP nsDockTile::GetMenu(nsINativeMenu** _retval)
 
 NS_IMETHODIMP nsDockTile::SetImageSpec(const nsAString& aImageSpec)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDockTile::GetImageSpec(nsAString& aImageSpec)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
   
 NS_IMETHODIMP nsDockTile::SetBadgeText(const nsAString& aBadgeText)
@@ -218,12 +218,24 @@ NS_IMETHODIMP nsDockTile::GetBadgeText(nsAString& aBadgeText)
 
 NS_IMETHODIMP nsDockTile::Show()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDockTile::Hide()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDockTile::SetBehavior(PRUint32 aBehavior)
+{
+  // Ignored on OS X
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDockTile::GetBehavior(PRUint32* aBehavior)
+{
+  *aBehavior = 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDockTile::GetItems(nsISimpleEnumerator** _retval)
