@@ -60,6 +60,7 @@ XPIDLSRCS	= \
     nsINativeIcon.idl \
     nsINativeMenu.idl \
     nsIPlatformGlue.idl \
+    nsIShellService.idl \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

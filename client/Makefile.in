@@ -91,6 +91,11 @@ libs repackage:: application.ini
 else
 
 libs::
+ifeq ($(OS_ARCH),WINNT)
+	cp $(srcdir)/winbuild/regprot.nsi $(DIST)/bin
+	makensis $(DIST)/bin/regprot.nsi
+endif
+
 	cp $(LIBXUL_DIST)/bin/xulrunner-stub$(BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY)
 	$(NSINSTALL) -D $(DIST)/bin/xulrunner
 	(cd $(LIBXUL_SDK)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)

@@ -46,6 +46,10 @@ const Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+const PRISM_PROTOCOL_PREFIX = "prism.protocol.";
+const PROTOCOL_HANDLER_CLASSNAME = "WebRunner protocol handler";
+const PROTOCOL_HANDLER_CID = Components.ID("{2033eb27-55cf-4e06-80ae-134b59ed5437}");
+
 function PlatformGlueSound() {
   //Constructor
 }
@@ -115,6 +119,73 @@ PlatformGlueSound.prototype = {
   }
 }
 
+function MakeProtocolHandlerFactory(contractid) {
+  var factory = {
+    QueryInterface: function (aIID) {
+      if (!aIID.equals(Components.interfaces.nsISupports) &&
+        !aIID.equals(Components.interfaces.nsIFactory))
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+      return this;
+    },
+    createInstance: function (outer, iid) {
+      if (outer != null)
+        throw Components.results.NS_ERROR_NO_AGGREGATION;
+      return (new PlatformProtocolHandler(contractid)).QueryInterface(iid);
+    }
+  };
+
+  return factory;
+}
+
+function PlatformProtocolHandler(contractid) {
+  this._ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+}
+
+PlatformProtocolHandler.prototype = {
+  QueryInterface: XPCOMUtils.generateQI(
+    [Ci.nsIProtocolHandler,
+    Ci.nsIClassInfo]),
+
+  // nsIClassInfo
+  implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
+  flags: Ci.nsIClassInfo.DOM_OBJECT,
+
+  getInterfaces: function getInterfaces(aCount) {
+    var interfaces = [Ci.nsIProtocolHandler,
+                      Ci.nsIClassInfo];
+    aCount.value = interfaces.length;
+    return interfaces;
+  },
+
+  getHelperForLanguage: function getHelperForLanguage(aLanguage) {
+    return null;
+  },
+
+  get defaultPort() {
+    return 80;
+  },
+
+  get protocolFlags() {
+    return 0;
+  },
+
+  newURI: function newURI(aSpec, anOriginalCharset, aBaseURI) {
+    var platformGlue = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
+    var uriString = platformGlue.getProtocolURI(aSpec);
+    return this._ioService.newURI(uriString, "", null);
+  },
+  
+  newChannel: function newChannel(aUri) {
+    var uri = this.newURI(aUri.spec, "", null);
+    return this._ioService.newChannelFromURI(uri, null);
+  },
+  
+  allowPort: function allowPort(aPort, aScheme) {
+    // We are not overriding any special ports
+    return false;
+  }
+}
+
 //=================================================
 // Factory - Treat PlatformGlue as a singleton
 // XXX This is required, because we're registered for the 'JavaScript global
@@ -152,6 +223,7 @@ PlatformGlue.prototype = {
     entry: "platform"
   }],
 
+  _prefs : Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch),
   _window : null,
   _icon : null,
 
@@ -247,7 +319,46 @@ PlatformGlue.prototype = {
       this._icon = desktop.getApplicationIcon(this._window);
     }
     return this._icon;
-  }  
+  },
+  
+  registerProtocolHandler: function registerProtocol(uriScheme, uriString) {
+    // First register the protocol with the shell
+    var shellService = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIShellService);
+    shellService.registerProtocol(uriScheme, null, null);
+    
+    // Register with the component registrar
+    var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+    var contractId = "@mozilla.org/network/protocol;1?name=" + uriScheme;
+    registrar.registerFactory(PROTOCOL_HANDLER_CID, PROTOCOL_HANDLER_CLASSNAME, contractId,
+      MakeProtocolHandlerFactory(contractId));
+    
+    // Then store a pref so we remember the URI string we want to load
+    this._prefs.setCharPref(PRISM_PROTOCOL_PREFIX + uriScheme, uriString);
+  },
+  
+  unregisterProtocolHandler: function unregisterProtocol(uriScheme) {
+    // Unregister the protocol with the shell so the URI scheme no longer invokes the application
+    var shellService = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIShellService);
+    shellService.unregisterProtocol(uriScheme);
+    
+    // Unregister with the component registrar
+    var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+    var contractId = "@mozilla.org/network/protocol;1?name=" + uriScheme;
+    // Now what?
+
+    // And remove the pref
+    this._prefs.clearUserPref(PRISM_PROTOCOL_PREFIX + uriScheme);
+  },
+  
+  getProtocolURI : function getProtocolCallback(uriSpec) {
+    try {
+      var uriString = this._prefs.getCharPref(PRISM_PROTOCOL_PREFIX + uriSpec.replace(/(.*):.*/, "$1"));
+      return uriString.replace(/%s/, uriSpec.replace(/.*:(.*)/, "$1"));
+    }
+    catch (e) {
+      return "";
+    }
+  }
 }
 
 var components = [PlatformGlue];

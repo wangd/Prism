@@ -105,6 +105,7 @@ IconProvider.prototype = {
 var WebAppProperties =
 {
   script : {},
+  scriptLoaded : false,
   id : "",
   name : null,
   fileTypes : [],
@@ -181,15 +182,18 @@ var WebAppProperties =
     if (appINI.exists())
       this.readINI(appINI);
 
-    // Load the application script
-    var appScript = appSandbox.clone();
-    appScript.append("webapp.js");
-    if (appScript.exists()) {
-      var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-      var appScriptURI = ios.newFileURI(appScript);
+    // Load the application script (if it isn't already loaded)
+    if (!this.scriptLoaded) {
+      var appScript = appSandbox.clone();
+      appScript.append("webapp.js");
+      if (appScript.exists()) {
+        var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+        var appScriptURI = ios.newFileURI(appScript);
 
-      var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
-      scriptLoader.loadSubScript(appScriptURI.spec, WebAppProperties.script);
+        var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
+        scriptLoader.loadSubScript(appScriptURI.spec, WebAppProperties.script);
+        this.scriptLoaded = true;
+      }
     }
 
     // Load the application style

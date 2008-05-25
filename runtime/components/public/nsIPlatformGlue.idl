@@ -101,4 +101,31 @@ interface nsIPlatformGlue : nsISupports
    * Access to application tile icon (notification area or dock).
    */
   nsIApplicationIcon icon();
+  
+  /**
+   * Register the application as the default handler for the specified URI scheme.
+   *
+   * @param uriScheme The scheme to register.
+   * @param uriString The address to load for a URI of the given scheme. "%s" is used as a
+   *    place holder for the URI (e.g. "http://www.mymail.com?compose&to=%s").
+   */
+  void registerProtocolHandler(in AString uriScheme, in AString uriString);
+  
+  /**
+   * Unregister the application as the default handle for the specified URI scheme.
+   *
+   * @param uriScheme The scheme to unregister.
+   */
+  void unregisterProtocolHandler(in AString uriScheme);
+  
+  /**
+   * Get the URI spec to use for the provided URI. The URI scheme is analyzed and the appropriate
+   * protocol handler URI is used. If there is no protocol handler registered for the scheme, an
+   * empty string is returned.
+   *
+   * @param uri URI to get the protocol handler address for (e.g. "mailto:matthew.gertner@gmail.com").
+   * @returns the URI to load (e.g. "http://www.mymail.com?compose&to=matthew.gertner@gmail.com") or
+   *    an empty string if no protocol handler is registered for the scheme.
+   */
+  AString getProtocolURI(in AString uriSpec);
 };

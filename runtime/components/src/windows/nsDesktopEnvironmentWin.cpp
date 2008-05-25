@@ -42,6 +42,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIApplicationIcon.h"
 #include "nsIBaseWindow.h"
 #include "nsICategoryManager.h"
@@ -56,10 +57,10 @@
 #include "nsIProperties.h"
 #include "nsIServiceManager.h"
 #include "nsIWebNavigation.h"
+#include "nsIXULAppInfo.h"
 #include "nsIXULWindow.h"
 #include "nsNotificationArea.h"
 #include "nsServiceManagerUtils.h"
-#include "nsStringAPI.h"
 #include "nsSystemMenu.h"
 
 #include <windows.h>
@@ -69,8 +70,8 @@
 
 #define MAX_BUF 4096
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsDesktopEnvironment, nsIDesktopEnvironment,
-  nsIDirectoryServiceProvider, nsIObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsDesktopEnvironment, nsIDesktopEnvironment,
+  nsIDirectoryServiceProvider, nsIObserver, nsIShellService)
 
 nsDesktopEnvironment::nsDesktopEnvironment()
 {
@@ -244,6 +245,134 @@ NS_IMETHODIMP nsDesktopEnvironment::GetSystemMenu(nsIDOMWindow* aWindow, nsINati
   NS_ENSURE_SUCCESS(rv, rv);
 
   return nsSystemMenu::GetSystemMenu(hWnd, document, _retval);
+}
+
+NS_IMETHODIMP nsDesktopEnvironment::RegisterProtocol(
+  const nsAString& aScheme,
+  nsIFile* aApplicationFile,
+  const nsAString& aArguments)
+{
+  nsresult rv;
+  nsAutoString appPath;
+  if (aApplicationFile) {
+    rv = aApplicationFile->GetPath(appPath);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    appPath = QuoteCommandLineString(appPath);
+    
+    appPath += NS_LITERAL_STRING(" ");
+    appPath += aArguments;
+  }
+  else {
+    int numArgs;
+    LPWSTR* argv = ::CommandLineToArgvW(::GetCommandLineW(), &numArgs);
+    
+    WCHAR fullPath[4096];
+    if (!::GetFullPathNameW(argv[0], 4096, fullPath, NULL)) {
+      ::LocalFree(argv);
+      return NS_ERROR_FAILURE;
+    }
+    appPath = QuoteCommandLineString(nsString(fullPath));
+    
+    for (int i=1; i<numArgs; i++) {
+      appPath += NS_LITERAL_STRING(" "); 
+      appPath += QuoteCommandLineString(nsString(argv[i]));
+    }
+    
+    ::LocalFree(argv);
+  }
+  
+  nsCOMPtr<nsIXULAppInfo> appInfo(do_GetService("@mozilla.org/xre/app-info;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCAutoString appName;
+  rv = appInfo->GetName(appName);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIProperties> dirSvc(do_GetService("@mozilla.org/file/directory_service;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILocalFile> appHelper;
+  rv = dirSvc->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(appHelper));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = appHelper->Append(NS_LITERAL_STRING("regprot.exe"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsAutoString helperPath;
+  rv = appHelper->GetPath(helperPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  helperPath += NS_LITERAL_STRING(" /Protocol ");
+  helperPath += aScheme;
+  helperPath += NS_LITERAL_STRING(" /ApplicationPath ");
+  helperPath += appPath;
+  helperPath += NS_LITERAL_STRING(" /ApplicationName ");
+  helperPath += NS_ConvertUTF8toUTF16(appName);
+  
+  STARTUPINFOW si = {sizeof(si), 0};
+  PROCESS_INFORMATION pi = {0};
+
+  BOOL ok = ::CreateProcessW(NULL, (LPWSTR) helperPath.get(), NULL, NULL,
+                             FALSE, 0, NULL, NULL, &si, &pi);
+
+  if (!ok)
+    return NS_ERROR_FAILURE;
+
+  CloseHandle(pi.hProcess);
+  CloseHandle(pi.hThread);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDesktopEnvironment::UnregisterProtocol(const nsAString& aScheme)
+{
+  nsresult rv;
+  nsCOMPtr<nsIProperties> dirSvc(do_GetService("@mozilla.org/file/directory_service;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILocalFile> appHelper;
+  rv = dirSvc->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(appHelper));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = appHelper->Append(NS_LITERAL_STRING("regprot.exe"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsAutoString helperPath;
+  rv = appHelper->GetPath(helperPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  helperPath += NS_LITERAL_STRING(" /Protocol ");
+  helperPath += aScheme;
+  
+  helperPath += NS_LITERAL_STRING(" /Unregister");
+  
+  STARTUPINFOW si = {sizeof(si), 0};
+  PROCESS_INFORMATION pi = {0};
+
+  BOOL ok = ::CreateProcessW(NULL, (LPWSTR) helperPath.get(), NULL, NULL,
+                             FALSE, 0, NULL, NULL, &si, &pi);
+
+  if (!ok)
+    return NS_ERROR_FAILURE;
+
+  CloseHandle(pi.hProcess);
+  CloseHandle(pi.hThread);
+  
+  return NS_OK;
+}
+
+// Quote the string if it contains spaces
+nsString nsDesktopEnvironment::QuoteCommandLineString(const nsAString& aString)
+{
+  if (aString.FindChar(' ') == -1)
+    return nsString(aString);
+    
+  nsString quoted = NS_LITERAL_STRING("\"");
+  quoted += aString;
+  quoted += NS_LITERAL_STRING("\"");
+  
+  return quoted;
 }
 
 // Retrieves the HWND associated with a DOM window

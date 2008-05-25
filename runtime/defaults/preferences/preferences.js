@@ -2,6 +2,7 @@
 
 pref("toolkit.defaultChromeURI", "chrome://webrunner/content/webrunner.xul");  // - main xul window
 pref("browser.chromeURL", "chrome://webrunner/content/webrunner.xul");         // - allow popup windows to open
+pref("toolkit.singletonWindowType", "navigator:browser");
 
 pref("general.useragent.extra.prism", "@APP_UA_NAME@/@APP_VERSION@");
 

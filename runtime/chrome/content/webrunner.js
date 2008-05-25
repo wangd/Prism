@@ -451,9 +451,6 @@ var WebRunner = {
     if (!install)
       install = (WebAppProperties.uri == null || WebAppProperties.name == null);
 
-    // Set the windowtype attribute here, so we always know which window is the main window
-    document.documentElement.setAttribute("windowtype", "webrunner:main");
-
     // Hack to get the mime handler initialized correctly so the content handler dialog doesn't appear
     var hs = Cc["@mozilla.org/uriloader/handler-service;1"].getService(Ci.nsIHandlerService);
     var extps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService);

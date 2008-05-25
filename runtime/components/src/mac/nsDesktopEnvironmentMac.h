@@ -38,6 +38,7 @@
 
 #include "nsIDesktopEnvironment.h"
 #include "nsIMacDock.h"
+#include "nsIShellService.h"
 #include "nsCOMPtr.h"
 
 class nsIApplicationIcon;
@@ -55,12 +56,13 @@ struct nsModuleComponentInfo;
 #define NS_DESKTOPENVIRONMENT_CONTRACTID "@mozilla.org/desktop-environment;1"
 
 // Desktop integration for Mac OS X platforms.
-class nsDesktopEnvironment : public nsIDesktopEnvironment, public nsIMacDock
+class nsDesktopEnvironment : public nsIDesktopEnvironment, public nsIMacDock, public nsIShellService
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDESKTOPENVIRONMENT
   NS_DECL_NSIMACDOCK
+  NS_DECL_NSISHELLSERVICE
 
   nsDesktopEnvironment();
 

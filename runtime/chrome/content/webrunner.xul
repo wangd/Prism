@@ -37,7 +37,7 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="webrunner"
-        windowtype="webrunner"
+        windowtype="navigator:browser"
         title="&app.title;"
         width="750" height="550"
         onclose="return WebRunner.tryClose();"

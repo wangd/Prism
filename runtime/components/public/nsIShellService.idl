@@ -40,26 +40,27 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
-interface nsISimpleEnumerator;
+interface nsIFile;
 
 /**
- * Support for platform-native menus.
+ * Access to operating system user interface services.
  */
-[scriptable, uuid(9d3547d0-ff55-11dc-95ff-0800200c9a66)]
-interface nsINativeMenu : nsISupports
+[scriptable, uuid(a4a139c5-b6a5-4652-89b6-fb1ea9dbf9b3)]
+interface nsIShellService : nsISupports
 {
-  readonly attribute nsISimpleEnumerator items;
-
   /**
-   * Add the item to the menu.
+   * Register an application to be used for a URI scheme.
    *
-   * @param id ID of the element in the document
+   * @param uriScheme Scheme to register (e.g. "http").
+   * @param applicationFile Application to use (or null to use active application)
+   * @param arguments Arguments to pass to the application.
   **/
-  void addMenuItem(in AString id);
-
+  void registerProtocol(in AString uriScheme, in nsIFile applicationFile, in AString arguments);
+  
   /**
-   * Remove the item from the menu.
+   * Unregister an application for a given URI scheme.
+   *
+   * @param uriScheme Scheme for which to unregister the handler.
   **/
-  void removeMenuItem(in AString id);
+  void unregisterProtocol(in AString uriScheme);
 };

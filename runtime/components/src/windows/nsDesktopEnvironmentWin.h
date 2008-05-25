@@ -41,6 +41,8 @@
 #include "nsCOMPtr.h"
 #include "nsIDirectoryService.h"
 #include "nsIObserver.h"
+#include "nsIShellService.h"
+#include "nsStringAPI.h"
 
 class nsIApplicationIcon;
 class nsIComponentManager;
@@ -60,18 +62,21 @@ struct nsModuleComponentInfo;
 // Desktop integration for Windows platforms.
 class nsDesktopEnvironment : public nsIDesktopEnvironment,
                              public nsIDirectoryServiceProvider,
-                             public nsIObserver
+                             public nsIObserver,
+                             public nsIShellService
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDESKTOPENVIRONMENT
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSISHELLSERVICE
 
   nsDesktopEnvironment();
 
   nsresult Init();
   
+  nsString QuoteCommandLineString(const nsAString& aString);  
   static nsresult GetHWNDForDOMWindow(nsIDOMWindow* aWindow, void* hWnd);
 
   static NS_METHOD OnRegistration(nsIComponentManager *aCompMgr,

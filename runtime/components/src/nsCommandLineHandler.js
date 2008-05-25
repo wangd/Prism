@@ -19,9 +19,11 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matthew Gertner <matthew@allpeers.com>
+ *   Matthew Gertner <matthew.gertner@gmail.com>
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+/* Development of this Contribution was supported by Yahoo! Inc. */
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -72,7 +74,7 @@ WebRunnerCommandLineHandler.prototype = {
   handle : function(aCmdLine) {
     if (!aCmdLine)
       return;
-
+      
     // Register the directory provider for the web apps directory
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
@@ -120,12 +122,26 @@ WebRunnerCommandLineHandler.prototype = {
       }
     }
 
+    var protocolURI = null;
+
     // Check for an OSX launch
-    if (!file) {
-      var uri = aCmdLine.handleFlagWithParam("url", false);
-      if (uri) {
-        uri = aCmdLine.resolveURI(uri);
+    var uri = aCmdLine.handleFlagWithParam("url", false);
+    if (uri) {
+      uri = aCmdLine.resolveURI(uri);
+      if (!file && uri.scheme == "file") {
         file = uri.QueryInterface(Ci.nsIFileURL).file;
+      }
+      else {
+        try {
+         // Check whether we were launched as a protocol
+         // If so, get the URL to load for the protocol scheme
+          var platform = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
+          protocolURI = platform.getProtocolURI(uri.spec);
+        }
+        catch(e) {
+          // Couldn't get a protocol URI so just use default URI
+          protocolURI = null;
+        }
       }
     }
 
@@ -143,6 +159,21 @@ WebRunnerCommandLineHandler.prototype = {
       var value = aCmdLine.handleFlagWithParam(key, false);
       if (value != null)
         WebAppProperties.setParameter(key, value);
+    }
+    
+    if (protocolURI) {
+      WebAppProperties.uri = protocolURI;
+    }
+    
+    // Check for an existing window and reuse it if there is one
+    var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+    var win = windowMediator.getMostRecentWindow("navigator:browser");
+    if (win) {
+      win.focus();
+      win.document.getElementById("browser_content").loadURI(WebAppProperties.uri, null, null);
+      
+      aCmdLine.preventDefault = true;
+      return;
     }
     
     if (WebAppProperties.script.startup)

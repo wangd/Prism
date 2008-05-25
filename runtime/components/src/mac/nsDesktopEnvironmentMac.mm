@@ -41,6 +41,10 @@
 #import <Foundation/Foundation.h>
 #import <Cocoa/Cocoa.h>
 
+extern "C" {
+  extern OSStatus _LSSaveAndRefresh(void);
+}
+
 #include "nsDesktopEnvironmentMac.h"
 
 #include "nsCOMPtr.h"
@@ -209,7 +213,7 @@
 
 @end
 
-NS_IMPL_ISUPPORTS2(nsDesktopEnvironment, nsIDesktopEnvironment, nsIMacDock)
+NS_IMPL_ISUPPORTS3(nsDesktopEnvironment, nsIDesktopEnvironment, nsIMacDock, nsIShellService)
 
 nsDesktopEnvironment::nsDesktopEnvironment()
 {
@@ -259,7 +263,39 @@ NS_IMETHODIMP nsDesktopEnvironment::GetApplicationIcon(nsIDOMWindow* aWindow, ns
 
 NS_IMETHODIMP nsDesktopEnvironment::SetZLevel(nsIDOMWindow* aWindow, PRUint16 aLevel)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDesktopEnvironment::RegisterProtocol(
+  const nsAString& aScheme,
+  nsIFile* aApplicationFile,
+  const nsAString& aArguments)
+{
+  nsresult rv;
+  NSBundle* bundle;
+  if (aApplicationFile) {
+    nsAutoString applicationPath;
+    rv = aApplicationFile->GetPath(applicationPath);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NSString* path = [NSString stringWithCharacters:applicationPath.get() length:applicationPath.Length()];
+    bundle = [NSBundle bundleWithPath:path];
+  }
+  else {
+    bundle = [NSBundle mainBundle];
+  }
+  
+  NSString* scheme = [NSString stringWithCharacters:nsString(aScheme).get() length:aScheme.Length()];
+  LSSetDefaultHandlerForURLScheme((CFStringRef) scheme, (CFStringRef) [bundle bundleIdentifier]);
+  
+  _LSSaveAndRefresh();
+  
+  return NS_OK;  
+}
+
+NS_IMETHODIMP nsDesktopEnvironment::UnregisterProtocol(const nsAString& aScheme)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDesktopEnvironment::AddApplication(nsIFile* aAppBundle)

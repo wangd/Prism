@@ -345,6 +345,8 @@ var WebAppInstall =
     "<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
     "<plist version=\"1.0\">\n" +
     "<dict>\n" +
+    "<key>CFBundleIdentifier</key>\n" +
+    "<string>org.mozilla.prism." + WebAppProperties.id.substring(0, WebAppProperties.id.indexOf("@")) + "</string>\n" +
     "<key>CFBundleExecutable</key>\n" +
     "<string>" + name + "</string>\n" +
     "<key>CFBundleIconFile</key>\n" +
