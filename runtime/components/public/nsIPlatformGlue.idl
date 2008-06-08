@@ -65,6 +65,12 @@ interface nsIPlatformGlueSound : nsISupports
   void playSound(in AString aSoundURI);
 };
 
+[function, scriptable, uuid(0d835990-2b21-11dd-bd0b-0800200c9a66)]
+interface nsIPlatformProtocolCallback : nsISupports
+{
+  void handleURI(in AString uriSpec);
+};
+
 /**
  * Interface that gives simplified access to platform functionality
  */
@@ -108,8 +114,10 @@ interface nsIPlatformGlue : nsISupports
    * @param uriScheme The scheme to register.
    * @param uriString The address to load for a URI of the given scheme. "%s" is used as a
    *    place holder for the URI (e.g. "http://www.mymail.com?compose&to=%s").
+   * @param callback If specified, the callback is invoked when the application is already running
+   *    instead of navigating to a new page.
    */
-  void registerProtocolHandler(in AString uriScheme, in AString uriString);
+  void registerProtocolHandler(in AString uriScheme, in AString uriString, in nsIPlatformProtocolCallback callback);
   
   /**
    * Unregister the application as the default handle for the specified URI scheme.
@@ -127,5 +135,5 @@ interface nsIPlatformGlue : nsISupports
    * @returns the URI to load (e.g. "http://www.mymail.com?compose&to=matthew.gertner@gmail.com") or
    *    an empty string if no protocol handler is registered for the scheme.
    */
-  AString getProtocolURI(in AString uriSpec);
+  AString getProtocolURI(in AString uriSpec, out nsIPlatformProtocolCallback callback);
 };

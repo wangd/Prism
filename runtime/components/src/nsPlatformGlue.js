@@ -137,10 +137,6 @@ function MakeProtocolHandlerFactory(contractid) {
   return factory;
 }
 
-function PlatformProtocolHandler(contractid) {
-  this._ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-}
-
 PlatformProtocolHandler.prototype = {
   QueryInterface: XPCOMUtils.generateQI(
     [Ci.nsIProtocolHandler,
@@ -171,13 +167,22 @@ PlatformProtocolHandler.prototype = {
 
   newURI: function newURI(aSpec, anOriginalCharset, aBaseURI) {
     var platformGlue = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
-    var uriString = platformGlue.getProtocolURI(aSpec);
-    return this._ioService.newURI(uriString, "", null);
+    var callback = {};
+    var uriString = platformGlue.getProtocolURI(aSpec, callback);
+    if (!callback.value) {
+      return this._ioService.newURI(uriString, "", null);
+    }
+    else {
+      // Use the original URI so we can invoke the callback and cancel
+      var uri = Cc["@mozilla.org/network/simple-uri;1"].createInstance(Ci.nsIURI);
+      uri.spec = aSpec;
+      return uri;
+    }
   },
   
   newChannel: function newChannel(aUri) {
-    var uri = this.newURI(aUri.spec, "", null);
-    return this._ioService.newChannelFromURI(uri, null);
+    // We never create a channel for the protocol since it redirects to the protocol URI in newURI
+    throw Components.results.NS_ERROR_UNEXPECTED;
   },
   
   allowPort: function allowPort(aPort, aScheme) {
@@ -226,6 +231,7 @@ PlatformGlue.prototype = {
   _prefs : Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch),
   _window : null,
   _icon : null,
+  _protocolCallbacks : {},
 
   QueryInterface: XPCOMUtils.generateQI(
     [Ci.nsIPlatformGlue,
@@ -321,7 +327,7 @@ PlatformGlue.prototype = {
     return this._icon;
   },
   
-  registerProtocolHandler: function registerProtocol(uriScheme, uriString) {
+  registerProtocolHandler: function registerProtocol(uriScheme, uriString, callback) {
     // First register the protocol with the shell
     var shellService = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIShellService);
     shellService.registerProtocol(uriScheme, null, null);
@@ -334,6 +340,11 @@ PlatformGlue.prototype = {
     
     // Then store a pref so we remember the URI string we want to load
     this._prefs.setCharPref(PRISM_PROTOCOL_PREFIX + uriScheme, uriString);
+	
+    // Register the callback, if any
+    if (callback) {
+      this._protocolCallbacks[uriScheme] = callback;
+    }
   },
   
   unregisterProtocolHandler: function unregisterProtocol(uriScheme) {
@@ -348,11 +359,20 @@ PlatformGlue.prototype = {
 
     // And remove the pref
     this._prefs.clearUserPref(PRISM_PROTOCOL_PREFIX + uriScheme);
+    
+    // Remove the callback, if any
+    if (uriScheme in this._protocolCallbacks) {
+      delete this._protocolCallbacks[uriScheme];
+    }
   },
   
-  getProtocolURI : function getProtocolCallback(uriSpec) {
+  getProtocolURI : function getProtocolURI(uriSpec, callback) {
+    var uriScheme = uriSpec.replace(/(.*):.*/, "$1");
+    if (callback && uriScheme in this._protocolCallbacks) {
+      callback.value = this._protocolCallbacks[uriScheme];
+    }
     try {
-      var uriString = this._prefs.getCharPref(PRISM_PROTOCOL_PREFIX + uriSpec.replace(/(.*):.*/, "$1"));
+      var uriString = this._prefs.getCharPref(PRISM_PROTOCOL_PREFIX + uriScheme);
       return uriString.replace(/%s/, uriSpec.replace(/.*:(.*)/, "$1"));
     }
     catch (e) {

@@ -123,28 +123,24 @@ WebRunnerCommandLineHandler.prototype = {
     }
 
     var protocolURI = null;
+    var callback = {};
 
     // Check for an OSX launch
-    var uri = aCmdLine.handleFlagWithParam("url", false);
-    if (uri) {
-      uri = aCmdLine.resolveURI(uri);
-      if (!file && uri.scheme == "file") {
-        file = uri.QueryInterface(Ci.nsIFileURL).file;
-      }
-      else {
-        try {
-         // Check whether we were launched as a protocol
-         // If so, get the URL to load for the protocol scheme
-          var platform = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
-          protocolURI = platform.getProtocolURI(uri.spec);
-        }
-        catch(e) {
-          // Couldn't get a protocol URI so just use default URI
-          protocolURI = null;
+    var uriSpec = aCmdLine.handleFlagWithParam("url", false);
+    if (uriSpec) {
+      // Check whether we were launched as a protocol
+      // If so, get the URL to load for the protocol scheme
+      var platform = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
+      protocolURI = platform.getProtocolURI(uriSpec, callback);
+
+      if (!protocolURI || protocolURI.length == 0) {
+        var uri = aCmdLine.resolveURI(uriSpec);
+        if (!file && uri.scheme == "file") {
+          file = uri.QueryInterface(Ci.nsIFileURL).file;
         }
       }
     }
-
+    
     if (file && file.exists()) {
       // Bundles are files and need to be installed
       if (!file.isDirectory()) {
@@ -161,10 +157,18 @@ WebRunnerCommandLineHandler.prototype = {
         WebAppProperties.setParameter(key, value);
     }
     
-    if (protocolURI) {
+    if (protocolURI && protocolURI.length > 0) {
       WebAppProperties.uri = protocolURI;
     }
     
+    if (callback.value) {
+      // Invoke the callback and don't load a new page
+      callback.value.handleURI(uriSpec);
+
+      aCmdLine.preventDefault = true;
+      return;
+    }
+
     // Check for an existing window and reuse it if there is one
     var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
     var win = windowMediator.getMostRecentWindow("navigator:browser");

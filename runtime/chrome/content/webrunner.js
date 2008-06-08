@@ -414,14 +414,12 @@ var WebRunner = {
   _prepareWebAppScript : function()
   {
     // Initialize the platform glue
-    var browser = this._getBrowser();
-    // Use createInstance since we're overloaded the factory to always use a singleton
-    var platformGlue = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
-    
+    var platform = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
+  
     HostUI._document = document;
     
     WebAppProperties.script["XMLHttpRequest"] = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1");
-    WebAppProperties.script["window"] = browser.contentWindow;
+    WebAppProperties.script["window"] = this._getBrowser().contentWindow;
     WebAppProperties.script["properties"] = WebAppProperties;
     WebAppProperties.script["host"] = HostUI;
   },
@@ -478,7 +476,7 @@ var WebRunner = {
         .treeOwner
         .QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIXULWindow);
-
+        
     // Do we need to handle making a web application?
     if (install) {
       // If the install is successful, launch the webapp
@@ -494,6 +492,8 @@ var WebRunner = {
 
     // Hookup the browser window callbacks
     this._xulWindow.XULBrowserWindow = this;
+    window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow =
+      new nsBrowserAccess(this._getBrowser());
 
     window.addEventListener("close", function(event) { self._handleWindowClose(event); }, false);
 
@@ -847,3 +847,41 @@ var WebRunner = {
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
 };
+
+function nsBrowserAccess(browser)
+{
+  this._browser = browser;
+  this._platform = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
+}
+
+nsBrowserAccess.prototype =
+{
+  QueryInterface : function(aIID)
+  {
+    if (aIID.equals(Ci.nsIBrowserDOMWindow) ||
+        aIID.equals(Ci.nsISupports))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+  },
+
+  openURI : function(aURI, aOpener, aWhere, aContext)
+  {
+    // Check whether we have a JS callback for this URI
+    var callback = {};
+    var uriString = this._platform.getProtocolURI(aURI.spec, callback);
+    if (callback.value) {
+      callback.value.handleURI(aURI.spec);
+      // Return a window to abort the load
+      return this._browser.contentWindow;
+    }
+
+    // Drop through to default implementation
+    return null;
+  },
+
+  isTabContentWindow : function(aWindow)
+  {
+    // Shouldn't ever get called
+    throw Components.results.NS_ERROR_UNEXPECTED;
+  }
+}
