@@ -119,10 +119,11 @@ var WebRunner = {
           // Preload failed so don't load the web app URI.
           return;
       }
-
+      
       // Call the script's load() function once the page has finished loading
-      if (WebAppProperties.script.load)
-        this._getBrowser().addEventListener("DOMContentLoaded", WebAppProperties.script.load, true);
+      if (WebAppProperties.script.load) {
+        this._getBrowser().addEventListener("DOMContentLoaded", this._contentLoaded, true);
+      }
       
       this._getBrowser().loadURI(WebAppProperties.uri, null, null);
       
@@ -136,6 +137,15 @@ var WebRunner = {
     }
     
     this._loadSettings();
+  },
+  
+  _contentLoaded : function(event) {
+    var browser = WebRunner._getBrowser();
+    // Don't fire for iframes
+    if (event.target == browser.contentDocument) {
+      browser.removeEventListener("DOMContentLoaded", WebRunner._contentLoaded, true);
+      WebAppProperties.script.load();
+    }
   },
 
   _processConfig : function() {
@@ -587,7 +597,7 @@ var WebRunner = {
   {
     var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
     var icon = desktop.getApplicationIcon(this._getBrowser().contentWindow);
-    if (icon.behavior | Ci.nsIApplicationIcon.HIDE_ON_MINIMIZE) {
+    if (icon.behavior & Ci.nsIApplicationIcon.HIDE_ON_MINIMIZE) {
       this._xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
     }
   },
@@ -596,7 +606,7 @@ var WebRunner = {
   {
     var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
     var icon = desktop.getApplicationIcon(this._getBrowser().contentWindow);
-    if (icon.behavior | Ci.nsIApplicationIcon.HIDE_ON_CLOSE) {
+    if (icon.behavior & Ci.nsIApplicationIcon.HIDE_ON_CLOSE) {
       this._xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
       event.preventDefault();
     }

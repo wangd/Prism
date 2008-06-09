@@ -261,6 +261,9 @@ nsNotificationArea::AddMenuItem(const nsAString& aId)
   rv = GetElementById(aId, getter_AddRefs(element));
   NS_ENSURE_SUCCESS(rv, rv);
   
+  if (!element)
+    return NS_ERROR_FAILURE;
+  
   nsAutoString label;
   rv = element->GetAttribute(NS_LITERAL_STRING("label"), label);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -275,7 +275,15 @@ NS_IMETHODIMP nsDesktopEnvironment::RegisterProtocol(
     appPath = QuoteCommandLineString(nsString(fullPath));
     
     for (int i=1; i<numArgs; i++) {
-      appPath += NS_LITERAL_STRING(" "); 
+      appPath += NS_LITERAL_STRING(" ");
+      
+      // Don't include -url parameter
+      if (wcscmp(argv[i], L"-url") == 0)
+      {
+        i++; // Skip -url value as well
+        continue;
+      }
+      
       appPath += QuoteCommandLineString(nsString(argv[i]));
     }
     

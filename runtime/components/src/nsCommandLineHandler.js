@@ -161,6 +161,8 @@ WebRunnerCommandLineHandler.prototype = {
       WebAppProperties.uri = protocolURI;
     }
     
+    var win = this.activateWindow();
+
     if (callback.value) {
       // Invoke the callback and don't load a new page
       callback.value.handleURI(uriSpec);
@@ -170,10 +172,7 @@ WebRunnerCommandLineHandler.prototype = {
     }
 
     // Check for an existing window and reuse it if there is one
-    var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-    var win = windowMediator.getMostRecentWindow("navigator:browser");
     if (win) {
-      win.focus();
       win.document.getElementById("browser_content").loadURI(WebAppProperties.uri, null, null);
       
       aCmdLine.preventDefault = true;
@@ -182,6 +181,19 @@ WebRunnerCommandLineHandler.prototype = {
     
     if (WebAppProperties.script.startup)
       WebAppProperties.script.startup();
+  },
+  
+  activateWindow : function() {
+    var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+    var win = windowMediator.getMostRecentWindow("navigator:browser");
+
+    if (win) {
+      var event = win.document.QueryInterface(Ci.nsIDOMDocumentEvent).createEvent("Events");
+      event.initEvent("DOMActivate", true, true);
+      win.QueryInterface(Ci.nsIDOMEventTarget).dispatchEvent(event);
+    }
+    
+    return win;
   },
 
   helpInfo : "",

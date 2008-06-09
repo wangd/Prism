@@ -280,8 +280,14 @@ PlatformGlue.prototype = {
 
   // nsIWebProgressListener
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_TRANSFERRING) {
-      this._window = aWebProgress.DOMWindow;
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_TRANSFERRING && !(aWebProgress.DOMWindow instanceof Ci.nsIDOMChromeWindow)) {
+      var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+      var win = windowMediator.getMostRecentWindow("navigator:browser");
+      var browser = win.document.getElementById("browser_content");
+    
+      if (aWebProgress.DOMWindow == browser.contentWindow) {
+        this._window = aWebProgress.DOMWindow;
+      }
     }
   },
 
@@ -373,7 +379,7 @@ PlatformGlue.prototype = {
     }
     try {
       var uriString = this._prefs.getCharPref(PRISM_PROTOCOL_PREFIX + uriScheme);
-      return uriString.replace(/%s/, uriSpec.replace(/.*:(.*)/, "$1"));
+      return uriString.replace(/%s/, escape(uriSpec.replace(/.*:(.*)/, "$1")));
     }
     catch (e) {
       return "";
