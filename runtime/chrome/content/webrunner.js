@@ -116,17 +116,11 @@ var WebRunner = {
       // the page loads
       if (WebAppProperties.script.preload) {
         if (!WebAppProperties.script.preload())
-          // Preload failed so don't load the web app URI.
+          // Preload failed so don't load the web app URI
           return;
       }
       
-      // Call the script's load() function once the page has finished loading
-      if (WebAppProperties.script.load) {
-        this._getBrowser().addEventListener("DOMContentLoaded", this._contentLoaded, true);
-      }
-      
-      this._getBrowser().loadURI(WebAppProperties.uri, null, null);
-      
+      // Show tray icon, if any, and default behavior to hide on minimize
       if (WebAppProperties.trayicon) {
         this.showTrayIcon();
         
@@ -134,6 +128,18 @@ var WebRunner = {
         var icon = desktop.getApplicationIcon(this._getBrowser().contentWindow);
         icon.behavior = Ci.nsIApplicationIcon.HIDE_ON_MINIMIZE;
       }
+
+      // Setup the resource:// substitution for the app's root directory
+      var resourceProtocol = this._ios.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
+      var appRootURI = this._ios.newFileURI(WebAppProperties.getAppRoot());
+      resourceProtocol.setSubstitution("webapp", appRootURI);
+      
+      // Call the script's load() function once the page has finished loading
+      if (WebAppProperties.script.load) {
+        this._getBrowser().addEventListener("DOMContentLoaded", this._contentLoaded, true);
+      }
+      
+      this._getBrowser().loadURI(WebAppProperties.uri, null, null);
     }
     
     this._loadSettings();
@@ -551,8 +557,8 @@ var WebRunner = {
 
     var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
     var icon = desktop.getApplicationIcon(this._getBrowser().contentWindow);
-    icon.imageSpec = iconUri.spec;
     icon.title = document.title;
+    icon.imageSpec = iconUri.spec;
     icon.show();
   },
 

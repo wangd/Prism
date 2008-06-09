@@ -230,7 +230,13 @@ nsNotificationArea::GetMenu(nsINativeMenu** _retval)
 NS_IMETHODIMP
 nsNotificationArea::SetImageSpec(const nsAString& aImageSpec)
 {
+  nsresult rv;
   mImageSpec = aImageSpec;
+  if (mIconData.cbSize) {
+    rv = Show();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
   return NS_OK;
 }
 
