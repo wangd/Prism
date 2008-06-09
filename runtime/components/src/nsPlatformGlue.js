@@ -137,6 +137,10 @@ function MakeProtocolHandlerFactory(contractid) {
   return factory;
 }
 
+function PlatformProtocolHandler(contractid) {
+  this._ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+}
+
 PlatformProtocolHandler.prototype = {
   QueryInterface: XPCOMUtils.generateQI(
     [Ci.nsIProtocolHandler,
