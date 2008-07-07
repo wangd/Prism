@@ -43,6 +43,7 @@ var WebRunner = {
   _xulWindow : null,
   _currentDomain : null,
   _windowCreator : null,
+  _minimizedState : 0,
 
   _getBrowser : function() {
     return document.getElementById("browser_content");
@@ -160,6 +161,7 @@ var WebRunner = {
     document.getElementById("toolbar_main").hidden = !WebAppProperties.location;
     document.getElementById("box_sidebar").hidden = !WebAppProperties.sidebar;
     document.getElementById("splitter_sidebar").hidden = !WebAppProperties.sidebar;
+    //document.getElementById("statusbar").setAttribute("collapsed", !WebAppProperties.status);
 
     if (!WebAppProperties.navigation) {
       // Remove navigation key from the document
@@ -606,6 +608,7 @@ var WebRunner = {
     if (icon.behavior & Ci.nsIApplicationIcon.HIDE_ON_MINIMIZE) {
       this._xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
     }
+    this._minimizedState = window.windowState;
   },
   
   onClosing : function(event)
@@ -622,10 +625,20 @@ var WebRunner = {
   {
     this._xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = true;
     
+    var chromeWindow = window.QueryInterface(Ci.nsIDOMChromeWindow);
+    if (chromeWindow.windowState == chromeWindow.STATE_MINIMIZED) {
+      if (this._minimizedState == chromeWindow.STATE_MAXIMIZED) {
+        chromeWindow.maximize();
+      }
+      else {
+        chromeWindow.restore();
+      }
+      
+      this._minimizedState = 0;
+    }
+    
     var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
     desktop.setZLevel(window, Ci.nsIDesktopEnvironment.zLevelTop);
-    
-    window.QueryInterface(Ci.nsIDOMChromeWindow).restore();
   },
 
   doCommand : function(aCmd) {

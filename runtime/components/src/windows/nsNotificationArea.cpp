@@ -250,13 +250,13 @@ nsNotificationArea::GetImageSpec(nsAString& aImageSpec)
 NS_IMETHODIMP
 nsNotificationArea::SetBadgeText(const nsAString& aBadgeText)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNotificationArea::GetBadgeText(nsAString& aBadgeText)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
