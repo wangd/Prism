@@ -173,7 +173,9 @@ WebRunnerCommandLineHandler.prototype = {
 
     // Check for an existing window and reuse it if there is one
     if (win) {
-      win.document.getElementById("browser_content").loadURI(WebAppProperties.uri, null, null);
+      if (protocolURI) {
+        win.document.getElementById("browser_content").loadURI(WebAppProperties.uri, null, null);
+      }
       
       aCmdLine.preventDefault = true;
       return;
