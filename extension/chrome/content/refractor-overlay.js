@@ -52,9 +52,6 @@ var Prism = {
     uriloader.registerContentListener(PrismContentListener);
 
     gBrowser.addProgressListener(PrismWebListener);
-
-    var downloadmanager = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-    downloadmanager.addListener(PrismWebAppDownload);
   }
 };
 

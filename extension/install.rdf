@@ -5,7 +5,7 @@
 		<em:type>2</em:type>
 		<em:name>Refractor for Prism</em:name>
 		<em:description>Create Prism applications directly in Firefox</em:description>
-		<em:version>0.2</em:version>
+		<em:version>0.2.1</em:version>
 		<em:creator>Prism Project</em:creator>
 		<em:iconURL>chrome://refractor/skin/install-shortcut48.png</em:iconURL>
 		<em:homepageURL>http://wiki.mozilla.org/Prism</em:homepageURL>
