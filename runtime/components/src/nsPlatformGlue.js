@@ -108,7 +108,7 @@ PlatformGlueSound.prototype = {
 
   playSound: function playSound(aSoundURI) {
     var sound = Cc["@mozilla.org/sound;1"].createInstance(Ci.nsISound);
-    if (aSound.indexOf("://") == -1) {
+    if (aSoundURI.indexOf("://") == -1) {
       sound.playSystemSound(aSoundURI);
     }
     else
