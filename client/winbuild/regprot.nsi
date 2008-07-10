@@ -12,6 +12,8 @@ Function .onInit
 ${GetParameters} $R0
 
 ${GetOptions} $R0 "/Protocol" $R1
+IfErrors 0 +2
+GoTo finish
 ${StrTok} $R2 $R1 "/" "0" "0"
 
 ; Delete the existing entry for this protocol
