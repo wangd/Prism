@@ -30,35 +30,6 @@ const Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function WebRunnerDirectoryProvider(aFolder) {
-  this._folder = aFolder;
-}
-
-WebRunnerDirectoryProvider.prototype = {
-  getFile: function(prop, persistent) {
-    if (prop == "WebAppD") {
-      return this._folder.clone();
-    }
-    else {
-      return Components.results.NS_ERROR_FAILURE;
-    }
-  },
-
-  getFiles: function(prop, persistent) {
-    return Components.results.NS_ERROR_FAILURE;
-  },
-
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
-        iid.equals(Ci.nsIDirectoryServiceProvider2) ||
-        iid.equals(Ci.nsISupports))
-    {
-      return this;
-    }
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  }
-};
-
 function WebRunnerCommandLineHandler() {
 }
 
@@ -75,27 +46,6 @@ WebRunnerCommandLineHandler.prototype = {
     if (!aCmdLine)
       return;
       
-    // Register the directory provider for the web apps directory
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-
-    var installRoot = null;
-
-#ifdef XP_MACOSX
-    installRoot = dirSvc.get("ULibDir", Ci.nsIFile);
-    installRoot.append("WebApps");
-#else
-#ifdef XP_UNIX
-    installRoot = dirSvc.get("Home", Ci.nsIFile);
-    installRoot.append(".webapps");
-#else
-    installRoot = dirSvc.get("AppData", Ci.nsIFile);
-    installRoot.append("WebApps");
-#endif
-#endif
-   
-    var dirProvider = new WebRunnerDirectoryProvider(installRoot);
-    dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(dirProvider);
-    
     Components.utils.import("resource://prism-runtime/modules/WebAppProperties.jsm");
 
     var file = null;
@@ -115,6 +65,7 @@ WebRunnerCommandLineHandler.prototype = {
       // Do we have a valid file? or did it fail?
       if (!file || !file.exists()) {
         // Its not a bundle. look for an installed webapp
+        var installRoot = WebAppProperties.getInstallRoot();
         var appSandbox = installRoot.clone();
         appSandbox.append(webapp);
         if (appSandbox.exists())

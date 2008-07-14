@@ -55,6 +55,7 @@ libs::
 	fi
 
 	$(INSTALL) $(DIST)/bin/extensions/prism-runtime@developer.mozilla.org/components/* $(FINAL_TARGET)/components
+	rm $(FINAL_TARGET)/components/*.js
 
 	if test ! -d $(FINAL_TARGET)/modules; then \
 		$(NSINSTALL) -D $(FINAL_TARGET)/modules; \

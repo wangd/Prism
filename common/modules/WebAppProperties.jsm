@@ -1,3 +1,4 @@
+#filter substitution
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1
  *
@@ -69,6 +70,39 @@ ArrayEnumerator.prototype = {
 };
 
 /**
+ * Directory provider for web app directory.
+ */
+
+function WebRunnerDirectoryProvider(aFolder) {
+  this._folder = aFolder;
+}
+
+WebRunnerDirectoryProvider.prototype = {
+  getFile: function(prop, persistent) {
+    if (prop == "WebAppD") {
+      return this._folder.clone();
+    }
+    else {
+      return Components.results.NS_ERROR_FAILURE;
+    }
+  },
+
+  getFiles: function(prop, persistent) {
+    return Components.results.NS_ERROR_FAILURE;
+  },
+
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
+        iid.equals(Ci.nsIDirectoryServiceProvider2) ||
+        iid.equals(Ci.nsISupports))
+    {
+      return this;
+    }
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  }
+};
+
+/**
  * Directory provider that provides access to external chrome icons
  */
 const NS_APP_CHROME_DIR_LIST = "AChromDL";
@@ -120,14 +154,44 @@ var WebAppProperties =
   navigation : false,
   appBundle : null,
   appRoot : null,
+  installRoot : null,
   flags : ["id", "name", "uri", "icon", "status", "location", "sidebar", "trayicon", "navigation", "credits", "splashscreen"],
 
+  getInstallRoot : function() {
+    if (!this.installRoot) {
+      var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+
+#ifdef XP_MACOSX
+      this.installRoot = dirSvc.get("ULibDir", Ci.nsIFile);
+      this.installRoot.append("WebApps");
+#else
+#ifdef XP_UNIX
+      this.installRoot = dirSvc.get("Home", Ci.nsIFile);
+      this.installRoot.append(".webapps");
+#else
+      this.installRoot = dirSvc.get("AppData", Ci.nsIFile);
+      this.installRoot.append("WebApps");
+#endif
+#endif
+    }
+    
+    return this.installRoot;
+  },
+  
   getAppRoot : function() {
     if (this.appRoot) {
       return this.appRoot.clone();
     }
     else {
-      var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);    
+      var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+      if (!this.installRoot) {
+        // Register the directory provider for the web apps directory
+        var installRoot = this.getInstallRoot();
+        
+        var dirProvider = new WebRunnerDirectoryProvider(installRoot);
+        dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(dirProvider);
+      }
+
       var appRoot = dirSvc.get("WebAppD", Ci.nsIFile);
       appRoot.append(this.id);
       return appRoot;
