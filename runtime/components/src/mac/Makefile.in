@@ -54,8 +54,9 @@ REQUIRES	= \
     gfx \
     necko \
     caps \
+    alerts \
     prism_mac \
-		$(NULL)
+    $(NULL)
 
 CPPSRCS		= \
     $(NULL)

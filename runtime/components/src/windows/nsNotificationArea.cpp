@@ -129,6 +129,7 @@ nsNotificationArea::Show()
     rv = GetIconForURI(imageURI, hicon);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    mIconData.uFlags = NIF_ICON;
     mIconData.hIcon = hicon;
     MK_ENSURE_NATIVE(Shell_NotifyIconW(NIM_MODIFY, &mIconData));
 
@@ -196,6 +197,7 @@ nsNotificationArea::AddTrayIcon(nsIURI* iconURI)
 NS_IMETHODIMP
 nsNotificationArea::SetTitle(const nsAString& aTitle)
 {
+  nsresult rv;
   mTitle = aTitle;
 
   if (!mIconData.cbSize)
@@ -203,11 +205,9 @@ nsNotificationArea::SetTitle(const nsAString& aTitle)
     return NS_OK;
 
   mIconData.uFlags = NIF_TIP;
-  PRUint32 length = aTitle.Length();
-  if (length > 64)
-    length = 64;
 
-  wcsncpy(mIconData.szTip, nsString(aTitle).get(), length);
+  rv = CopyStringWithMaxLength(aTitle, mIconData.szTip, 128);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   MK_ENSURE_NATIVE(Shell_NotifyIconW(NIM_MODIFY, &mIconData));
 
@@ -379,6 +379,42 @@ nsNotificationArea::SetBehavior(PRUint32 aBehavior)
   
   SetProp(hwnd, S_PROPBEHAVIOR, (HANDLE) aBehavior);
   
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNotificationArea::ShowNotification(const nsAString& aTitle,
+                                   const nsAString& aText,
+                                   PRUint32 aTimeout,
+                                   PRBool aIsClickable,
+                                   nsIObserver* aAlertListener)
+{
+  NS_ENSURE_STATE(mIconData.cbSize);
+  
+  nsresult rv;
+  mIconData.uFlags = NIF_INFO;
+  mIconData.uTimeout = aTimeout;
+  rv = CopyStringWithMaxLength(aTitle, mIconData.szInfoTitle, 64);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = CopyStringWithMaxLength(aText, mIconData.szInfo, 256);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  MK_ENSURE_NATIVE(Shell_NotifyIconW(NIM_MODIFY, &mIconData));
+
+  return NS_OK;
+}
+
+nsresult
+nsNotificationArea::CopyStringWithMaxLength(const nsAString& aSource, wchar_t* aDest, PRUint32 aMaxLength)
+{
+  PRUint32 length = aSource.Length();
+  if (length > aMaxLength-1)
+    length = aMaxLength-1;
+
+  wcsncpy(aDest, nsString(aSource).get(), length);
+  aDest[length] = 0;
+
   return NS_OK;
 }
 

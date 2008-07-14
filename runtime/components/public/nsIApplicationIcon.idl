@@ -41,6 +41,7 @@
 interface nsIDOMWindow;
 interface nsIFile;
 interface nsINativeMenu;
+interface nsIObserver;
 
 /**
  * Operating system tile (i.e. icon) representing the application. Examples are
@@ -89,4 +90,14 @@ interface nsIApplicationIcon : nsISupports
    * Hide the application tile.
    */
   void hide();
+  
+  /**
+   * Display a popup over the icon. Displays a normal alert (using nsIAlertsService) on
+   * platforms that don't support balloon tips.
+   */
+  void showNotification(in AString title,
+                      in AString text,
+                      in PRUint32 timeout,
+                      [optional] in boolean textClickable,
+                      [optional] in nsIObserver alertListener);
 };

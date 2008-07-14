@@ -19,7 +19,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Matthew Gertner <matthew@allpeers.com>
+#   Matthew Gertner <matthew.gertner@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,6 +50,7 @@ XPI_PKGNAME            = prism-runtime
 
 DIST_FILES = install.rdf
 
+APP_UA_NAME = $(shell echo $(MOZ_APP_DISPLAYNAME) | sed -e's/[^A-Za-z]//g')
 DEFINES += -DAPP_NAME=$(MOZ_APP_DISPLAYNAME) -DAPP_VERSION=$(MOZ_APP_VERSION) -DAPP_UA_NAME=$(APP_UA_NAME)
 
 PREF_JS_EXPORTS = $(srcdir)/defaults/preferences/preferences.js

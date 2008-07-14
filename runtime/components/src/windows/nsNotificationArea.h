@@ -45,12 +45,6 @@
 #ifndef nsNotificationArea_h__
 #define nsNotificationArea_h__
 
-// needed for QueueUserAPC
-#ifdef _WIN32_WINNT
-#undef _WIN32_WINNT
-#endif
-#define _WIN32_WINNT  0x0400
-
 #include <windows.h>
 #include <shellapi.h>
 
@@ -81,6 +75,7 @@ public:
   virtual ~nsNotificationArea();
 
 protected:
+  nsresult CopyStringWithMaxLength(const nsAString& aSource, wchar_t* aDest, PRUint32 aMaxLength);
   nsresult AddTrayIcon(nsIURI* iconURI);
   nsresult GetIconForWnd(HWND hwnd, HICON& result);
   nsresult GetIconForURI(nsIURI* iconURI, HICON& result);

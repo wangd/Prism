@@ -42,11 +42,13 @@
 
 #include "nsDockTile.h"
 #include "nsArrayEnumerator.h"
+#include "nsCOMPtr.h"
+#include "nsIAlertsService.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsINativeMenu.h"
-
+#include "nsServiceManagerUtils.h"
 #include "nsStringAPI.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsDockTile, nsIApplicationIcon, nsINativeMenu, nsISecurityCheckedComponent)
@@ -275,6 +277,24 @@ NS_IMETHODIMP nsDockTile::RemoveMenuItem(const nsAString& aId)
     return NS_ERROR_NOT_AVAILABLE;
   else
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDockTile::ShowNotification(const nsAString& aTitle,
+                                   const nsAString& aText,
+                                   PRUint32 aTimeout,
+                                   PRBool aIsClickable,
+                                   nsIObserver* aAlertListener)
+{
+  // Don't do balloon tips so use alerts service instead
+  nsresult rv;
+  nsCOMPtr<nsIAlertsService> alerts(do_GetService("@mozilla.org/alerts-service;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = alerts->ShowAlertNotification(EmptyString(), aTitle, aText, aIsClickable, EmptyString(), nsnull, EmptyString());
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return NS_OK;
 }
 
 static char* cloneAllAccess()
