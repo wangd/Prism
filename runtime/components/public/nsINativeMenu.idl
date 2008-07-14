@@ -55,11 +55,16 @@ interface nsINativeMenu : nsISupports
    * Add the item to the menu.
    *
    * @param id ID of the element in the document
-  **/
+   **/
   void addMenuItem(in AString id);
 
   /**
    * Remove the item from the menu.
-  **/
+   **/
   void removeMenuItem(in AString id);
+  
+  /**
+   * Remove all items from the menu.
+   */
+  void removeAllMenuItems();
 };

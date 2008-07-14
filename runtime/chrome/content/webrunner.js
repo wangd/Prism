@@ -150,9 +150,20 @@ var WebRunner = {
     var browser = WebRunner._getBrowser();
     // Don't fire for iframes
     if (event.target == browser.contentDocument) {
-      browser.removeEventListener("DOMContentLoaded", WebRunner._contentLoaded, true);
+      browser.contentWindow.addEventListener("unload", WebRunner._contentUnload, true);
       WebAppProperties.script.load();
     }
+  },
+  
+  _contentUnload : function(event) {
+    var contentWindow = WebRunner._getBrowser().contentWindow;
+  
+    // Remove all menu items from the tray icon since the associated element is going away
+    var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
+    var icon = desktop.getApplicationIcon(contentWindow);
+    icon.menu.removeAllMenuItems();
+    
+    contentWindow.removeEventListener("unload", WebRunner._contentUnload, true);
   },
 
   _processConfig : function() {

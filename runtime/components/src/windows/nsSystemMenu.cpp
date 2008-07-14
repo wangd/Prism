@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matthew Gertner <matthew@allpeers.com> (Original author)
+ *   Matthew Gertner <matthew.gertner@gmail.com> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -121,6 +121,22 @@ NS_IMETHODIMP nsSystemMenu::RemoveMenuItem(const nsAString& aId)
 
   mItems.RemoveObjectAt(index);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSystemMenu::RemoveAllMenuItems()
+{
+  NS_ENSURE_STATE(mWnd);
+  
+  HMENU hSystemMenu = ::GetSystemMenu(mWnd, FALSE);
+  PRUint32 menuCount = mItems.Count();
+  PRUint32 index;
+  for (index=menuCount; index>0; index--) {
+    ::RemoveMenu(hSystemMenu, index-1, MF_BYPOSITION);
+    mItems.RemoveObjectAt(index-1);
+  }
+  
   return NS_OK;
 }
 

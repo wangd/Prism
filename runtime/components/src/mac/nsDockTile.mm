@@ -297,6 +297,12 @@ nsDockTile::ShowNotification(const nsAString& aTitle,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDockTile::RemoveAllMenuItems()
+{
+  mItems.Clear();
+  return NS_OK;
+}
+
 static char* cloneAllAccess()
 {
   static const char allAccess[] = "AllAccess";
