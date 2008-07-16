@@ -23,6 +23,16 @@
 <!ENTITY install.label              "Install Shortcut">
 <!ENTITY tools.label                "Tools">
 <!ENTITY addons.label               "Add-ons">
+<!ENTITY zoomIn.label               "Zoom In">
+<!ENTITY zoomIn.commandkey          "+">
+<!ENTITY zoomIn.commandkey2         "=">
+<!ENTITY zoomIn.modifiers           "accel">
+<!ENTITY zoomOut.label              "Zoom Out">
+<!ENTITY zoomOut.commandkey         "-">
+<!ENTITY zoomOut.modifiers          "accel">
+<!ENTITY zoomReset.label            "Reset">
+<!ENTITY zoomReset.commandkey       "0">
+<!ENTITY zoomReset.modifiers        "accel">
 
 <!ENTITY servicesMenu.label         "Services">
 <!ENTITY hideThisApp.label          "Hide &brandShortName;">

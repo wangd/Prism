@@ -67,6 +67,9 @@
     <command id="cmd_console" label="&console.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_install" label="&install.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_addons" label="&addons.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_zoomIn" label="&zoomIn.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_zoomOut" label="&zoomOut.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_zoomReset" label="&zoomReset.label;" oncommand="WebRunner.doCommand(this.id);"/>
   </commandset>
 
   <keyset id="keyset_app">
@@ -81,6 +84,10 @@
     <key id="key_hideThisApp" key="&hideThisApp.commandkey;" modifiers="&hideThisApp.modifiers;"/>
     <key id="key_hideOtherApps" key="&hideOtherApps.commandkey;" modifiers="&hideOtherApps.modifiers;"/>
 #endif
+    <key id="key_zoomIn" key="&zoomIn.commandkey;" modifiers="&zoomIn.modifiers;" command="cmd_zoomIn"/>
+    <key                 key="&zoomIn.commandkey2;" modifiers="&zoomIn.modifiers;" command="cmd_zoomIn"/>
+    <key id="key_zoomOut" key="&zoomOut.commandkey;" modifiers="&zoomOut.modifiers;" command="cmd_zoomOut"/>
+    <key id="key_zoomReset" key="&zoomReset.commandkey;" modifiers="&zoomReset.modifiers;" command="cmd_zoomReset"/>
   </keyset>
 
   <popupset>
@@ -144,12 +151,14 @@
     </splitter>
 
     <vbox id="box_content" flex="1">
-      <browser id="browser_content"
-               flex="1"
-               type="content-primary"
-               context="popup_content"
-               tooltip="tooltip_content"
-               autocompletepopup="popup_autocomplete" />
+      <notificationbox id="notifications" flex="1">
+        <browser id="browser_content"
+                 flex="1"
+                 type="content-primary"
+                 context="popup_content"
+                 tooltip="tooltip_content"
+                 autocompletepopup="popup_autocomplete" />
+      </notificationbox>
     </vbox>
   </hbox>
 

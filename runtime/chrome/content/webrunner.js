@@ -24,7 +24,7 @@
  *   Matthew Gertner <matthew.gertner@gmail.com>
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
@@ -44,6 +44,7 @@ var WebRunner = {
   _currentDomain : null,
   _windowCreator : null,
   _minimizedState : 0,
+  _zoomLevel : 1,
 
   _getBrowser : function() {
     return document.getElementById("browser_content");
@@ -111,7 +112,7 @@ var WebRunner = {
 
   _delayedStartup : function() {
     this._prepareWebAppScript();
-  
+
     if (WebAppProperties.uri) {
       // Give the user script the chance to do additional processing before
       // the page loads
@@ -120,11 +121,11 @@ var WebRunner = {
           // Preload failed so don't load the web app URI
           return;
       }
-      
+
       // Show tray icon, if any, and default behavior to hide on minimize
       if (WebAppProperties.trayicon) {
         this.showTrayIcon();
-        
+
         var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
         var icon = desktop.getApplicationIcon(this._getBrowser().contentWindow);
         icon.behavior = Ci.nsIApplicationIcon.HIDE_ON_MINIMIZE;
@@ -134,18 +135,18 @@ var WebRunner = {
       var resourceProtocol = this._ios.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
       var appRootURI = this._ios.newFileURI(WebAppProperties.getAppRoot());
       resourceProtocol.setSubstitution("webapp", appRootURI);
-      
+
       // Call the script's load() function once the page has finished loading
       if (WebAppProperties.script.load) {
         this._getBrowser().addEventListener("DOMContentLoaded", this._contentLoaded, true);
       }
-      
+
       this._getBrowser().loadURI(WebAppProperties.uri, null, null);
     }
-    
+
     this._loadSettings();
   },
-  
+
   _contentLoaded : function(event) {
     var browser = WebRunner._getBrowser();
     // Don't fire for iframes
@@ -444,9 +445,9 @@ var WebRunner = {
   {
     // Initialize the platform glue
     var platform = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
-  
+
     HostUI._document = document;
-    
+
     WebAppProperties.script["XMLHttpRequest"] = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1");
     WebAppProperties.script["window"] = this._getBrowser().contentWindow;
     WebAppProperties.script["properties"] = WebAppProperties;
@@ -505,7 +506,7 @@ var WebRunner = {
         .treeOwner
         .QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIXULWindow);
-        
+
     // Do we need to handle making a web application?
     if (install) {
       // If the install is successful, launch the webapp
@@ -603,7 +604,7 @@ var WebRunner = {
     if (WebAppProperties.script.shutdown)
       WebAppProperties.script.shutdown();
   },
-  
+
   tryClose : function()
   {
     var contentViewer = this._xulWindow.docShell.contentViewer;
@@ -611,7 +612,7 @@ var WebRunner = {
       return false;
     }
   },
-  
+
   onMinimizing : function(event)
   {
     var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
@@ -621,7 +622,7 @@ var WebRunner = {
     }
     this._minimizedState = window.windowState;
   },
-  
+
   onClosing : function(event)
   {
     var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
@@ -631,11 +632,11 @@ var WebRunner = {
       event.preventDefault();
     }
   },
-  
+
   onActivate : function(event)
   {
     this._xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = true;
-    
+
     var chromeWindow = window.QueryInterface(Ci.nsIDOMChromeWindow);
     if (chromeWindow.windowState == chromeWindow.STATE_MINIMIZED) {
       if (this._minimizedState == chromeWindow.STATE_MAXIMIZED) {
@@ -644,10 +645,10 @@ var WebRunner = {
       else {
         chromeWindow.restore();
       }
-      
+
       this._minimizedState = 0;
     }
-    
+
     var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
     desktop.setZLevel(window, Ci.nsIDesktopEnvironment.zLevelTop);
   },
@@ -725,6 +726,35 @@ var WebRunner = {
           const EMFEATURES = "chrome,dialog=no,resizable=yes";
           window.openDialog(EMURL, "", EMFEATURES);
         }
+        break;
+      case "cmd_zoomIn":
+        const max = 2.0;
+        var tmp = this._zoomLevel;
+        tmp += 0.3;
+
+        if (tmp > max)
+          tmp = max;
+
+        this._zoomLevel = tmp;
+        var markupDocumentViewer = this._getBrowser().markupDocumentViewer;
+        markupDocumentViewer.fullZoom = this._zoomLevel;
+        break;
+      case "cmd_zoomOut":
+        const min = .2;
+        var tmp = this._zoomLevel;
+        tmp -= .3;
+
+        if (tmp < min)
+          tmp = min;
+
+        this._zoomLevel = tmp
+        var markupDocumentViewer = this._getBrowser().markupDocumentViewer;
+        markupDocumentViewer.fullZoom = this._zoomLevel;
+        break;
+      case "cmd_zoomReset":
+        this._zoomLevel = 1;
+        var markupDocumentViewer = this._getBrowser().markupDocumentViewer;
+        markupDocumentViewer.fullZoom = this._zoomLevel;
         break;
     }
   },
@@ -923,5 +953,9 @@ nsBrowserAccess.prototype =
   {
     // Shouldn't ever get called
     throw Components.results.NS_ERROR_UNEXPECTED;
+  },
+
+  getNotificationBox : function(aWindow) {
+    return document.getElementById("notifications");
   }
 }
