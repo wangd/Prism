@@ -123,7 +123,7 @@ var WebRunner = {
       }
 
       // Show tray icon, if any, and default behavior to hide on minimize
-      if (WebAppProperties.trayicon) {
+      if (WebAppProperties.trayicon && ("@mozilla.org/desktop-environment;1" in Cc)) {
         this.showTrayIcon();
 
         var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
