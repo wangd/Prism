@@ -251,7 +251,7 @@ var WebRunner = {
 
     var editor = null;
     if (isTextField && !target.readOnly)
-      editor = target.QueryInterface(Ci.nsIDOMNSEditableElement).editor;
+      editor = new XPCNativeWrapper(target.QueryInterface(Ci.nsIDOMNSEditableElement)).editor;
 
     if (isEditable)
       editor = editingSession.getEditorForWindow(win);
