@@ -75,3 +75,13 @@ pref("extensions.logging.enabled", false);
 pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+
+/* findbar support */
+pref("accessibility.typeaheadfind", true);
+pref("accessibility.typeaheadfind.timeout", 5000);
+pref("accessibility.typeaheadfind.flashBar", 1);
+pref("accessibility.typeaheadfind.linksonly", false);
+pref("accessibility.typeaheadfind.casesensitive", 0);
+
+/* enable xul error pages */
+pref("browser.xul.error_pages.enabled", true);

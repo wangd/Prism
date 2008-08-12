@@ -155,15 +155,15 @@ var WebRunner = {
       WebAppProperties.script.load();
     }
   },
-  
+
   _contentUnload : function(event) {
     var contentWindow = WebRunner._getBrowser().contentWindow;
-  
+
     // Remove all menu items from the tray icon since the associated element is going away
     var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
     var icon = desktop.getApplicationIcon(contentWindow);
     icon.menu.removeAllMenuItems();
-    
+
     contentWindow.removeEventListener("unload", WebRunner._contentUnload, true);
   },
 
@@ -760,6 +760,15 @@ var WebRunner = {
         this._zoomLevel = 1;
         var markupDocumentViewer = this._getBrowser().markupDocumentViewer;
         markupDocumentViewer.fullZoom = this._zoomLevel;
+        break;
+      case "cmd_find":
+        document.getElementById("findbar").onFindCommand();
+        break;
+      case "cmd_findNext":
+        document.getElementById("findbar").onFindAgainCommand(true);
+        break;
+      case "cmd_findPrevious":
+        document.getElementById("findbar").onFindAgainCommand(false);
         break;
     }
   },

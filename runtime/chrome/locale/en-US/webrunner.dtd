@@ -11,7 +11,7 @@
 <!ENTITY noSuggestions.label        "(No suggestions)">
 <!ENTITY addToDictionary.label      "Add to Dictionary">
 <!ENTITY print.label                "Print...">
-<!ENTITY pageSetup.label            "Page Setup...">
+<!ENTITY pageSetup.label            "Page Setup…">
 <!ENTITY back.label                 "Back">
 <!ENTITY forward.label              "Forward">
 <!ENTITY home.label                 "Home">
@@ -23,6 +23,7 @@
 <!ENTITY install.label              "Install Shortcut">
 <!ENTITY tools.label                "Tools">
 <!ENTITY addons.label               "Add-ons">
+
 <!ENTITY zoomIn.label               "Zoom In">
 <!ENTITY zoomIn.commandkey          "+">
 <!ENTITY zoomIn.commandkey2         "=">
@@ -33,6 +34,15 @@
 <!ENTITY zoomReset.label            "Reset">
 <!ENTITY zoomReset.commandkey       "0">
 <!ENTITY zoomReset.modifiers        "accel">
+
+<!ENTITY findOnCmd.label            "Find in This Page…">
+<!ENTITY findOnCmd.accesskey        "F">
+<!ENTITY findOnCmd.commandkey       "f">
+<!ENTITY findNextCmd.label          "Find Next">
+<!ENTITY findNextCmd.accesskey      "g">
+<!ENTITY findNextCmd.commandkey     "g">
+<!ENTITY findNextCmd.commandkey2    "VK_F3">
+<!ENTITY findPreviousCmd.label      "Find Previous">
 
 <!ENTITY servicesMenu.label         "Services">
 <!ENTITY hideThisApp.label          "Hide &brandShortName;">
