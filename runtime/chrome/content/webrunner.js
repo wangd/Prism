@@ -556,6 +556,11 @@ var WebRunner = {
       // Needed for linux or the menubar doesn't hide
       document.getElementById("menu_file").hidden = true;
     }
+    
+    // Register observer for quit-application-requested so we can handle shutdown (needed for OS X
+    // dock Quit menu item, for example).
+    var observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    observerService.addObserver(this, "quit-application-requested", false);
 
     setTimeout(function() { self._delayedStartup(); }, 0);
   },
@@ -901,6 +906,18 @@ var WebRunner = {
         createChromeWindow2(parent, chromeFlags, contextFlags, uri, cancel);
     }
   },
+  
+  observe : function(aSubject, aTopic, aData) {
+    if (aTopic == "quit-application-requested") {
+      if (!this.shutdownQuery()) {
+        aSubject.data = true;
+        return;
+      }
+      
+      var observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+      observerService.removeObserver(this, "quit-application-requested");
+    }
+  },
 
   // We need to advertize that we support weak references.  This is done simply
   // by saying that we QI to nsISupportsWeakReference.  XPConnect will take
@@ -911,6 +928,7 @@ var WebRunner = {
         aIID.equals(Ci.nsIXULBrowserWindow) ||
         aIID.equals(Ci.nsIWindowCreator) ||
         aIID.equals(Ci.nsIWindowCreator2) ||
+        aIID.equals(Ci.nsIObserver) ||
         aIID.equals(Ci.nsISupports))
       return this;
 
