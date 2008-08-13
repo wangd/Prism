@@ -97,6 +97,13 @@ interface nsIPlatformGlue : nsISupports
    *          The value of the data
    */
   void postStatus(in AString aName, in AString aValue);
+  
+  /**
+   * Open the URI in the default browser.
+   * @param   aURISpec
+   *          URI to open
+   */
+  void openURI(in AString aURISpec);
 
   /**
    * Access to the sound interface.

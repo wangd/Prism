@@ -317,6 +317,12 @@ PlatformGlue.prototype = {
     if (this._icon)
       this._icon.setBadgeText(aValue);
   },
+  
+  openURI : function openURI(aURISpec) {
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    var extps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService);
+    extps.loadURI(ioService.newURI(aURISpec, null, null), null);
+  },
 
   sound: function sound() {
     if (!this._sound)
