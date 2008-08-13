@@ -298,6 +298,39 @@ NS_IMETHODIMP nsDesktopEnvironment::UnregisterProtocol(const nsAString& aScheme)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDesktopEnvironment::GetDefaultApplicationForURIScheme(const nsAString& aScheme, nsAString& _retval)
+{
+  CFURLRef appURL = nil;
+  OSStatus err = noErr;
+  
+  nsAutoString url(aScheme);
+  url += NS_LITERAL_STRING(":");
+  
+  CFStringRef urlString = ::CFStringCreateWithCharacters(NULL, url.get(), url.Length());
+
+  CFURLRef tempURL = ::CFURLCreateWithString(kCFAllocatorDefault,
+                                             urlString,
+                                             NULL);
+  err = ::LSGetApplicationForURL(tempURL, kLSRolesAll, NULL, &appURL);
+  ::CFRelease(tempURL);
+  ::CFRelease(urlString);
+  
+  CFStringRef leafName = ::CFURLCopyLastPathComponent(appURL);
+  CFRange extension = ::CFStringFind(leafName, CFSTR(".app"), 0);
+  if (extension.location == kCFNotFound) {
+    // Fail if we haven't found an app bundle
+    return NS_ERROR_FAILURE;
+  }
+
+  PRUnichar* buffer = new PRUnichar[extension.location+1];
+  ::CFStringGetCharacters(leafName, CFRangeMake(0, extension.location), buffer);
+  buffer[extension.location] = 0;
+  _retval = buffer;
+  delete [] buffer;
+
+  return err == noErr ? NS_OK : NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsDesktopEnvironment::AddApplication(nsIFile* aAppBundle)
 {
   NS_ENSURE_ARG(aAppBundle);

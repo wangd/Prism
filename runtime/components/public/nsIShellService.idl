@@ -63,4 +63,12 @@ interface nsIShellService : nsISupports
    * @param uriScheme Scheme for which to unregister the handler.
   **/
   void unregisterProtocol(in AString uriScheme);
+  
+  /**
+    * Get the default application for handling the specified URI scheme.
+    *
+    * @param uriScheme URI scheme to check.
+    * @returns the name of the application that handles that URI scheme, or an empty string if none is found.
+  **/
+  AString getDefaultApplicationForURIScheme(in AString uriScheme);
 };

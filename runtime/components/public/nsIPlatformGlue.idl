@@ -136,4 +136,11 @@ interface nsIPlatformGlue : nsISupports
    *    an empty string if no protocol handler is registered for the scheme.
    */
   AString getProtocolURI(in AString uriSpec, out nsIPlatformProtocolCallback callback);
+  
+  /**
+   * Check whether we are currently the registered handler for the specified protocol.
+   *
+   * @param uriScheme Protocol to check.
+   */
+  boolean isRegisteredProtocolHandler(in AString uriScheme);
 };

@@ -68,6 +68,8 @@
 #include <shlguid.h>
 #include <comutil.h>
 
+#include "nsIWindowsRegKey.h"
+
 #define MAX_BUF 4096
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsDesktopEnvironment, nsIDesktopEnvironment,
@@ -366,6 +368,29 @@ NS_IMETHODIMP nsDesktopEnvironment::UnregisterProtocol(const nsAString& aScheme)
 
   CloseHandle(pi.hProcess);
   CloseHandle(pi.hThread);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDesktopEnvironment::GetDefaultApplicationForURIScheme(const nsAString& aScheme, nsAString& _retval)
+{
+  nsresult rv;
+  nsCOMPtr<nsIWindowsRegKey> regKey(do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsAutoString keyPath = NS_LITERAL_STRING("SOFTWARE\\Classes\\");
+  keyPath += aScheme;
+  keyPath += NS_LITERAL_STRING("\\shell\\open\\ddeexec\\Application");
+    
+  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, keyPath, nsIWindowsRegKey::ACCESS_READ);
+  if (NS_FAILED(rv)) {
+    // Return an empty string
+    _retval = EmptyString();
+  }
+  else {
+    rv = regKey->ReadStringValue(EmptyString(), _retval);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   
   return NS_OK;
 }
