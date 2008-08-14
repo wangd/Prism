@@ -560,7 +560,7 @@ var WebRunner = {
       // Needed for linux or the menubar doesn't hide
       document.getElementById("menu_file").hidden = true;
     }
-    
+
     // Register observer for quit-application-requested so we can handle shutdown (needed for OS X
     // dock Quit menu item, for example).
     var observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
@@ -709,26 +709,16 @@ var WebRunner = {
         break;
       case "cmd_addons":
         const EMTYPE = "Extension:Manager";
-
-        var aOpenMode = "extensions";
         var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-        var needToOpen = true;
-        var windowType = EMTYPE + "-" + aOpenMode;
-        var windows = wm.getEnumerator(windowType);
-        while (windows.hasMoreElements()) {
-          var theEM = windows.getNext().QueryInterface(Ci.nsIDOMWindowInternal);
-          if (theEM.document.documentElement.getAttribute("windowtype") == windowType) {
-            theEM.focus();
-            needToOpen = false;
-            break;
-          }
+        var theEM = wm.getMostRecentWindow(EMTYPE);
+        if (theEM) {
+          theEM.focus();
+          return;
         }
 
-        if (needToOpen) {
-          const EMURL = "chrome://mozapps/content/extensions/extensions.xul?type=" + aOpenMode;
-          const EMFEATURES = "chrome,dialog=no,resizable=yes";
-          window.openDialog(EMURL, "", EMFEATURES);
-        }
+        const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
+        const EMFEATURES = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
+        window.openDialog(EMURL, "", EMFEATURES);
         break;
       case "cmd_zoomIn":
         const max = 2.0;
@@ -913,14 +903,14 @@ var WebRunner = {
         createChromeWindow2(parent, chromeFlags, contextFlags, uri, cancel);
     }
   },
-  
+
   observe : function(aSubject, aTopic, aData) {
     if (aTopic == "quit-application-requested") {
       if (!this.shutdownQuery()) {
         aSubject.data = true;
         return;
       }
-      
+
       var observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
       observerService.removeObserver(this, "quit-application-requested");
     }
