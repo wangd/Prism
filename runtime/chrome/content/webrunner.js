@@ -968,9 +968,9 @@ nsBrowserAccess.prototype =
   {
     // Shouldn't ever get called
     throw Components.results.NS_ERROR_UNEXPECTED;
-  },
-
-  getNotificationBox : function(aWindow) {
-    return document.getElementById("notifications");
   }
+};
+
+function getNotificationBox(aWindow) {
+  return document.getElementById("notifications");
 }
