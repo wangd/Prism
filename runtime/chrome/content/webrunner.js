@@ -242,7 +242,7 @@ var WebRunner = {
     if (win) {
       var isEditable = false;
       try {
-        var editingSession = win.QueryInterface(Ci.nsIInterfaceRequestor)
+        var editingSession = new XPCNativeWrapper(win).QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIWebNavigation)
                                 .QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIEditingSession);
