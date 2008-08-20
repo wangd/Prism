@@ -51,7 +51,15 @@ WebRunnerCommandLineHandler.prototype = {
     var file = null;
 
     // Check for a webapp profile
-    var webapp = aCmdLine.handleFlagWithParam("webapp", false);
+    var environment = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+    var webapp;
+    if (environment.exists("PRISM_WEBAPP")) {
+      webapp = environment.get("PRISM_WEBAPP");
+    }
+    else {
+      webapp = aCmdLine.handleFlagWithParam("webapp", false);
+    }
+
     if (webapp) {
       // Check for a bundle first
       try {

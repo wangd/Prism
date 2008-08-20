@@ -173,7 +173,7 @@ var WebRunner = {
     document.getElementById("toolbar_main").hidden = !WebAppProperties.location;
     document.getElementById("box_sidebar").hidden = !WebAppProperties.sidebar;
     document.getElementById("splitter_sidebar").hidden = !WebAppProperties.sidebar;
-    //document.getElementById("statusbar").setAttribute("collapsed", !WebAppProperties.status);
+    document.getElementById("statusbar").setAttribute("collapsed", !WebAppProperties.status);
 
     if (!WebAppProperties.navigation) {
       // Remove navigation key from the document
