@@ -466,6 +466,11 @@ var WebRunner = {
     // Configure the window's chrome
     this._processConfig();
 
+    var self = this;
+
+    document.getElementById("popup_content").addEventListener("popupshowing", self._popupShowing, false);
+    document.getElementById("tooltip_content").addEventListener("popupshowing", self._tooltipShowing, false);
+
     if (!window.arguments || !window.arguments[0] || !(window.arguments[0] instanceof Ci.nsICommandLine)) {
       // Not the main window, so we're done
       return;
@@ -501,8 +506,6 @@ var WebRunner = {
     httpsHandler.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
     httpsHandler.alwaysAskBeforeHandling = false;
     hs.store(httpsHandler);
-
-    var self = this;
 
     this._xulWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIWebNavigation)
@@ -548,9 +551,6 @@ var WebRunner = {
     this._windowCreator = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIWindowCreator);
     var windowWatcher = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher);
     windowWatcher.setWindowCreator(this);
-
-    document.getElementById("popup_content").addEventListener("popupshowing", self._popupShowing, false);
-    document.getElementById("tooltip_content").addEventListener("popupshowing", self._tooltipShowing, false);
 
     // Let osx make its app menu, then hide the window menu
     var mainMenu = document.getElementById("menu_main");
