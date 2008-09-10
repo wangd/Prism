@@ -34,6 +34,18 @@ Components.utils.import("resource://prism-runtime/modules/HostUI.jsm");
 
 window.addEventListener("load", function() { WebRunner.startup(); }, false);
 
+function toOpenWindowByType(inType, uri)
+{
+  var windowManager = Cc['@mozilla.org/appshell/window-mediator;1'].getService();
+  var windowManagerInterface = windowManager.QueryInterface(Ci.nsIWindowMediator);
+
+  var topWindow = windowManagerInterface.getMostRecentWindow( inType );
+  if (topWindow)
+    topWindow.focus();
+  else
+    window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
+}
+
 /**
  * Main application code.
  */
