@@ -62,6 +62,8 @@ CPPSRCS		= \
     $(NULL)
 
 CMMSRCS = \
+  DOMElementWrapper.mm \
+  nsCocoaMenu.mm \
   nsDesktopEnvironmentMac.mm \
   nsDockTile.mm \
   nsICNSEncoder.mm \

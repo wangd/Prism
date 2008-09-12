@@ -47,6 +47,8 @@ extern "C" {
 
 #include "nsDesktopEnvironmentMac.h"
 
+#include "DOMElementWrapper.h"
+#include "nsCocoaMenu.h"
 #include "nsCOMPtr.h"
 #include "nsDockTile.h"
 #include "nsICategoryManager.h"
@@ -55,44 +57,13 @@ extern "C" {
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMWindow.h"
 #include "nsIFile.h"
 #include "nsINativeMenu.h"
 #include "nsIObserverService.h"
 #include "nsIProperties.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringAPI.h"
-
-@interface DOMElementWrapper : NSObject
-{
-  nsIDOMElement* mElement;
-}
-
-- (id)initWithElement:(nsIDOMElement*)element;
-- (nsIDOMElement*)element;
-
-@end
-
-@implementation DOMElementWrapper
-
-- (id)initWithElement:(nsIDOMElement*)element
-{
-  mElement = element;
-  NS_ADDREF(mElement);
-  return self;
-}
-
-- (void)dealloc
-{
-  NS_RELEASE(mElement);
-  [super dealloc];
-}
-
-- (nsIDOMElement*)element
-{
-  return mElement;
-}
-
-@end
 
 @interface DockMenuDelegate : NSObject
 {
@@ -391,6 +362,16 @@ NS_IMETHODIMP nsDesktopEnvironment::RemoveApplication(nsIFile* aAppBundle)
 NS_IMETHODIMP nsDesktopEnvironment::GetSystemMenu(nsIDOMWindow* aWindow, nsINativeMenu** _retval)
 {
   NS_ENSURE_ARG(_retval);
-  *_retval = 0;
+
+  nsresult rv;
+  nsCOMPtr<nsIDOMDocument> document;
+  rv = aWindow->GetDocument(getter_AddRefs(document));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NSMenu* applicationMenu = [[[NSApp mainMenu] itemAtIndex:0] submenu];
+  *_retval = new nsCocoaMenu(document, applicationMenu);
+  NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(*_retval);
+
   return NS_OK;
 }
