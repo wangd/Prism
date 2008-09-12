@@ -1,7 +1,10 @@
 OutFile "regprot.exe"
 
+RequestExecutionLevel user
+
 !include FileFunc.nsh
 !include StrFunc.nsh
+!include UAC.nsh
 
 !insertmacro GetParameters
 !insertmacro GetOptions
@@ -28,6 +31,9 @@ ${GetOptions} $R0 "/ApplicationPath" $R1
 ${StrTok} $R3 $R1 "/" "0" "0"
 
 ${GetOptions} $R0 "/ApplicationName" $R4
+
+; Use UAC to elevate privileges on Vista
+UAC::RunElevated
 
 ; Register our protocol keys
 WriteRegStr HKLM "SOFTWARE\Classes\$R2" "EditFlags" 2
