@@ -451,6 +451,7 @@ var WebRunner = {
     var platform = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
 
     HostUI._document = document;
+    HostUI._window = window;
 
     WebAppProperties.script["XMLHttpRequest"] = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1");
     WebAppProperties.script["window"] = this._getBrowser().contentWindow;
@@ -470,6 +471,15 @@ var WebRunner = {
 
     document.getElementById("popup_content").addEventListener("popupshowing", self._popupShowing, false);
     document.getElementById("tooltip_content").addEventListener("popupshowing", self._tooltipShowing, false);
+
+    // Let osx make its app menu, then hide the window menu
+    var mainMenu = document.getElementById("menu_main");
+    if (mainMenu) {
+      mainMenu.hidden = true;
+
+      // Needed for linux or the menubar doesn't hide
+      document.getElementById("menu_file").hidden = true;
+    }
 
     if (!window.arguments || !window.arguments[0] || !(window.arguments[0] instanceof Ci.nsICommandLine)) {
       // Not the main window, so we're done
@@ -551,15 +561,6 @@ var WebRunner = {
     this._windowCreator = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIWindowCreator);
     var windowWatcher = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher);
     windowWatcher.setWindowCreator(this);
-
-    // Let osx make its app menu, then hide the window menu
-    var mainMenu = document.getElementById("menu_main");
-    if (mainMenu) {
-      mainMenu.hidden = true;
-
-      // Needed for linux or the menubar doesn't hide
-      document.getElementById("menu_file").hidden = true;
-    }
 
     // Register observer for quit-application-requested so we can handle shutdown (needed for OS X
     // dock Quit menu item, for example).
