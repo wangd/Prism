@@ -50,6 +50,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsStringAPI.h"
+#include "nsTArray.h"
 
 @interface NativeMenuDelegate : NSObject
 {
@@ -136,23 +137,60 @@ NS_IMETHODIMP nsCocoaMenu::AddMenuItem(const nsAString& aId)
   rv = element->GetAttribute(NS_LITERAL_STRING("label"), label);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  NSMenuItem* item = [mMenu addItemWithTitle: [NSString stringWithCharacters:label.get() length:label.Length()]
+  if (mItems.Count() == 0) {
+    // Insert separator after first item
+    [mMenu insertItem: [NSMenuItem separatorItem] atIndex: 0];
+  }
+  
+  NSMenuItem* item = [mMenu insertItemWithTitle: [NSString stringWithCharacters:label.get() length:label.Length()]
          action: @selector (menuItemSelected:)
-         keyEquivalent: @""];
+         keyEquivalent: @""
+         atIndex: mItems.Count()];
   [item setTarget: mDelegate];
   [item setRepresentedObject: [[DOMElementWrapper alloc] initWithElement:element]];
+  
+  mItems.AppendObject(element);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsCocoaMenu::RemoveMenuItem(const nsAString& aId)
 {
+  NS_ENSURE_STATE(mDocument);
+  NS_ENSURE_STATE(mMenu);
+
+  nsresult rv;
+  nsCOMPtr<nsIDOMElement> element;
+  rv = mDocument->GetElementById(aId, getter_AddRefs(element));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 index = mItems.IndexOf(element);
+  if (index == nsTArray<nsIDOMElement*>::NoIndex)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  [mMenu removeItemAtIndex: index];
+  if (mItems.Count() == 1) {
+     // Remove the separator
+    [mMenu removeItemAtIndex: 0];
+  }
+
+  mItems.RemoveObjectAt(index);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCocoaMenu::RemoveAllMenuItems()
 {
+  NS_ENSURE_STATE(mMenu);
+  
+  PRUint32 menuCount = mItems.Count();
+  PRUint32 index;
+  for (index=menuCount; index>0; index--) {
+    [mMenu removeItemAtIndex: index-1];
+    mItems.RemoveObjectAt(index-1);
+  }
+  
   return NS_OK;
 }
 

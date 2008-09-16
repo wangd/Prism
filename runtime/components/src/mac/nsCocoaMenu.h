@@ -45,6 +45,7 @@ class nsIDOMElement;
 @class NSMenu;
 @class NativeMenuDelegate;
 
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 
 // Encapsulation of native menus on OS X using Cocoa APIs
@@ -61,6 +62,7 @@ private:
 
 protected:
   nsCOMPtr<nsIDOMDocument> mDocument;
+  nsCOMArray<nsIDOMElement> mItems;
   NSMenu* mMenu;
   NativeMenuDelegate* mDelegate;
 };
