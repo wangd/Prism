@@ -152,10 +152,13 @@ var WebAppProperties =
   credits : "",
   splashscreen : null,
   navigation : false,
+  include : null,
+  exclude : null,
   appBundle : null,
   appRoot : null,
   installRoot : null,
-  flags : ["id", "name", "uri", "icon", "status", "location", "sidebar", "trayicon", "navigation", "credits", "splashscreen"],
+  flags : ["id", "name", "uri", "icon", "status", "location", "sidebar", "trayicon", "navigation",
+           "credits", "splashscreen", "include", "exclude"],
 
   getInstallRoot : function() {
     if (!this.installRoot) {
