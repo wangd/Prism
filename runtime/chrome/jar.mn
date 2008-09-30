@@ -7,8 +7,13 @@ webrunner.jar:
 % resource prism-runtime .
   content/about.xul                    (content/about.xul)
   content/about.js                     (content/about.js)
+  content/prefdialog.xul               (content/prefdialog.xul)
+  content/prefdialog.js                (content/prefdialog.js)
 * content/webrunner.xul                (content/webrunner.xul)
   content/webrunner.js                 (content/webrunner.js)
+* content/fonts.xul                    (content/fonts.xul)
+* content/fonts.js                     (content/fonts.js)
+* content/colors.xul                   (content/colors.xul)
   branding/brand.dtd                   (locale/@AB_CD@/brand/brand.dtd)
   branding/brand.properties            (locale/@AB_CD@/brand/brand.properties)
   branding/icon128.png                 (locale/@AB_CD@/brand/icon128.png)
@@ -16,6 +21,7 @@ webrunner.jar:
 classic.jar:
 % skin webrunner classic/1.0 %
   about.css                            (skin/standard/about.css)
+  prefdialog.css                       (skin/standard/prefdialog.css)
   webrunner.css                        (skin/standard/webrunner.css)
   images/gear.png                      (skin/standard/images/gear.png)
   images/toolbar.png                   (skin/standard/images/toolbar.png)
@@ -32,4 +38,7 @@ classic.jar:
 @AB_CD@.jar:
 % locale webrunner @AB_CD@ %
   about.dtd                            (locale/@AB_CD@/about.dtd)
+  prefdialog.dtd                       (locale/@AB_CD@/prefdialog.dtd)
   webrunner.dtd                        (locale/@AB_CD@/webrunner.dtd)
+  fonts.dtd                            (locale/@AB_CD@/fonts.dtd)
+  colors.dtd                           (locale/@AB_CD@/colors.dtd)

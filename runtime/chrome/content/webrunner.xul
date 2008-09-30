@@ -55,6 +55,7 @@
     <command id="cmd_paste" label="&paste.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_delete" label="&delete.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_selectAll" label="&selectAll.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_prefs" label="&prefs.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_print" label="&print.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_pageSetup" label="&pageSetup.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_about" label="&about.label;" oncommand="WebRunner.doCommand(this.id);"/>
@@ -182,6 +183,7 @@
     <statusbarpanel id="security" class="statusbarpanel-iconic-text"/>
     <toolbarbutton id="button_commands" type="menu" tooltiptext="&commands.tooltip;">
       <menupopup id="popup_main">
+        <menuitem id="menuitem_prefs" command="cmd_prefs"/>
         <menuitem id="menuitem_print" command="cmd_print"/>
         <menuitem id="menuitem_pageSetup" command="cmd_pageSetup"/>
         <!--

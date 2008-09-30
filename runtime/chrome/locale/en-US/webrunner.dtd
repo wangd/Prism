@@ -22,7 +22,8 @@
 <!ENTITY console.label              "Error Console">
 <!ENTITY install.label              "Install Shortcut">
 <!ENTITY tools.label                "Tools">
-<!ENTITY addons.label               "Add-ons">
+<!ENTITY prefs.label                "Preferences...">
+<!ENTITY addons.label               "Add-ons...">
 
 <!ENTITY zoomIn.label               "Zoom In">
 <!ENTITY zoomIn.commandkey          "+">
