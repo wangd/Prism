@@ -323,7 +323,33 @@ PlatformGlue.prototype = {
     var extps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService);
     extps.loadURI(ioService.newURI(aURISpec, null, null), null);
   },
+  
+  canQuitApplication : function canQuitApplication() {
+    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    if (!os) return true;
+    
+    try {
+      var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+      os.notifyObservers(cancelQuit, "quit-application-requested", null);
+      
+      // Something aborted the quit process. 
+      if (cancelQuit.data)
+        return false;
+    }
+    catch (ex) { }
+    return true;
+  },
 
+  quit : function quit() {
+    if (!this.canQuitApplication())
+      return false;
+
+    var appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+    appStartup.quit(Ci.nsIAppStartup.eAttemptQuit);
+    return true;
+  },
+
+ 
   sound: function sound() {
     if (!this._sound)
       this._sound = new PlatformGlueSound();
