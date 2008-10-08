@@ -320,13 +320,13 @@ nsNotificationArea::RemoveMenuItem(const nsAString& aId)
 NS_IMETHODIMP
 nsNotificationArea::RemoveAllMenuItems()
 {
-  NS_ENSURE_STATE(mMenu);
-  
-  int menuCount = ::GetMenuItemCount(mMenu);
-  
-  PRUint32 i;
-  for (i=menuCount; i>0; i--) {
-    ::RemoveMenu(mMenu, i-1, MF_BYPOSITION);
+  if (mMenu) {
+    int menuCount = ::GetMenuItemCount(mMenu);
+    
+    PRUint32 i;
+    for (i=menuCount; i>0; i--) {
+      ::RemoveMenu(mMenu, i-1, MF_BYPOSITION);
+    }
   }
   
   return NS_OK;
