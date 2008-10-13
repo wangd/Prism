@@ -57,6 +57,12 @@ var WebRunner = {
 
       // Pull out the window state
       settings.window = {};
+
+      // save current fullscreen state and unfullscreen it for proper store of
+      // our window unfullscreen'ed
+      settings.window.fullscreen = window.fullScreen;
+      window.fullScreen = false;
+
       settings.window.state = window.windowState;
       if (window.windowState == window.STATE_NORMAL) {
         settings.window.screenX = window.screenX;
@@ -101,6 +107,8 @@ var WebRunner = {
               window.resizeTo(settings.window.width, settings.window.height);
               break;
           }
+          // if webapp was closed in fullscreen mode, it should relaunch as such.
+          window.fullScreen = settings.window.fullscreen;
         }
 
         if (settings.sidebar) {
@@ -798,6 +806,9 @@ var WebRunner = {
         const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
         const EMFEATURES = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
         window.openDialog(EMURL, "", EMFEATURES);
+        break;
+      case "cmd_fullScreen":
+        window.fullScreen = !window.fullScreen;
         break;
       case "cmd_zoomIn":
         const max = 2.0;

@@ -71,6 +71,7 @@
     <command id="cmd_zoomIn" label="&zoomIn.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_zoomOut" label="&zoomOut.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_zoomReset" label="&zoomReset.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_fullScreen" label="&fullScreen.label;"   oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_find" label="&findOnCmd.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_findNext" label="&findNextCmd.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_findPrevious" label="&findPreviousCmd.label;" oncommand="WebRunner.doCommand(this.id);"/>
@@ -84,6 +85,7 @@
     <key id="key_close" modifiers="accel" key="w" command="cmd_close"/>
     <key id="key_quit" modifiers="accel" key="q" command="cmd_quit"/>
     <key id="key_print" modifiers="accel" key="p" command="cmd_print"/>
+    <key id="key_fullScreen" keycode="VK_F11" command="cmd_fullScreen"/>
 #ifdef XP_MACOSX
     <key id="key_hideThisApp" key="&hideThisApp.commandkey;" modifiers="&hideThisApp.modifiers;"/>
     <key id="key_hideOtherApps" key="&hideOtherApps.commandkey;" modifiers="&hideOtherApps.modifiers;"/>

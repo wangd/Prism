@@ -35,6 +35,7 @@
 <!ENTITY zoomReset.label            "Reset">
 <!ENTITY zoomReset.commandkey       "0">
 <!ENTITY zoomReset.modifiers        "accel">
+<!ENTITY fullScreen.label           "Fullscreen">
 
 <!ENTITY findOnCmd.label            "Find in This Page…">
 <!ENTITY findOnCmd.accesskey        "F">
