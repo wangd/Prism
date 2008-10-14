@@ -96,8 +96,11 @@ else
 libs::
 ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/winbuild/regprot.nsi $(DIST)/bin
+	cp $(srcdir)/winbuild/UAC.nsh $(DIST)/bin
 	cp $(srcdir)/winbuild/UAC.dll $(DIST)/bin
 	makensis $(DIST)/bin/regprot.nsi
+	rm $(DIST)/bin/regprot.nsi
+	rm $(DIST)/bin/UAC.nsh
 endif
 
 	$(NSINSTALL) -D $(DIST)/bin/xulrunner

@@ -2,6 +2,8 @@ OutFile "regprot.exe"
 
 RequestExecutionLevel user
 
+!addplugindir ./
+
 !include FileFunc.nsh
 !include StrFunc.nsh
 !include UAC.nsh
