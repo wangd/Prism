@@ -62,7 +62,7 @@ interface nsIDesktopEnvironment : nsISupports
    * @param arguments Command-line parameters to pass to the app.
    * @param description Human-readable description.
    * @param icon Icon to use for the shortcut.
-  **/
+   */
   nsIFile createShortcut(
     in AString name,
     in nsIFile target,
@@ -84,7 +84,7 @@ interface nsIDesktopEnvironment : nsISupports
 
   /**
    * Change the Z order of the window relative to other windows on the desktop.
-  **/
+   */
   void setZLevel(in nsIDOMWindow window, in unsigned short level);
 
   /**
@@ -92,6 +92,13 @@ interface nsIDesktopEnvironment : nsISupports
    *
    * @param window the window for which we want the system menu.
    * @returns null if there is no system menu.
-  **/
+   */
   nsINativeMenu getSystemMenu(in nsIDOMWindow window);
+  
+  /**
+  * Gets the menu bar for the specific window.
+  *
+  * @param widnow the window for which we want the menu bar.
+  */
+  nsINativeMenu getMenuBar(in nsIDOMWindow window);
 };

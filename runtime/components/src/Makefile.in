@@ -43,7 +43,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE       = $(MOZ_APP_NAME)
+MODULE            = $(MOZ_APP_NAME)
+LIBRARY_NAME      = $(MOZ_APP_NAME)_static
+USE_STATIC_LIBS   = 1
+FORCE_STATIC_LIB  = 1
+
+REQUIRES = \
+  layout \
+  docshell \
+  dom \
+  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 DIRS = windows
@@ -52,6 +61,10 @@ endif
 ifeq ($(OS_ARCH),Darwin)
 DIRS = mac
 endif
+
+CPPSRCS = \
+  nsDOMMenuBar.cpp \
+  $(NULL)
 
 EXTRA_PP_COMPONENTS = \
   nsCommandLineHandler.js \

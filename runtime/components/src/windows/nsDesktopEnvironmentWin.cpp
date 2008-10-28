@@ -43,6 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsDOMMenuBar.h"
 #include "nsIApplicationIcon.h"
 #include "nsIBaseWindow.h"
 #include "nsICategoryManager.h"
@@ -51,8 +52,11 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMXULElement.h"
 #include "nsIGenericFactory.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsILocalFile.h"
 #include "nsIProperties.h"
 #include "nsIServiceManager.h"
@@ -247,6 +251,18 @@ NS_IMETHODIMP nsDesktopEnvironment::GetSystemMenu(nsIDOMWindow* aWindow, nsINati
   NS_ENSURE_SUCCESS(rv, rv);
 
   return nsSystemMenu::GetSystemMenu(hWnd, document, _retval);
+}
+
+NS_IMETHODIMP nsDesktopEnvironment::GetMenuBar(nsIDOMWindow* aWindow, nsINativeMenu** _retval)
+{
+  NS_ENSURE_ARG(aWindow);
+
+  nsresult rv;
+  *_retval = new nsDOMMenuBar(aWindow);
+  NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDesktopEnvironment::RegisterProtocol(

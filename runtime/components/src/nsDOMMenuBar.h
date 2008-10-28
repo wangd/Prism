@@ -36,64 +36,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDesktopEnvironment.h"
+/* Development of this Contribution was supported by Yahoo! Inc. */
+
+#include "nsIDOMEventListener.h"
+#include "nsINativeMenu.h"
 
 #include "nsCOMPtr.h"
-#include "nsIDirectoryService.h"
-#include "nsIObserver.h"
-#include "nsIShellService.h"
 #include "nsStringAPI.h"
 
-class nsIApplicationIcon;
-class nsIComponentManager;
 class nsIDOMDocument;
 class nsIDOMElement;
-class nsIFile;
-class nsINativeMenu;
-struct nsModuleComponentInfo;
+class nsIDOMWindow;
 
-#define NS_DESKTOPENVIRONMENT_CID \
-{ /* 3c748b50-beae-11dc-95ff-0800200c9a66 */         \
-     0x3c748b50,                                     \
-     0xbeae,                                         \
-     0x11dc,                                         \
-    {0x95, 0xff, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66} \
-}
-#define NS_DESKTOPENVIRONMENT_CONTRACTID "@mozilla.org/desktop-environment;1"
-
-// Desktop integration for Windows platforms.
-class nsDesktopEnvironment : public nsIDesktopEnvironment,
-                             public nsIDirectoryServiceProvider,
-                             public nsIObserver,
-                             public nsIShellService
+// Encapsulation of native menus on OS X using Cocoa APIs
+class nsDOMMenuBar : public nsINativeMenu, public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDESKTOPENVIRONMENT
-  NS_DECL_NSIDIRECTORYSERVICEPROVIDER
-  NS_DECL_NSIOBSERVER
-  NS_DECL_NSISHELLSERVICE
+  NS_DECL_NSINATIVEMENU
+  NS_DECL_NSIDOMEVENTLISTENER
 
-  nsDesktopEnvironment();
-
-  nsresult Init();
-  
-  static nsresult GetHWNDForDOMWindow(nsIDOMWindow* aWindow, void* hWnd);
-
-  static NS_METHOD OnRegistration(nsIComponentManager *aCompMgr,
-    nsIFile *aPath, const char *registryLocation, const char *componentType,
-    const nsModuleComponentInfo *info);
-
-  static NS_METHOD OnUnregistration(nsIComponentManager *aCompMgr,
-    nsIFile *aPath, const char *registryLocation,
-    const nsModuleComponentInfo *info);
-    
-protected:
-  nsString QuoteCommandLineString(const nsAString& aString);  
+  nsDOMMenuBar(nsIDOMWindow* aWindow);
+  ~nsDOMMenuBar();
 
 private:
-  ~nsDesktopEnvironment();
 
 protected:
-  nsCOMPtr<nsIApplicationIcon> mNotificationArea;
+  nsresult CreateXULMenu(nsIDOMDocument* aDocument, nsIDOMElement* aElement, const nsAString& aId, nsIDOMElement** _retval);
+
+  nsCOMPtr<nsIDOMWindow> mWindow;
 };
