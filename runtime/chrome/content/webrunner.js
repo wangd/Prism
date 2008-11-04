@@ -568,6 +568,11 @@ var WebRunner = {
       // Not the main window, so we're done
       return;
     }
+    
+    // Set browser homepage as initial webapp page
+    var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
+    prefs = prefs.getBranch("browser.startup.");
+    prefs.setCharPref("homepage", WebAppProperties.uri);
 
     // Add handlers for the main page
     window.addEventListener("unload", function() { WebRunner.shutdown(); }, false);
