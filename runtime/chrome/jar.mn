@@ -4,6 +4,7 @@ webrunner.jar:
 % content webrunner %content/ xpcnativewrappers=no
 % content branding %branding/
 % locale branding @AB_CD@ %branding/
+% overlay chrome://mozapps/content/downloads/unknownContentType.xul chrome://webrunner/content/unknownContentType.xul
 % resource prism-runtime .
   content/about.xul                    (content/about.xul)
   content/about.js                     (content/about.js)
@@ -14,6 +15,7 @@ webrunner.jar:
 * content/fonts.xul                    (content/fonts.xul)
 * content/fonts.js                     (content/fonts.js)
 * content/colors.xul                   (content/colors.xul)
+  content/unknownContentType.xul       (content/unknownContentType.xul)
   branding/brand.dtd                   (locale/@AB_CD@/brand/brand.dtd)
   branding/brand.properties            (locale/@AB_CD@/brand/brand.properties)
   branding/icon128.png                 (locale/@AB_CD@/brand/icon128.png)
@@ -42,3 +44,4 @@ classic.jar:
   webrunner.dtd                        (locale/@AB_CD@/webrunner.dtd)
   fonts.dtd                            (locale/@AB_CD@/fonts.dtd)
   colors.dtd                           (locale/@AB_CD@/colors.dtd)
+  browser.dtd                          (locale/@AB_CD@/browser.dtd)
