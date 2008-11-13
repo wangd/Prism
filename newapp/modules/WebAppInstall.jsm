@@ -219,9 +219,11 @@ var WebAppInstall =
       var appINI = appSandbox.clone();
       appINI.append("webapp.ini");
 
-      // Make sure file is writable.
-      if (!appINI.isWritable())
-          appINI.permission = PR_PERMS_FILE;
+      // If prism was launched with '-webapp <path_to_webapp_bundle>'
+      // parameter specified, the 'webapp.ini' file can already exists
+      // at this point. If it is the case, make sure it is writable.
+      if (appINI.exists() && !appINI.isWritable())
+        appINI.QueryInterface(Ci.nsILocalFile).permissions = PR_PERMS_FILE;
 
       // Save the params to an INI file
       var cmd = "[Parameters]\n";
@@ -253,6 +255,10 @@ var WebAppInstall =
       if (!appIcon.exists())
         appIcon.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
       appIcon.append(WebAppProperties.icon + ImageUtils.getNativeIconExtension());
+
+      // See comments above about permissions.
+      if (appIcon.exists() && !appIcon.isWritable())
+        appIcon.QueryInterface(Ci.nsILocalFile).permissions = PR_PERMS_FILE;
 
       var stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
       stream.init(appIcon, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, PR_PERMS_FILE, 0);
