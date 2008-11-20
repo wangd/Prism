@@ -730,6 +730,9 @@ nsNotificationArea::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 }
 
 void nsNotificationArea::ShowPopupMenu(HWND hwnd, HMENU hmenu) {
+  // Set window to foregroup so the menu goes away when we lose focus
+  ::SetForegroundWindow(hwnd);
+  
   POINT pos;
   ::GetCursorPos(&pos);
 
