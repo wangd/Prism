@@ -81,6 +81,9 @@ protected:
   nsresult GetIconForURI(nsIURI* iconURI, HICON& result);
   nsresult CreateListenerWindow(HWND* listenerWindow);
   nsresult GetElementById(const nsAString& aId, nsIDOMElement** _retval);
+  nsresult AddMenuChild(HMENU hMenu, nsIDOMElement* aElement);
+  nsresult CreateMenu(nsIDOMElement* aElement, HMENU& subMenu);
+  
   static nsresult DispatchEvent(nsIDOMWindow* aDOMWindow, nsIDOMEventTarget* aEventTarget, const nsAString& aType,
     PRBool* aPreventDefault);
   static void ShowPopupMenu(HWND hwnd, HMENU hmenu);

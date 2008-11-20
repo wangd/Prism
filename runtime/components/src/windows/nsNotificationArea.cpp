@@ -270,26 +270,73 @@ nsNotificationArea::AddMenuItem(const nsAString& aId)
   if (!element)
     return NS_ERROR_FAILURE;
   
-  nsAutoString label;
-  rv = element->GetAttribute(NS_LITERAL_STRING("label"), label);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (!mMenu) {
     mMenu = ::CreatePopupMenu();
     NS_ENSURE_TRUE(mMenu, NS_ERROR_FAILURE);
   }
   
-  PRUint32 itemId = mLastMenuId++;
+  rv = AddMenuChild(mMenu, element);
+  NS_ENSURE_SUCCESS(rv, rv);
   
-  ::AppendMenuW(mMenu, MF_STRING, itemId, label.get());
-  
-  // Set the pointer to the element
-  MENUITEMINFO itemInfo;
-  itemInfo.cbSize = sizeof(itemInfo);
-  itemInfo.fMask = MIIM_DATA;
-  itemInfo.dwItemData = (DWORD_PTR) (nsIDOMElement *) element;
-  ::SetMenuItemInfo(mMenu, itemId, FALSE, &itemInfo);
+  return NS_OK;
+}
 
+nsresult nsNotificationArea::AddMenuChild(HMENU hMenu, nsIDOMElement* aElement)
+{
+  nsresult rv;
+  nsAutoString tagName;
+  rv = aElement->GetTagName(tagName);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsAutoString label;
+  rv = aElement->GetAttribute(NS_LITERAL_STRING("label"), label);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (tagName == NS_LITERAL_STRING("COMMAND")) {
+    PRUint32 itemId = mLastMenuId++;
+    ::AppendMenuW(hMenu, MF_STRING, itemId, label.get());
+  
+    // Set the pointer to the element
+    MENUITEMINFO itemInfo;
+    itemInfo.cbSize = sizeof(itemInfo);
+    itemInfo.fMask = MIIM_DATA;
+    itemInfo.dwItemData = (DWORD_PTR) (nsIDOMElement *) aElement;
+    ::SetMenuItemInfo(hMenu, itemId, FALSE, &itemInfo);
+  }
+  else if (tagName == NS_LITERAL_STRING("MENU")) {
+    HMENU subMenu;
+    rv = CreateMenu(aElement, subMenu);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    ::AppendMenuW(hMenu, MF_STRING|MF_POPUP, (UINT) subMenu, label.get());
+  }
+  else {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return NS_OK;
+}
+
+nsresult nsNotificationArea::CreateMenu(nsIDOMElement* aElement, HMENU& subMenu)
+{
+  nsresult rv;
+  subMenu = ::CreatePopupMenu();
+  
+  nsCOMPtr<nsIDOMNode> node;
+  rv = aElement->GetFirstChild(getter_AddRefs(node));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  while (node) {
+    nsCOMPtr<nsIDOMElement> child(do_QueryInterface(node, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = AddMenuChild(subMenu, child);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = child->GetNextSibling(getter_AddRefs(node));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
   return NS_OK;
 }
 
