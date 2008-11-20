@@ -59,6 +59,7 @@ extern "C" {
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMWindow.h"
 #include "nsIFile.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsINativeMenu.h"
 #include "nsIObserverService.h"
 #include "nsIProperties.h"
@@ -72,6 +73,7 @@ extern "C" {
 }
 
 - (id)initWithDockMenu:(nsINativeMenu*)dockMenu;
+- (void)addMenuChild:(NSMenu*)menu child:(nsIDOMElement*)child;
 
 @end
 
@@ -85,11 +87,51 @@ extern "C" {
   return self;
 }
 
+- (void)addMenuChild:(NSMenu*)menu child:(nsIDOMElement*)element
+{
+  nsAutoString label;
+  if (NS_SUCCEEDED(element->GetAttribute(NS_LITERAL_STRING("label"), label))) {
+    NSMenuItem *menuItem = [[NSMenuItem alloc]
+                             initWithTitle:[NSString stringWithCharacters:label.get() length:label.Length()]
+                             action:@selector(dockMenuItemSelected:)
+                             keyEquivalent:@""];
+    nsAutoString tagName;
+    element->GetTagName(tagName);
+    if (tagName == NS_LITERAL_STRING("MENU")) {
+      NSMenu* subMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+      [menuItem setSubmenu:subMenu];
+
+      nsCOMPtr<nsIDOMNode> node;
+      element->GetFirstChild(getter_AddRefs(node));
+      
+      while (node) {
+        nsCOMPtr<nsIDOMElement> child(do_QueryInterface(node));
+        if (!child)
+          break;
+
+        [self addMenuChild:subMenu child:child];
+        
+        child->GetNextSibling(getter_AddRefs(node));
+      }
+    }
+    else if (tagName == NS_LITERAL_STRING("COMMAND")) {
+      [menuItem setTarget:self];
+      [menuItem setRepresentedObject:[[DOMElementWrapper alloc] initWithElement:element]];
+    }
+    else {
+      // We only handle <command> and <menu>
+      return;
+    }
+    [menu addItem:menuItem];
+    [menuItem release];
+  }
+}
+
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender
 {
   NSMenu* menu = [mOldDelegate applicationDockMenu:sender];
   
-  PRBool first = PR_TRUE;
+ [menu addItem:[NSMenuItem separatorItem]];
   
   nsCOMPtr<nsISimpleEnumerator> items;
   if (NS_SUCCEEDED(mDockMenu->GetItems(getter_AddRefs(items)))) {
@@ -99,21 +141,7 @@ extern "C" {
       if (NS_SUCCEEDED(items->GetNext(getter_AddRefs(supports)))) {
         nsCOMPtr<nsIDOMElement> element(do_QueryInterface(supports));
         if (element) {
-          nsAutoString label;
-          if (NS_SUCCEEDED(element->GetAttribute(NS_LITERAL_STRING("label"), label))) {
-            if (first) {
-              [menu addItem:[NSMenuItem separatorItem]];
-              first = PR_FALSE;
-            }
-            NSMenuItem *menuItem = [[NSMenuItem alloc]
-                                     initWithTitle:[NSString stringWithCharacters:label.get() length:label.Length()]
-                                     action:@selector(dockMenuItemSelected:)
-                                     keyEquivalent:@""];
-            [menuItem setTarget:self];
-            [menuItem setRepresentedObject:[[DOMElementWrapper alloc] initWithElement:element]];
-            [menu addItem:menuItem];
-            [menuItem release];
-          }
+          [self addMenuChild:menu child:element];
         }
       }
     }
@@ -361,6 +389,7 @@ NS_IMETHODIMP nsDesktopEnvironment::RemoveApplication(nsIFile* aAppBundle)
 
 NS_IMETHODIMP nsDesktopEnvironment::GetSystemMenu(nsIDOMWindow* aWindow, nsINativeMenu** _retval)
 {
+  NS_ENSURE_ARG(aWindow);
   NS_ENSURE_ARG(_retval);
 
   nsresult rv;
@@ -374,4 +403,9 @@ NS_IMETHODIMP nsDesktopEnvironment::GetSystemMenu(nsIDOMWindow* aWindow, nsINati
   NS_ADDREF(*_retval);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsDesktopEnvironment::GetMenuBar(nsIDOMWindow* aWindow, nsINativeMenu** _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
