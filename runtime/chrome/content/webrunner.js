@@ -28,7 +28,6 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-Components.utils.import("resource://gre/modules/JSON.jsm");
 Components.utils.import("resource://prism-runtime/modules/WebAppProperties.jsm");
 Components.utils.import("resource://prism-runtime/modules/HostUI.jsm");
 
@@ -77,7 +76,8 @@ var WebRunner = {
 
       // Save using JSON format
       if (WebAppProperties.hasOwnProperty("id")) {
-        var json = JSON.toString(settings);
+        var nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+        var json = nativeJSON.encode(settings);
         var file = WebAppProperties.getAppRoot();
         file.append("localstore.json");
         FileIO.stringToFile(json, file);
@@ -92,7 +92,8 @@ var WebRunner = {
       file.append("localstore.json");
       if (file.exists()) {
         var json = FileIO.fileToString(file);
-        settings = JSON.fromString(json);
+        var nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+        settings = nativeJSON.decode(json);
 
         if (settings.window) {
           switch (settings.window.state) {
@@ -338,41 +339,41 @@ var WebRunner = {
   _convert2RegExp : function(pattern) {
     s = new String(pattern);
     res = new String("^");
-    
+
     for (var i = 0 ; i < s.length ; i++) {
       switch(s[i]) {
-        case '*' : 
+        case '*' :
           res += ".*";
           break;
-          
-        case '.' : 
+
+        case '.' :
         case '?' :
-        case '^' : 
-        case '$' : 
+        case '^' :
+        case '$' :
         case '+' :
         case '{' :
-        case '[' : 
+        case '[' :
         case '|' :
-        case '(' : 
+        case '(' :
         case ')' :
         case ']' :
           res += "\\" + s[i];
           break;
-        
+
         case '\\' :
           res += "\\\\";
           break;
-        
+
         case ' ' :
           // Remove spaces from URLs.
           break;
-        
-        default :     
+
+        default :
           res += s[i];
           break;
       }
     }
-    
+
     var tldRegExp = new RegExp("^(\\^(?:[^/]*)(?://)?(?:[^/]*))(\\\\\\.tld)((?:/.*)?)$")
     var tldRes = res.match(tldRegExp);
     if (tldRes) {
@@ -417,7 +418,7 @@ var WebRunner = {
     // Links from our host are always internal
     if (aURI.host == this._uri.host)
       return false;
-      
+
     // Check whether URI is explicitly included
     if (WebAppProperties.include) {
       var includes = WebAppProperties.include.split(",");
@@ -425,7 +426,7 @@ var WebRunner = {
         return false;
       }
     }
-    
+
     // Check whether URI is explicitly excluded
     if (WebAppProperties.exclude) {
       var excludes = WebAppProperties.exclude.split(",");
@@ -433,7 +434,7 @@ var WebRunner = {
         return true;
       }
     }
-    
+
     var linkDomain = this._getBaseDomain(aURI);
     // Can't use browser.currentURI since it causes reentrancy into the docshell.
     if (!linkDomain || (linkDomain == this._currentDomain))
@@ -568,7 +569,7 @@ var WebRunner = {
       // Not the main window, so we're done
       return;
     }
-    
+
     // Set browser homepage as initial webapp page
     if (WebAppProperties.uri) {
       var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
