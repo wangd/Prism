@@ -1,27 +1,22 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://webrunner/skin/prefdialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://webrunner/skin/preferences/content.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://webrunner/locale/prefdialog.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://webrunner/locale/preferences/content.dtd">
 
-<prefwindow xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        id="prefdialog"
-        title="&dialog.title;"
-        width="500" height="400"
-        onload="WebRunnerPreferences.init();">
-  <script type="application/x-javascript" src="chrome://webrunner/content/prefdialog.js"/>
+<overlay id="ContentPaneOverlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="allPrefs">
-
+  <prefpane id="paneContent" onpaneload="WebRunnerContentPrefs.init()">
     <preferences id="contentPreferences">
 
       <!-- FONTS -->
       <preference id="font.language.group"
                   name="font.language.group"
                   type="wstring"
-                  onchange="WebRunnerPreferences._rebuildFonts();"/>
+                  onchange="WebRunnerContentPrefs._rebuildFonts();"/>
     </preferences>
     
+    <script type="application/x-javascript" src="chrome://webrunner/content/content.js"/>
     <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
 
     <!-- Fonts and Colors -->
@@ -72,14 +67,14 @@
             <button id="advancedFonts" icon="select-font"
                     label="&advancedFonts.label;"
                     accesskey="&advancedFonts.accesskey;"
-                    oncommand="WebRunnerPreferences.configureFonts();"/>
+                    oncommand="WebRunnerContentPrefs.configureFonts();"/>
           </row>
           <row id="colorsRow">
             <hbox/>
             <button id="colors" icon="select-color"
                     label="&colors.label;"
                     accesskey="&colors.accesskey;"
-                    oncommand="WebRunnerPreferences.configureColors();"/>
+                    oncommand="WebRunnerContentPrefs.configureColors();"/>
           </row>
         </rows>
       </grid>
@@ -87,4 +82,4 @@
 
   </prefpane>
 
-</prefwindow>
+</overlay>

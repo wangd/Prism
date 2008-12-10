@@ -765,7 +765,7 @@ var WebRunner = {
         goDoCommand(aCmd);
         break;
       case "cmd_prefs":
-        window.openDialog("chrome://webrunner/content/prefdialog.xul", "prefdialog", "chrome,extrachrome,dialog=no,centerscreen,modal", WebAppProperties);
+        window.openDialog("chrome://webrunner/content/preferences/preferences.xul", "preferences", "chrome,extrachrome,dialog=no,centerscreen,toolbar,modal", WebAppProperties);
         break;
       case "cmd_print":
         PrintUtils.print();

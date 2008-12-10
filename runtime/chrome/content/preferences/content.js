@@ -28,7 +28,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 // Stolen/adapted from browser/components/preferences/content.js
-var WebRunnerPreferences =
+var WebRunnerContentPrefs =
 {
   init : function()
   {
@@ -111,7 +111,7 @@ var WebRunnerPreferences =
       preference.id = defaultFontTypePref;
       preference.setAttribute("name", defaultFontTypePref);
       preference.setAttribute("type", "string");
-      preference.setAttribute("onchange", "WebRunnerPreferences._rebuildFonts();");
+      preference.setAttribute("onchange", "WebRunnerContentPrefs._rebuildFonts();");
       document.getElementById("contentPreferences").appendChild(preference);
     }
     return preference.value;
@@ -123,7 +123,7 @@ var WebRunnerPreferences =
    */  
   configureFonts: function ()
   {
-    document.documentElement.openSubDialog("chrome://webrunner/content/fonts.xul", "", null);
+    document.documentElement.openSubDialog("chrome://webrunner/content/preferences/fonts.xul", "", null);
   },
 
   /**
@@ -132,7 +132,7 @@ var WebRunnerPreferences =
    */
   configureColors: function ()
   {
-    document.documentElement.openSubDialog("chrome://webrunner/content/colors.xul",
+    document.documentElement.openSubDialog("chrome://webrunner/content/preferences/colors.xul",
                                            "", null);  
   }
 };

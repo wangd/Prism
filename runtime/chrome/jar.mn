@@ -8,13 +8,16 @@ webrunner.jar:
 % resource prism-runtime .
   content/about.xul                    (content/about.xul)
   content/about.js                     (content/about.js)
-  content/prefdialog.xul               (content/prefdialog.xul)
-  content/prefdialog.js                (content/prefdialog.js)
+  content/preferences/content.xul      (content/preferences/content.xul)
+  content/preferences/content.js       (content/preferences/content.js)
 * content/webrunner.xul                (content/webrunner.xul)
   content/webrunner.js                 (content/webrunner.js)
-* content/fonts.xul                    (content/fonts.xul)
-* content/fonts.js                     (content/fonts.js)
-* content/colors.xul                   (content/colors.xul)
+* content/preferences/fonts.xul        (content/preferences/fonts.xul)
+* content/preferences/fonts.js         (content/preferences/fonts.js)
+* content/preferences/colors.xul       (content/preferences/colors.xul)
+* content/preferences/connection.xul   (content/preferences/connection.xul)
+* content/preferences/connection.js    (content/preferences/connection.js)
+* content/preferences/preferences.xul  (content/preferences/preferences.xul)
   content/unknownContentType.xul       (content/unknownContentType.xul)
   branding/brand.dtd                   (locale/@AB_CD@/brand/brand.dtd)
   branding/brand.properties            (locale/@AB_CD@/brand/brand.properties)
@@ -23,7 +26,6 @@ webrunner.jar:
 classic.jar:
 % skin webrunner classic/1.0 %
   about.css                            (skin/standard/about.css)
-  prefdialog.css                       (skin/standard/prefdialog.css)
   webrunner.css                        (skin/standard/webrunner.css)
   images/gear.png                      (skin/standard/images/gear.png)
   images/toolbar.png                   (skin/standard/images/toolbar.png)
@@ -36,11 +38,18 @@ classic.jar:
   resources/mail28.png                 (skin/standard/resources/mail28.png)
   resources/permission28.png           (skin/standard/resources/permission28.png)
   resources/warning28.png              (skin/standard/resources/warning28.png)
+  preferences/content.css              (skin/standard/preferences/content.css)
+  preferences/preferences.css          (skin/standard/preferences/preferences.css)
+  preferences/Options.png              (skin/standard/preferences/Options.png)
 
 @AB_CD@.jar:
 % locale webrunner @AB_CD@ %
   about.dtd                            (locale/@AB_CD@/about.dtd)
-  prefdialog.dtd                       (locale/@AB_CD@/prefdialog.dtd)
   webrunner.dtd                        (locale/@AB_CD@/webrunner.dtd)
-  fonts.dtd                            (locale/@AB_CD@/fonts.dtd)
-  colors.dtd                           (locale/@AB_CD@/colors.dtd)
+  preferences/content.dtd              (locale/@AB_CD@/preferences/content.dtd)
+  preferences/fonts.dtd                (locale/@AB_CD@/preferences/fonts.dtd)
+  preferences/colors.dtd               (locale/@AB_CD@/preferences/colors.dtd)
+  preferences/connection.dtd           (locale/@AB_CD@/preferences/connection.dtd)
+  preferences/preferences.dtd          (locale/@AB_CD@/preferences/preferences.dtd)
+  preferences/preferences.properties   (locale/@AB_CD@/preferences/preferences.properties)
+
