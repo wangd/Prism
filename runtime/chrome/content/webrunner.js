@@ -152,6 +152,10 @@ var WebRunner = {
       }
 
       this._getBrowser().loadURI(WebAppProperties.uri, null, null);
+
+      if (WebAppProperties.refresh && WebAppProperties.refresh > 0) {
+        this._autoRefresh(false);
+      }
     }
 
     this._loadSettings();
@@ -175,6 +179,13 @@ var WebRunner = {
     icon.menu.removeAllMenuItems();
 
     contentWindow.removeEventListener("unload", WebRunner._contentUnload, true);
+  },
+
+  _autoRefresh : function(refreshNow) {
+    if (refreshNow) {
+      WebRunner._getBrowser().reload();
+    }
+    setTimeout(function() { WebRunner._autoRefresh(true); }, WebAppProperties.refresh * 1000);
   },
 
   _processConfig : function() {
