@@ -211,16 +211,33 @@ var WebRunner = {
     var isContentSelected = !document.commandDispatcher.focusedWindow.getSelection().isCollapsed;
 
     var target = document.popupNode;
+
+    // if the document is editable, show context menu like in text inputs
+    var win = target.ownerDocument.defaultView;
+    if (win) {
+      var isEditable = false;
+      try {
+        var editingSession = new XPCNativeWrapper(win).QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIWebNavigation)
+                                .QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIEditingSession);
+        isEditable = editingSession.windowIsEditable(win);
+      }
+      catch(ex) {
+        // If someone built with composer disabled, we can't get an editing session.
+      }
+    }
+
     var isTextField = target instanceof HTMLTextAreaElement;
     if (target instanceof HTMLInputElement && (target.type == "text" || target.type == "password"))
       isTextField = true;
 
     var isTextSelectied= (isTextField && target.selectionStart != target.selectionEnd);
 
-    cut.setAttribute("disabled", ((!isTextField || !isTextSelectied) ? "true" : "false"));
-    copy.setAttribute("disabled", (((!isTextField || !isTextSelectied) && !isContentSelected) ? "true" : "false"));
-    paste.setAttribute("disabled", (!isTextField ? "true" : "false"));
-    del.setAttribute("disabled", (!isTextField ? "true" : "false"));
+    cut.setAttribute("disabled", (((!isTextField && !isEditable) || !isTextSelectied) ? "true" : "false"));
+    copy.setAttribute("disabled", ((((!isTextField && !isEditable) || !isTextSelectied) && !isContentSelected) ? "true" : "false"));
+    paste.setAttribute("disabled", ((!isTextField && !isEditable) ? "true" : "false"));
+    del.setAttribute("disabled", ((!isTextField && !isEditable) ? "true" : "false"));
 
     var copylink = document.getElementById("menuitem_copyLink");
     var copylinkSep = document.getElementById("menusep_copyLink");
@@ -246,22 +263,6 @@ var WebRunner = {
     addToDictionary.hidden = true;
     var noSuggestions = document.getElementById("menuitem_noSuggestions");
     noSuggestions.hidden = true;
-
-    // if the document is editable, show context menu like in text inputs
-    var win = target.ownerDocument.defaultView;
-    if (win) {
-      var isEditable = false;
-      try {
-        var editingSession = new XPCNativeWrapper(win).QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIWebNavigation)
-                                .QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIEditingSession);
-        isEditable = editingSession.windowIsEditable(win);
-      }
-      catch(ex) {
-        // If someone built with composer disabled, we can't get an editing session.
-      }
-    }
 
     var editor = null;
     if (isTextField && !target.readOnly)
