@@ -132,6 +132,9 @@ PRBool PR_CALLBACK SetEnvironmentVariable(const char* aString, const char* aValu
 #if defined(XP_MACOSX)
   setenv(aString, aValue, 1);
 #endif
+#if defined(XP_WIN)
+  ::SetEnvironmentVariableA(aString, aValue);
+#endif
   return PR_TRUE;
 }
 
