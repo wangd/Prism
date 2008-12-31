@@ -87,6 +87,9 @@ var PrismWebAppDownload = {
   },
 
   install : function(file) {
+    if (!file)
+      return;
+      
     var packageDir = WebAppInstall.install(file);
     WebAppProperties.init(packageDir);
     Prism.convertToApplication(false);
@@ -120,7 +123,9 @@ var PrismWebAppDownload = {
 
   onDownloadComplete : function(downloader, request, ctxt, status, result) {
     this.install(result);
-  }
+  },
+  
+  onDownloadStateChange: function(state, download) { }
 };
 
 function PrismWebApps(theDocument)
@@ -243,6 +248,9 @@ var PrismContentListener = {
   },
 
   doContent: function(contentType, isContentPreferred, request, contentHandler) {
+    if (contentType != this.contentType)
+      return false;
+      
     var downloader = Cc["@mozilla.org/network/downloader;1"].createInstance(Ci.nsIDownloader);
 
     var io = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
