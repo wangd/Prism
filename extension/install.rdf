@@ -3,7 +3,7 @@
 	<Description about="urn:mozilla:install-manifest">
 		<em:id>refractor@developer.mozilla.org</em:id>
 		<em:type>2</em:type>
-		<em:name>Refractor for Prism</em:name>
+		<em:name>Prism for Firefox</em:name>
 		<em:description>Create Prism applications directly in Firefox</em:description>
 		<em:version>0.2.1</em:version>
 		<em:creator>Prism Project</em:creator>
@@ -13,8 +13,8 @@
 		<em:targetApplication>
 			<Description>
 				<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id> <!-- Firefox -->
-				<em:minVersion>3.0b1</em:minVersion>
-				<em:maxVersion>3.0</em:maxVersion>
+				<em:minVersion>3.0</em:minVersion>
+				<em:maxVersion>3.0.*</em:maxVersion>
 			</Description>
 		</em:targetApplication>
 	</Description>

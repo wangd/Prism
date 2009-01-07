@@ -52,8 +52,9 @@ var InstallShortcut = {
     // Default the UI from the given config
     if (WebAppProperties.uri) {
       document.getElementById("uri").value = WebAppProperties.uri;
-      document.getElementById("name").focus();
-
+      var name = document.getElementById("name");
+      name.focus();
+    
       // Fetch the favicon since we have a URI, only if this is not a webapp bundle
       if (!WebAppProperties.appBundle) {
         setTimeout(function() { self.onUriChange(); }, 100);
@@ -61,7 +62,8 @@ var InstallShortcut = {
     }
 
     if (WebAppProperties.name) {
-      document.getElementById("name").value = WebAppProperties.name;
+      name.value = WebAppProperties.name;
+      name.select();
     }
 
     // Default to use the favicon

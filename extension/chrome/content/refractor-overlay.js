@@ -41,6 +41,16 @@ var Prism = {
   convertToApplication : function(useDocumentHref) {
     if (useDocumentHref) {
       WebAppProperties.uri = gBrowser.contentDocument.location.href;
+      var regexp = /^[\w ]*/;
+      var title = regexp.exec(gBrowser.contentDocument.title);
+      if (title) {
+        title = title[0];
+        // Trim whitespace from the end
+        while (title.length > 0 && title.charAt(title.length-1) == ' ') {
+          title = title.substr(0, title.length-1);
+        }
+      }
+      WebAppProperties.name = title;
       WebAppProperties.appBundle = null;
     }
 
