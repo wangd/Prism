@@ -213,6 +213,55 @@ var WebRunner = {
     return this.shutdownQuery();
   },
 
+  _handleContentCommand: function(event) {
+    // Don't trust synthetic events
+    if (!event.isTrusted)
+      return;
+
+    var ot = event.originalTarget;
+    var errorDoc = ot.ownerDocument;
+
+    // If the event came from an ssl error page, it is probably either the "Add
+    // Exception…" or "Get me out of here!" button
+    if (/^about:neterror\?e=nssBadCert/.test(errorDoc.documentURI)) {
+      if (ot == errorDoc.getElementById('exceptionDialogButton')) {
+        var params = { exceptionAdded : false };
+
+        var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+
+        try {
+          switch (prefs.getIntPref("browser.ssl_override_behavior")) {
+            case 2 : // Pre-fetch & pre-populate
+              params.prefetchCert = true;
+            case 1 : // Pre-populate
+              params.location = errorDoc.location.href;
+          }
+        } catch (e) {
+          Components.utils.reportError("Couldn't get ssl_override pref: " + e);
+        }
+
+        window.openDialog("chrome://pippki/content/exceptionDialog.xul", "","chrome,centerscreen,modal", params);
+
+        // If the user added the exception cert, attempt to reload the page
+        if (params.exceptionAdded)
+          errorDoc.location.reload();
+      }
+      else if (ot == errorDoc.getElementById('getMeOutOfHereButton')) {
+        // Get the start page from the *default* pref branch, not the user's
+        var defaultPrefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getDefaultBranch(null);
+        var url = "about:blank";
+        try {
+          url = defaultPrefs.getCharPref("browser.startup.homepage");
+          // If url is a pipe-delimited set of pages, just take the first one.
+          if (url.indexOf("|") != -1)
+            url = url.split("|")[0];
+        } catch (e) { /* Fall back on about blank */ }
+
+        this._getBrowser().loadURI(url, null, null, false);
+      }
+    }
+  },
+
   _popupShowing : function(aEvent) {
     var cut = document.getElementById("cmd_cut");
     var copy = document.getElementById("cmd_copy");
@@ -343,7 +392,6 @@ var WebRunner = {
 
     document.title = aEvent.target.title;
   },
-
 
   // Converts a pattern in this programs simple notation to a regular expression.
   // thanks Greasemonkey! http://www.mozdev.org/source/browse/greasemonkey/src/
@@ -584,9 +632,8 @@ var WebRunner = {
 
     // Set browser homepage as initial webapp page
     if (WebAppProperties.uri) {
-      var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
-      prefs = prefs.getBranch("browser.startup.");
-      prefs.setCharPref("homepage", WebAppProperties.uri);
+      var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+      prefs.setCharPref("browser.startup.homepage", WebAppProperties.uri);
     }
 
     // Add handlers for the main page
@@ -651,6 +698,7 @@ var WebRunner = {
     browser.addEventListener("DOMTitleChanged", function(aEvent) { self._domTitleChanged(aEvent); }, true);
     browser.addEventListener("dragover", function(aEvent) { self._dragOver(aEvent); }, true);
     browser.addEventListener("dragdrop", function(aEvent) { self._dragDrop(aEvent); }, true);
+    browser.addEventListener("command", function(aEvent) { self._handleContentCommand(aEvent); }, false);
     browser.webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
 
     // Remember the base domain of the web app

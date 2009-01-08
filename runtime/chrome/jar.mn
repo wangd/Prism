@@ -52,4 +52,6 @@ classic.jar:
   preferences/connection.dtd           (locale/@AB_CD@/preferences/connection.dtd)
   preferences/preferences.dtd          (locale/@AB_CD@/preferences/preferences.dtd)
   preferences/preferences.properties   (locale/@AB_CD@/preferences/preferences.properties)
-
+# Prism-specific overrides of generic strings
+* netError.dtd                         (locale/@AB_CD@/overrides/netError.dtd)
+% override chrome://global/locale/netErrorApp.dtd chrome://webrunner/locale/netError.dtd

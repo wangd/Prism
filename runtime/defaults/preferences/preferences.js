@@ -71,7 +71,7 @@ pref("extensions.dss.switchPending", false);
 pref("extensions.ignoreMTimeChanges", false);
 pref("extensions.logging.enabled", false);
 
-// NB these point at AMO
+/* NB these point at AMO */
 pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
@@ -85,3 +85,7 @@ pref("accessibility.typeaheadfind.casesensitive", 0);
 
 /* enable xul error pages */
 pref("browser.xul.error_pages.enabled", true);
+
+/* SSL error page behaviour */
+pref("browser.ssl_override_behavior", 2);
+pref("browser.xul.error_pages.expert_bad_cert", false);
