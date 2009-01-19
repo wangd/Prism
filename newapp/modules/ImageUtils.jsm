@@ -18,7 +18,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matthew Gertner <matthew@allpeers.com>
+ *   Matthew Gertner <matthew.gertner@gmail.com>
  *   Mark Finkle <mark.finkle@gmail.com>, <mfinkle@mozilla.com>
  *   Fredrik Larsson <nossralf@gmail.com>
  *

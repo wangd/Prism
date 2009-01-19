@@ -98,7 +98,9 @@ FaviconDownloader.prototype = {
       var mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
       var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
       var iconURI = ioService.newURI(iconURISpec, null, null);
-      mimeType = mimeService.getTypeFromURI(iconURI);
+      if (mimeType == "") {
+        mimeType = mimeService.getTypeFromURI(iconURI);
+      }
       this.loadIcon(mimeType, iconURISpec);
     }
   },

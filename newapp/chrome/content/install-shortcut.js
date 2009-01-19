@@ -174,9 +174,21 @@ var InstallShortcut = {
     // Get the icon stream which is either the default icon or the favicon
     var iconData = this.getIcon();
     if (iconData.mimeType != ImageUtils.getNativeIconMimeType()) {
-      var storageStream = ImageUtils.createStorageStream();
-      ImageUtils.createNativeIcon(iconData.stream, iconData.mimeType, ImageUtils.getBufferedOutputStream(storageStream));
-      iconData = { mimeType: ImageUtils.getNativeIconMimeType(), stream: storageStream.newInputStream(0) };
+      try {
+        this.convertIconToNative(iconData);
+      }
+      catch(e) {
+        // Couldn't convert icon to native format for some reason. We'll have to use the default icon.
+        var bundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
+        bundle = bundle.createBundle("chrome://@PACKAGE@/locale/install-shortcut.properties");
+        var alertTitle = bundle.GetStringFromName("iconDialog.couldntConvertTitle");
+        var alertText = bundle.GetStringFromName("iconDialog.couldntConvert");
+        var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
+        promptService.alert(window, alertTitle, alertText);
+
+        this.useDefaultIcon(iconData);
+        this.convertIconToNative(iconData);
+      }
     }
 
     var params = {id: idPrefix + "@prism.app", name: name, uri: uri.value, icon: iconData, status: doStatus, location: doLocation, sidebar: "false", navigation: doNavigation, trayicon: doTrayIcon};
@@ -260,12 +272,7 @@ var InstallShortcut = {
       icon.mimeType = ImageUtils.getNativeIconMimeType();
     }
     else {
-      var iconName = "app" + ImageUtils.getNativeIconExtension();
-      var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-      var channel = ioService.newChannel("resource://prism/chrome/icons/default/app.png", "", null);
-
-      icon.stream = channel.open();
-      icon.mimeType = "image/png";
+      this.useDefaultIcon(icon);
     }
 
     return icon;
@@ -314,6 +321,14 @@ var InstallShortcut = {
     image.setAttribute("src", iconDataURI);
   },
 
+  useDefaultIcon : function(icon) {
+    var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    var channel = ioService.newChannel("resource://prism/chrome/icons/default/app.png", "", null);
+
+    icon.stream = channel.open();
+    icon.mimeType = "image/png";
+  },
+
   useFavicon : function() {
     this._userIcon = null;
     this.onIconReady();
@@ -346,6 +361,13 @@ var InstallShortcut = {
 
       this.onIconReady();
     }
+  },
+
+  convertIconToNative : function(iconData) {
+    var storageStream = ImageUtils.createStorageStream();
+    ImageUtils.createNativeIcon(iconData.stream, iconData.mimeType, ImageUtils.getBufferedOutputStream(storageStream));
+    iconData. mimeType = ImageUtils.getNativeIconMimeType();
+    iconData.stream = storageStream.newInputStream(0);
   },
 
   advancedSettings : function() {
