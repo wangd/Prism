@@ -18,6 +18,7 @@ webrunner.jar:
 * content/preferences/connection.xul   (content/preferences/connection.xul)
 * content/preferences/connection.js    (content/preferences/connection.js)
 * content/preferences/preferences.xul  (content/preferences/preferences.xul)
+  content/preferences/preferences.js   (content/preferences/preferences.js)
   content/unknownContentType.xul       (content/unknownContentType.xul)
   branding/brand.dtd                   (locale/@AB_CD@/brand/brand.dtd)
   branding/brand.properties            (locale/@AB_CD@/brand/brand.properties)

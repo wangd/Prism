@@ -1,7 +1,5 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://webrunner/skin/preferences/content.css" type="text/css"?>
-
 <!DOCTYPE overlay SYSTEM "chrome://webrunner/locale/preferences/content.dtd">
 
 <overlay id="ContentPaneOverlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -16,7 +14,7 @@
                   onchange="WebRunnerContentPrefs._rebuildFonts();"/>
     </preferences>
     
-    <script type="application/x-javascript" src="chrome://webrunner/content/content.js"/>
+    <script type="application/x-javascript" src="chrome://webrunner/content/preferences/content.js"/>
     <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
 
     <!-- Fonts and Colors -->

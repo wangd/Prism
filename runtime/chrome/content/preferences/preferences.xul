@@ -52,9 +52,9 @@
 <?xml-stylesheet href="chrome://browser/skin/preferences/applications.css"?> -->
 
 <!DOCTYPE prefwindow [
-<!-- <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd"> -->
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 <!ENTITY % preferencesDTD SYSTEM "chrome://webrunner/locale/preferences/preferences.dtd">
-<!-- %brandDTD; -->
+%brandDTD;
 %preferencesDTD;
 ]>
 
@@ -68,6 +68,7 @@
 <prefwindow type="prefwindow"
             id="BrowserPreferences"
             windowtype="Browser:Preferences"
+            onload="WebRunnerPrefs.init()"
             ondialoghelp="openPrefsHelp()"
 #ifdef USE_WIN_TITLE_STYLE
             title="&prefWindow.titleWin;"
@@ -89,9 +90,8 @@
 #endif
 #endif
 
-<!--  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/> -->
+<script type="application/javascript" src="chrome://webrunner/content/preferences/preferences.js"/>
 
-<!--  <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/> -->
     <stringbundle id="bundlePreferences"
                   src="chrome://webrunner/locale/preferences/preferences.properties"/>
 
