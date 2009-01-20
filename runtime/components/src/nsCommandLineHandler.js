@@ -63,7 +63,13 @@ WebRunnerCommandLineHandler.prototype = {
     if (webapp) {
       // Check for a bundle first
       try {
-        file = aCmdLine.resolveFile(webapp);
+        if (aCmdLine.state == aCmdLine.STATE_INITIAL_LAUNCH) {
+          file = aCmdLine.resolveFile(webapp);
+        }
+        else {
+          file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+          file.initWithPath(webapp);
+        }
       }
       catch (ex) {
         // Ouch, not a file
