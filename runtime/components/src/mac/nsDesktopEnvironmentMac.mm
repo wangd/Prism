@@ -212,7 +212,7 @@ extern "C" {
 
 @end
 
-NS_IMPL_ISUPPORTS3(nsDesktopEnvironment, nsIDesktopEnvironment, nsIMacDock, nsIShellService)
+NS_IMPL_ISUPPORTS2(nsDesktopEnvironment, nsIDesktopEnvironment, nsIShellService)
 
 nsDesktopEnvironment::nsDesktopEnvironment()
 {
@@ -328,63 +328,6 @@ NS_IMETHODIMP nsDesktopEnvironment::GetDefaultApplicationForURIScheme(const nsAS
   delete [] buffer;
 
   return err == noErr ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsDesktopEnvironment::AddApplication(nsIFile* aAppBundle)
-{
-  NS_ENSURE_ARG(aAppBundle);
- 
-  nsresult rv;
-  nsCOMPtr<nsIProperties>
-    dirSvc(do_GetService("@mozilla.org/file/directory_service;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIFile> preferences;
-  rv = dirSvc->Get("UsrPrfs", NS_GET_IID(nsIFile), getter_AddRefs(preferences));
-  NS_ENSURE_SUCCESS(rv, rv);
- 
-  rv = preferences->Append(NS_LITERAL_STRING("com.apple.dock.plist"));
-  NS_ENSURE_SUCCESS(rv, rv);
- 
-  nsAutoString path;
-  rv = preferences->GetPath(path);
-  NS_ENSURE_SUCCESS(rv, rv);
- 
-  NSString* prefPath = [NSString stringWithCharacters:path.get() length:path.Length()];
- 
-  NSMutableDictionary* dictionary = [NSMutableDictionary dictionaryWithContentsOfFile:prefPath];
-   
-  nsAutoString bundlePath;
-  rv = aAppBundle->GetPath(bundlePath);
-  NS_ENSURE_SUCCESS(rv, rv);
- 
-  NSMutableDictionary* appData = [NSMutableDictionary dictionaryWithCapacity:1];
-  NSMutableDictionary* tileData = [NSMutableDictionary dictionaryWithCapacity:1];
-  NSMutableDictionary* fileData = [NSMutableDictionary dictionaryWithCapacity:3];
-  [fileData setValue:[NSString stringWithCharacters:bundlePath.get() length:bundlePath.Length()]
-    forKey:@"_CFURLString"];
-  [fileData setValue:[NSNumber numberWithInt:0] forKey:@"_CFURLStringType"];
- 
-  [tileData setValue:fileData forKey:@"file-data"];
-  [appData setValue:tileData forKey:@"tile-data"];
- 
-  NSMutableArray* persistentApps = (NSMutableArray *) [dictionary valueForKey:@"persistent-apps"];
-  [persistentApps addObject:appData];
- 
-  [dictionary writeToFile:prefPath atomically:YES];
- 
-  // Restart the dock using AppleScript
-  NSDictionary* errorDict;
-  NSAppleScript* scriptObject = [[NSAppleScript alloc] initWithSource:@"quit application \"Dock\""];
-  [scriptObject executeAndReturnError: &errorDict];
-  [scriptObject release];
- 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDesktopEnvironment::RemoveApplication(nsIFile* aAppBundle)
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsDesktopEnvironment::GetSystemMenu(nsIDOMWindow* aWindow, nsINativeMenu** _retval)

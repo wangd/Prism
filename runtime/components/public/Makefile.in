@@ -47,10 +47,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE    = $(MOZ_APP_NAME)
 XPIDL_MODULE = $(MOZ_APP_NAME)
 
-ifeq ($(OS_ARCH),Darwin)
-DIRS = mac
-endif
-
 EXPORTS = \
     $(NULL)
 

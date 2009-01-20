@@ -335,11 +335,6 @@ var WebAppInstall =
       bundle = this._createBundle(target, name, arguments, extensionDir, appIcon, apps);
     }
 
-    if (locations.indexOf("dock") > -1 && bundle != null) {
-      var dock = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIMacDock);
-      dock.addApplication(bundle);
-    }
-
     // Return the exec script file so it can be spawned (for restart)
     var scriptFile = bundle.clone();
     scriptFile.append("Contents");

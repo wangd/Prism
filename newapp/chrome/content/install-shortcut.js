@@ -101,10 +101,8 @@ var InstallShortcut = {
     document.getElementById("trayicon").hidden = true;
 
     document.getElementById("applications").hidden = true;
-    document.getElementById("dock").hidden = true;
 #else
     document.getElementById("applications").hidden = true;
-    document.getElementById("dock").hidden = true;
 #endif
 #endif
   },
@@ -147,8 +145,6 @@ var InstallShortcut = {
       shortcuts += "quicklaunch,";
     if (document.getElementById("applications").checked)
       shortcuts += "applications,";
-    if (document.getElementById("dock").checked)
-      shortcuts += "dock,";
 
     if (shortcuts.length == 0) {
       alert(bundle.GetStringFromName("shortcuts.missing"));

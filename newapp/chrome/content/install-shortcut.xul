@@ -48,7 +48,6 @@
     <checkbox id="programs" label="&programs.label;"/>
     <checkbox id="quicklaunch" label="&quicklaunch.label;"/>
     <checkbox id="applications" label="&applications.label;"/>
-    <checkbox id="dock" label="&dock.label;"/>
     <separator class="thin"/>
     <description class="indent">&uninstall.hint;</description>
   </groupbox>
