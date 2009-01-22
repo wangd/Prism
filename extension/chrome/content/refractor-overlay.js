@@ -19,7 +19,7 @@
  *
  * Contributor(s):
  *   Cesar Oliveira <a.sacred.line@gmail.com>
- *   Matthew Gertner <matthew@allpeers.com>
+ *   Matthew Gertner <matthew.gertner@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -54,9 +54,33 @@ var Prism = {
       WebAppProperties.appBundle = null;
     }
 
-    var allowLaunch = {value: false};
-    window.openDialog("chrome://refractor/content/install-shortcut.xul", "install", "centerscreen,modal", WebAppProperties, allowLaunch);
+    window.openDialog("chrome://refractor/content/install-shortcut.xul", "install", "centerscreen,modal", WebAppProperties, this.exportPrefs);
   },
+
+  exportPrefs : function()
+  {
+    var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+    prefs = prefs.getBranch("network.proxy.");
+    prefList = prefs.getChildList("", {});
+    var prefValues = new Array;
+    for (prefNum in prefList) {
+      var pref = prefList[prefNum];
+      var prefType = prefs.getPrefType(pref);
+      var prefValue = null;
+      switch (prefType) {
+        case prefs.PREF_STRING: prefValue = prefs.getCharPref(pref); break;
+        case prefs.PREF_INT: prefValue = prefs.getIntPref(pref); break;
+        case prefs.PREF_BOOL: prefValue = prefs.getBoolPref(pref); break;
+      }
+      prefValues[prefNum] = { name: pref, type: prefType, value: prefValue };
+    }
+    var nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+    var json = nativeJSON.encode(prefValues);
+    var file = WebAppProperties.getAppRoot();
+    file.append("prefs.json");
+    FileIO.stringToFile(json, file);
+  },
+
   onLoad : function() {
     var uriloader = Cc["@mozilla.org/uriloader;1"].getService(Ci.nsIURILoader);
     uriloader.registerContentListener(PrismContentListener);
@@ -103,8 +127,9 @@ var PrismWebAppDownload = {
     var packageDir = WebAppInstall.install(file);
     WebAppProperties.init(packageDir);
     Prism.convertToApplication(false);
+    Prism.exportPrefs();
   },
-
+  
   getTemporaryFileForUri : function(uri)
   {
     var tempDir =

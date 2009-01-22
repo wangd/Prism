@@ -677,8 +677,8 @@ var WebRunner = {
     // Do we need to handle making a web application?
     if (install) {
       // If the install is successful, launch the webapp
-      var allowLaunch = {value: true};
-      window.openDialog("chrome://newapp/content/install-shortcut.xul", "install", "dialog=no,centerscreen", WebAppProperties, allowLaunch);
+      window.openDialog("chrome://newapp/content/install-shortcut.xul", "install", "dialog=no,centerscreen", WebAppProperties,
+        function(install, id, shortcut) { install.restart(id, shortcut); } );
 
       // Hide the main window so it doesn't flash on the screen before closing
       this._xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;

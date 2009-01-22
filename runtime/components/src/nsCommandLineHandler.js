@@ -87,6 +87,11 @@ WebRunnerCommandLineHandler.prototype = {
       }
     }
 
+    // Load any prefs from the bundle (e.g. inherited from Firefox)
+    if (file) {
+      this.loadPrefs(file);
+    }
+
     var protocolURI = null;
     var callback = {};
 
@@ -163,6 +168,33 @@ WebRunnerCommandLineHandler.prototype = {
     return win;
   },
 
+  loadPrefs : function(root) {
+    try {
+      var prefFile = root.clone();
+      prefFile.append("prefs.json");
+      if (prefFile.exists()) {
+        var json = FileIO.fileToString(prefFile);
+        var nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+        var prefValues = nativeJSON.decode(json);
+        var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+        prefs = prefs.getBranch("network.proxy.");
+        for (prefNum in prefValues) {
+          var pref = prefValues[prefNum];
+          switch (pref.type) {
+            case prefs.PREF_STRING: prefs.setCharPref(pref.name, pref.value); break;
+            case prefs.PREF_INT: prefs.setIntPref(pref.name, pref.value); break;
+            case prefs.PREF_BOOL: prefs.setBoolPref(pref.name, pref.value); break;
+          }
+        }
+        prefFile.remove(false);
+      }
+    }
+    catch(e) {
+      // Something went wrong, let's catch it here so we can at least run the app properly
+      Components.utils.reportError(e);
+    }
+  },
+  
   helpInfo : "",
 };
 
