@@ -90,6 +90,9 @@ public:
     
 protected:
   nsString QuoteCommandLineString(const nsAString& aString);  
+  nsresult RunHelperApp(const nsAString& params);
+  nsresult GetAppPath(nsAString& _retval);
+  nsresult GetAppName(nsAString& _retval);
 
 private:
   ~nsDesktopEnvironment();

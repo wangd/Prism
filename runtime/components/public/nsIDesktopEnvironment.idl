@@ -52,6 +52,11 @@ interface nsINativeMenu;
 interface nsIDesktopEnvironment : nsISupports
 {
   /**
+   * Register the application to run automatically on startup.
+   */
+  attribute boolean autoStart;
+
+  /**
    * Create a shortcut for the application.
    *
    * @param name Name of the shortcut.
@@ -96,9 +101,9 @@ interface nsIDesktopEnvironment : nsISupports
   nsINativeMenu getSystemMenu(in nsIDOMWindow window);
   
   /**
-  * Gets the menu bar for the specific window.
-  *
-  * @param widnow the window for which we want the menu bar.
-  */
+   * Gets the menu bar for the specific window.
+   *
+   * @param window the window for which we want the menu bar.
+   */
   nsINativeMenu getMenuBar(in nsIDOMWindow window);
 };

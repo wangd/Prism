@@ -127,6 +127,57 @@ NS_IMETHODIMP nsDesktopEnvironment::GetFile(const char* prop,
   }
 }
 
+NS_IMETHODIMP nsDesktopEnvironment::GetAutoStart(PRBool* _retval)
+{
+  NS_ENSURE_ARG(_retval);
+
+  nsresult rv;
+  nsCOMPtr<nsIWindowsRegKey> regKey(do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString appName;
+  rv = GetAppName(appName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString keyPath = NS_LITERAL_STRING("Software\\Microsoft\\Windows\\CurrentVersion\\Run\\");
+  keyPath += appName;
+
+  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, keyPath, nsIWindowsRegKey::ACCESS_READ);
+  if (NS_FAILED(rv)) {
+    *_retval = PR_FALSE;
+  }
+  else {
+    *_retval = PR_TRUE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDesktopEnvironment::SetAutoStart(PRBool aAutoStart)
+{
+  nsresult rv;
+  nsAutoString params;
+  params = NS_LITERAL_STRING("/AutoStart ");
+
+  nsAutoString appName;
+  rv = GetAppName(appName);
+  params += appName;
+
+  if (aAutoStart) {
+    nsAutoString commandLine;
+    rv = GetAppPath(commandLine);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    params += NS_LITERAL_STRING(" /ApplicationPath ");
+    params += commandLine;
+  }
+
+  rv = RunHelperApp(params);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDesktopEnvironment::CreateShortcut(
   const nsAString& aName,
   nsIFile* aTarget,
@@ -257,7 +308,6 @@ NS_IMETHODIMP nsDesktopEnvironment::GetMenuBar(nsIDOMWindow* aWindow, nsINativeM
 {
   NS_ENSURE_ARG(aWindow);
 
-  nsresult rv;
   *_retval = new nsDOMMenuBar(aWindow);
   NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
 
@@ -282,72 +332,25 @@ NS_IMETHODIMP nsDesktopEnvironment::RegisterProtocol(
     appPath += aArguments;
   }
   else {
-    int numArgs;
-    LPWSTR* argv = ::CommandLineToArgvW(::GetCommandLineW(), &numArgs);
-    
-    WCHAR fullPath[4096];
-    if (!::GetFullPathNameW(argv[0], 4096, fullPath, NULL)) {
-      ::LocalFree(argv);
-      return NS_ERROR_FAILURE;
-    }
-    appPath = QuoteCommandLineString(nsString(fullPath));
-    
-    for (int i=1; i<numArgs; i++) {
-      appPath += NS_LITERAL_STRING(" ");
-      
-      // Don't include -url parameter
-      if (wcscmp(argv[i], L"-url") == 0)
-      {
-        i++; // Skip -url value as well
-        continue;
-      }
-      
-      appPath += QuoteCommandLineString(nsString(argv[i]));
-    }
-    
-    ::LocalFree(argv);
+    rv = GetAppPath(appPath);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   
-  nsCOMPtr<nsIXULAppInfo> appInfo(do_GetService("@mozilla.org/xre/app-info;1", &rv));
+  nsAutoString appName;
+  rv = GetAppName(appName);
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsCAutoString appName;
-  rv = appInfo->GetName(appName);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsCOMPtr<nsIProperties> dirSvc(do_GetService("@mozilla.org/file/directory_service;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  nsAutoString params;
+  params += NS_LITERAL_STRING(" /Protocol ");
+  params += aScheme;
+  params += NS_LITERAL_STRING(" /ApplicationPath ");
+  params += appPath;
+  params += NS_LITERAL_STRING(" /ApplicationName ");
+  params += appName;
 
-  nsCOMPtr<nsILocalFile> appHelper;
-  rv = dirSvc->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(appHelper));
+  rv = RunHelperApp(params);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = appHelper->Append(NS_LITERAL_STRING("regprot.exe"));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsAutoString helperPath;
-  rv = appHelper->GetPath(helperPath);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  helperPath += NS_LITERAL_STRING(" /Protocol ");
-  helperPath += aScheme;
-  helperPath += NS_LITERAL_STRING(" /ApplicationPath ");
-  helperPath += appPath;
-  helperPath += NS_LITERAL_STRING(" /ApplicationName ");
-  helperPath += NS_ConvertUTF8toUTF16(appName);
-  
-  STARTUPINFOW si = {sizeof(si), 0};
-  PROCESS_INFORMATION pi = {0};
-
-  BOOL ok = ::CreateProcessW(NULL, (LPWSTR) helperPath.get(), NULL, NULL,
-                             FALSE, 0, NULL, NULL, &si, &pi);
-
-  if (!ok)
-    return NS_ERROR_FAILURE;
-
-  CloseHandle(pi.hProcess);
-  CloseHandle(pi.hThread);
-  
+ 
   return NS_OK;
 }
 
@@ -411,10 +414,59 @@ NS_IMETHODIMP nsDesktopEnvironment::GetDefaultApplicationForURIScheme(const nsAS
   return NS_OK;
 }
 
+nsresult nsDesktopEnvironment::GetAppName(nsAString& _retval)
+{
+  nsresult rv;
+  nsCOMPtr<nsIXULAppInfo> appInfo(do_GetService("@mozilla.org/xre/app-info;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCAutoString appName;
+  rv = appInfo->GetName(appName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  _retval = NS_ConvertUTF8toUTF16(appName);
+
+  return NS_OK;
+} 
+
+// Return the full command-line for the current app
+nsresult nsDesktopEnvironment::GetAppPath(nsAString& _retval)
+{
+  nsAutoString appPath;
+  int numArgs;
+  LPWSTR* argv = ::CommandLineToArgvW(::GetCommandLineW(), &numArgs);
+  
+  WCHAR fullPath[4096];
+  if (!::GetFullPathNameW(argv[0], 4096, fullPath, NULL)) {
+    ::LocalFree(argv);
+    return NS_ERROR_FAILURE;
+  }
+  appPath = QuoteCommandLineString(nsString(fullPath));
+  
+  for (int i=1; i<numArgs; i++) {
+    appPath += NS_LITERAL_STRING(" ");
+    
+    // Don't include -url parameter
+    if (wcscmp(argv[i], L"-url") == 0)
+    {
+      i++; // Skip -url value as well
+      continue;
+    }
+    
+    appPath += QuoteCommandLineString(nsString(argv[i]));
+  }
+  
+  ::LocalFree(argv);
+
+  _retval = appPath;
+  return NS_OK;
+}
+
 // Quote the string if it contains spaces
 nsString nsDesktopEnvironment::QuoteCommandLineString(const nsAString& aString)
 {
-  if (aString.FindChar(' ') == -1)
+  // Don't quote command line options
+  if (aString.FindChar('-') == 0)
     return nsString(aString);
     
   nsString quoted = NS_LITERAL_STRING("\"");
@@ -423,6 +475,42 @@ nsString nsDesktopEnvironment::QuoteCommandLineString(const nsAString& aString)
   
   return quoted;
 }
+
+// Run the NSIS helper app with the specified parameters
+nsresult nsDesktopEnvironment::RunHelperApp(const nsAString& aParams)
+{
+  nsresult rv;
+  nsCOMPtr<nsIProperties> dirSvc(do_GetService("@mozilla.org/file/directory_service;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILocalFile> appHelper;
+  rv = dirSvc->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(appHelper));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = appHelper->Append(NS_LITERAL_STRING("regprot.exe"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsAutoString helperPath;
+  rv = appHelper->GetPath(helperPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  helperPath += NS_LITERAL_STRING(" ");
+  helperPath += aParams;
+ 
+  STARTUPINFOW si = {sizeof(si), 0};
+  PROCESS_INFORMATION pi = {0};
+
+  BOOL ok = ::CreateProcessW(NULL, (LPWSTR) helperPath.get(), NULL, NULL,
+                             FALSE, 0, NULL, NULL, &si, &pi);
+
+  if (!ok)
+    return NS_ERROR_FAILURE;
+
+  CloseHandle(pi.hProcess);
+  CloseHandle(pi.hThread);
+
+  return NS_OK;
+} 
 
 // Retrieves the HWND associated with a DOM window
 nsresult nsDesktopEnvironment::GetHWNDForDOMWindow(nsIDOMWindow* aWindow, void* hWnd)

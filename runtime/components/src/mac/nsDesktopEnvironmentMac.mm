@@ -222,6 +222,59 @@ nsDesktopEnvironment::~nsDesktopEnvironment()
 {
 }
 
+NS_IMETHODIMP nsDesktopEnvironment::GetAutoStart(PRBool* _retval)
+{
+  NSString *loginWindowPlistPath = [@"~/Library/Preferences/loginwindow.plist" stringByExpandingTildeInPath];
+  NSMutableDictionary *loginWindowPrefsDictionary = [NSMutableDictionary dictionaryWithContentsOfFile:loginWindowPlistPath];
+  NSMutableArray *launchItems = [NSMutableArray arrayWithArray:[loginWindowPrefsDictionary valueForKey:@"AutoLaunchedApplicationDictionary"]];
+  NSEnumerator *enumerator = [launchItems objectEnumerator];
+  id application;
+
+  // search for entry
+  *_retval = PR_FALSE;
+  while ((application = [enumerator nextObject]))
+  {
+    if ([[[application valueForKey:@"Path"] lastPathComponent] isEqualToString:[[[NSBundle mainBundle] bundlePath] lastPathComponent]])
+    {
+      *_retval = PR_TRUE;
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDesktopEnvironment::SetAutoStart(PRBool aAutoStart)
+{
+  // setup run on login
+  NSString *loginWindowPlistPath = [@"~/Library/Preferences/loginwindow.plist" stringByExpandingTildeInPath];
+  NSMutableDictionary *loginWindowPrefsDictionary = [NSMutableDictionary dictionaryWithContentsOfFile:loginWindowPlistPath];
+  NSMutableArray *launchItems = [NSMutableArray arrayWithArray:[loginWindowPrefsDictionary valueForKey:@"AutoLaunchedApplicationDictionary"]];
+  NSEnumerator *enumerator = [launchItems objectEnumerator];
+  id application;
+
+  // delete any existing entries
+  while ((application = [enumerator nextObject]))
+  {
+    if ([[[application valueForKey:@"Path"] lastPathComponent] isEqualToString:[[[NSBundle mainBundle] bundlePath] lastPathComponent]])
+    {
+      [launchItems removeObject:application];
+      [loginWindowPrefsDictionary setObject:launchItems forKey:@"AutoLaunchedApplicationDictionary"];
+      [loginWindowPrefsDictionary writeToFile:loginWindowPlistPath atomically:YES];
+    }
+  }
+
+  // add entry if login startup desired
+  if (aAutoStart)
+  {
+    NSString *fullPath = [NSString stringWithFormat: @"%@", [[NSBundle mainBundle] bundlePath]];
+    [launchItems addObject: [NSMutableDictionary dictionaryWithObjectsAndKeys:
+      fullPath, @"Path",
+      [NSNumber numberWithBool: YES], @"Hide", NULL]];
+    [loginWindowPrefsDictionary setObject:launchItems forKey:@"AutoLaunchedApplicationDictionary"];
+    [loginWindowPrefsDictionary writeToFile:loginWindowPlistPath atomically:YES];
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDesktopEnvironment::CreateShortcut(
   const nsAString& aName,
   nsIFile* aTarget,
