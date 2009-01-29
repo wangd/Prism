@@ -60,7 +60,7 @@ DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "$R2"
 
 ${GetOptions} $R0 "/ApplicationPath" $R3
 IfErrors finish +1
-WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "$R2" $\"$R3$\"
+WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "$R2" "$R3"
 
 finish:
 Quit
