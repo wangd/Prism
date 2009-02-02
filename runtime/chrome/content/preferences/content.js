@@ -24,9 +24,6 @@
 
 /* Development of this Contribution was supported by Yahoo! Inc. */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 // Stolen/adapted from browser/components/preferences/content.js
 var WebRunnerContentPrefs =
 {

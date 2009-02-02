@@ -44,8 +44,7 @@
 
 <overlay id="AdvancedPaneOverlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="paneAdvanced"
-            helpTopic="prefs-connection-settings">
+  <prefpane id="paneAdvanced">
 
     <preferences>
       <preference id="network.proxy.type"         name="network.proxy.type"         type="int" onchange="WebRunnerAdvancedPrefs.proxyTypeChanged();"/>

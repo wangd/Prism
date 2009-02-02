@@ -43,14 +43,6 @@
 <?xml-stylesheet href="chrome://mozapps/content/preferences/preferences.css"?>
 <?xml-stylesheet href="chrome://webrunner/skin/preferences/preferences.css"?>
 
-<!-- XXX This should be in applications.xul, but bug 393953 means putting it
-   - there causes the Applications pane not to work the first time you open
-   - the Preferences dialog in a browsing session, so we work around the problem
-   - by putting it here instead.
-   -->
-<!-- <?xml-stylesheet href="chrome://browser/content/preferences/handlers.css"?>
-<?xml-stylesheet href="chrome://browser/skin/preferences/applications.css"?> -->
-
 <!DOCTYPE prefwindow [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 <!ENTITY % preferencesDTD SYSTEM "chrome://webrunner/locale/preferences/preferences.dtd">

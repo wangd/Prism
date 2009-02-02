@@ -33,6 +33,7 @@ EXPORTED_SYMBOLS = ["HostUI"];
  */
 var HostUI = {
   _document : null,
+  _window :   null,
 
   log : function(aMsg) {
     var console = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
@@ -41,6 +42,14 @@ var HostUI = {
 
   getBrowser : function() {
     return this._document.getElementById("browser_content");
+  },
+  
+  showAbout : function() {
+    this._window.openDialog("chrome://webrunner/content/about.xul", "about", "centerscreen,modal");
+  },
+  
+  showPreferences : function(paneToShow) {
+    this._window.openDialog("chrome://webrunner/content/preferences/preferences.xul", "preferences", "chrome,extrachrome,dialog=no,centerscreen,toolbar,modal", paneToShow);
   },
   
   showAlert : function(aImage, aTitle, aMsg) {
