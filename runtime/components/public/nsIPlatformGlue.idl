@@ -126,11 +126,18 @@ interface nsIPlatformGlue : nsISupports
    * @param uriScheme The scheme to register.
    * @param uriString The address to load for a URI of the given scheme. "%s" is used as a
    *    place holder for the URI (e.g. "http://www.mymail.com?compose&to=%s").
-   * @param callback If specified, the callback is invoked when the application is already running
-   *    instead of navigating to a new page.
    */
-  void registerProtocolHandler(in AString uriScheme, in AString uriString, in nsIPlatformProtocolCallback callback);
-  
+  void registerProtocolHandler(in AString uriScheme, in AString uriString);
+
+  /**
+   * Register a callback to be invoked (instead of navigating to the URI specified in
+   * registerProtocolHandler) when the user loads a URI with the specified scheme.
+   *
+   * @param callback Callback to invoke.
+   */
+   
+  void registerProtocolCallback(in AString uriScheme, in nsIPlatformProtocolCallback callback);
+
   /**
    * Unregister the application as the default handle for the specified URI scheme.
    *

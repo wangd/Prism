@@ -227,10 +227,10 @@ PlatformGlue.prototype = {
 
   _xpcom_factory : PlatformGlueFactory,
 
-  _xpcom_categories : [{
-    category: "JavaScript global property",
-    entry: "platform"
-  }],
+  _xpcom_categories : [
+    { category: "JavaScript global property", entry: "platform"},
+    { category: "app-startup", service: true }
+  ],
 
   _prefs : Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch),
   _window : null,
@@ -242,6 +242,7 @@ PlatformGlue.prototype = {
      Ci.nsISecurityCheckedComponent,
      Ci.nsISupportsWeakReference,
      Ci.nsIWebProgressListener,
+     Ci.nsIObserver,
      Ci.nsIClassInfo]),
 
   // nsIClassInfo
@@ -253,6 +254,7 @@ PlatformGlue.prototype = {
                       Ci.nsISecurityCheckedComponent,
                       Ci.nsISupportsWeakReference,
                       Ci.nsIWebProgressListener,
+                      Ci.nsIObserver,
                       Ci.nsIClassInfo];
     aCount.value = interfaces.length;
     return interfaces;
@@ -305,6 +307,25 @@ PlatformGlue.prototype = {
   },
 
   onSecurityChange: function(aWebProgress, aRequest, aState) {
+  },
+  
+  //nsIObserver
+  observe: function (aSubject, aTopic, aData) {
+    switch (aTopic) {
+    case "app-startup":
+      var observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+      observerService.addObserver(this, "profile-after-change", false);
+      break;
+      
+    case "profile-after-change":
+      // Register factories for any protocol handlers
+      var prefs = this._prefs.QueryInterface(Ci.nsIPrefService).getBranch(PRISM_PROTOCOL_PREFIX);
+      var protocols = prefs.getChildList("", {});
+      for (protocolNum in protocols) {
+        this._registerProtocolFactory(protocols[protocolNum]);
+      }
+      break;
+    }
   },
   
   //nsIPlatformGlue
@@ -369,24 +390,27 @@ PlatformGlue.prototype = {
     return this._icon;
   },
   
-  registerProtocolHandler: function registerProtocol(uriScheme, uriString, callback) {
+  _registerProtocolFactory : function(uriScheme) {
+    var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+    var contractId = "@mozilla.org/network/protocol;1?name=" + uriScheme;
+    registrar.registerFactory(PROTOCOL_HANDLER_CID, PROTOCOL_HANDLER_CLASSNAME, contractId,
+      MakeProtocolHandlerFactory(contractId));
+  },
+  
+  registerProtocolHandler: function registerProtocol(uriScheme, uriString) {
     // First register the protocol with the shell
     var shellService = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIShellService);
     shellService.registerProtocol(uriScheme, null, null);
     
     // Register with the component registrar
-    var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-    var contractId = "@mozilla.org/network/protocol;1?name=" + uriScheme;
-    registrar.registerFactory(PROTOCOL_HANDLER_CID, PROTOCOL_HANDLER_CLASSNAME, contractId,
-      MakeProtocolHandlerFactory(contractId));
+    this._registerProtocolFactory(uriScheme);
     
     // Then store a pref so we remember the URI string we want to load
     this._prefs.setCharPref(PRISM_PROTOCOL_PREFIX + uriScheme, uriString);
-	
-    // Register the callback, if any
-    if (callback) {
-      this._protocolCallbacks[uriScheme] = callback;
-    }
+  },
+  
+  registerProtocolCallback : function(uriScheme, callback) {
+    this._protocolCallbacks[uriScheme] = callback;
   },
   
   unregisterProtocolHandler: function unregisterProtocol(uriScheme) {
