@@ -242,7 +242,7 @@ NS_IMETHODIMP nsDesktopEnvironment::GetAutoStart(PRBool* _retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDesktopEnvironment::SetAutoStart(PRBool aAutoStart)
+NS_IMETHODIMP nsDesktopEnvironment::SetAutoStart(PRBool aAutoStart, PRBool aIconic)
 {
   // setup run on login
   NSString *loginWindowPlistPath = [@"~/Library/Preferences/loginwindow.plist" stringByExpandingTildeInPath];

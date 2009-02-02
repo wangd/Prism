@@ -122,7 +122,15 @@ WebRunnerCommandLineHandler.prototype = {
 
     for (var index in WebAppProperties.flags) {
       var key = WebAppProperties.flags[index];
-      var value = aCmdLine.handleFlagWithParam(key, false);
+      try {
+        var value = aCmdLine.handleFlagWithParam(key, false);
+      }
+      catch(e) {
+        if (e.result == Components.results.NS_ERROR_INVALID_ARG) {
+          // Boolean parameters are true if they don't have an explicit value
+          value = true;
+        }
+      }
       if (value != null)
         WebAppProperties.setParameter(key, value);
     }

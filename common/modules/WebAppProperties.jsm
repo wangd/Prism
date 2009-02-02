@@ -155,11 +155,12 @@ var WebAppProperties =
   include : null,
   exclude : null,
   refresh : null,
+  iconic : false,
   appBundle : null,
   appRoot : null,
   installRoot : null,
   flags : ["id", "name", "uri", "icon", "status", "location", "sidebar", "trayicon", "navigation",
-           "credits", "splashscreen", "include", "exclude", "refresh"],
+           "credits", "splashscreen", "include", "exclude", "refresh", "iconic"],
 
   getInstallRoot : function() {
     if (!this.installRoot) {
@@ -206,7 +207,7 @@ var WebAppProperties =
     if (WebAppProperties.flags.indexOf(aName) == -1)
       return;
 
-    if (typeof WebAppProperties[aName] == "boolean")
+    if (typeof WebAppProperties[aName] == "boolean" && typeof aValue != "boolean")
       aValue = (aValue.toLowerCase() == "true" || aValue.toLowerCase() == "yes");
 
     WebAppProperties[aName] = aValue;

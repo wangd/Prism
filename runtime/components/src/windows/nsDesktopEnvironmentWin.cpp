@@ -153,7 +153,7 @@ NS_IMETHODIMP nsDesktopEnvironment::GetAutoStart(PRBool* _retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDesktopEnvironment::SetAutoStart(PRBool aAutoStart)
+NS_IMETHODIMP nsDesktopEnvironment::SetAutoStart(PRBool aAutoStart, PRBool aIconic)
 {
   nsresult rv;
   nsAutoString params;
@@ -167,6 +167,10 @@ NS_IMETHODIMP nsDesktopEnvironment::SetAutoStart(PRBool aAutoStart)
     nsAutoString commandLine;
     rv = GetAppPath(commandLine);
     NS_ENSURE_SUCCESS(rv, rv);
+    
+    if (aIconic) {
+      commandLine += NS_LITERAL_STRING(" -iconic");
+    }
 
     params += NS_LITERAL_STRING(" /ApplicationPath ");
     params += commandLine;

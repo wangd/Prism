@@ -54,7 +54,12 @@ interface nsIDesktopEnvironment : nsISupports
   /**
    * Register the application to run automatically on startup.
    */
-  attribute boolean autoStart;
+  void setAutoStart(in boolean autoStart, in boolean iconic);
+  
+  /**
+   * Check whether the application is registered to run automatically.
+   */
+  readonly attribute boolean autoStart;
 
   /**
    * Create a shortcut for the application.

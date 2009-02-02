@@ -1,3 +1,5 @@
+#filter substitution
+
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1
  *
@@ -686,6 +688,13 @@ var WebRunner = {
       // Since we are installing, we need to close the application
       window.close();
     }
+
+#ifdef XP_WIN
+    if (WebAppProperties.iconic && WebAppProperties.trayicon) {
+      // Run as an icon. Right now we only support Windows system tray.
+      this._xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
+    } 
+#endif
 
     // Hookup the browser window callbacks
     this._xulWindow.XULBrowserWindow = this;
