@@ -47,6 +47,7 @@ var WebRunner = {
   _windowCreator : null,
   _minimizedState : 0,
   _zoomLevel : 1,
+  _loadError : false,
 
   _getBrowser : function() {
     return document.getElementById("browser_content");
@@ -168,7 +169,12 @@ var WebRunner = {
     // Don't fire for iframes
     if (event.target == browser.contentDocument) {
       browser.contentWindow.addEventListener("unload", WebRunner._contentUnload, true);
-      WebAppProperties.script.load();
+      if (!WebRunner._loadError) {
+        WebAppProperties.script.load();
+      }
+      else if (WebAppProperties.script.error) {
+        WebAppProperties.script.error();
+      }
     }
   },
 
@@ -977,12 +983,21 @@ var WebRunner = {
     }
 
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_TRANSFERRING) {
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+        this._loadError = false;
+      }
+      else if (aStateFlags & Ci.nsIWebProgressListener.STATE_TRANSFERRING) {
         WebAppProperties.script["window"] = aWebProgress.DOMWindow;
       }
       else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         var domDocument = aWebProgress.DOMWindow.document;
         this.attachDocument(domDocument);
+        
+        if (aWebProgress.DOMWindow == this._getBrowser().contentWindow) {
+          if (aStatus != Components.results.NS_OK) {
+            this._loadError = true;
+          }
+        }
       }
     }
   },
