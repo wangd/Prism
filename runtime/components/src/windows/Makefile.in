@@ -60,6 +60,7 @@ REQUIRES	= \
     widget \
     dom \
     caps \
+    content \
     prism_win \
     $(NULL)
 

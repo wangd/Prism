@@ -228,6 +228,11 @@ NS_IMETHODIMP nsDockTile::Hide()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDockTile::Minimize()
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDockTile::SetBehavior(PRUint32 aBehavior)
 {
   // Ignored on OS X

@@ -58,6 +58,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsINativeIcon.h"
 #include "nsIIOService.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIURI.h"
 #include "nsIXULWindow.h"
 #include "nsServiceManagerUtils.h"
@@ -445,6 +446,18 @@ nsNotificationArea::SetBehavior(PRUint32 aBehavior)
 }
 
 NS_IMETHODIMP
+nsNotificationArea::Minimize()
+{
+  NS_ENSURE_STATE(mWindow);
+  
+  nsresult rv;
+  rv = DispatchEvent(mWindow, nsnull, NS_LITERAL_STRING("minimizing"), PR_TRUE, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNotificationArea::ShowNotification(const nsAString& aTitle,
                                    const nsAString& aText,
                                    PRUint32 aTimeout,
@@ -563,6 +576,7 @@ nsNotificationArea::DispatchEvent(
   nsIDOMWindow* aDOMWindow,
   nsIDOMEventTarget* aEventTarget,
   const nsAString& aType,
+  PRBool canBubble,
   PRBool* aPreventDefault)
 {
   NS_ENSURE_ARG(aDOMWindow);
@@ -588,7 +602,14 @@ nsNotificationArea::DispatchEvent(
   rv = documentEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = event->InitEvent(aType, PR_TRUE, PR_TRUE);
+  rv = event->InitEvent(aType, canBubble, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // Need to make event trusted so content can cause it to be dispatched (e.g. minimizing the window via the API)
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = privateEvent->SetTrusted(PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool ret;
@@ -682,7 +703,7 @@ nsNotificationArea::ListenerWindowProc(HWND hwnd,
         nsCOMPtr<nsIDOMElement> element = (nsIDOMElement *) itemInfo.dwItemData;
         nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(element));
         
-        DispatchEvent(notificationArea->mWindow, eventTarget, NS_LITERAL_STRING("DOMActivate"), nsnull);
+        DispatchEvent(notificationArea->mWindow, eventTarget, NS_LITERAL_STRING("DOMActivate"), PR_FALSE, nsnull);
       }
       return FALSE;
     default:
@@ -696,7 +717,7 @@ nsNotificationArea::ListenerWindowProc(HWND hwnd,
       }
       break;
     case WM_LBUTTONDOWN:
-      DispatchEvent(notificationArea->mWindow, nsnull, NS_LITERAL_STRING("DOMActivate"), nsnull);
+      DispatchEvent(notificationArea->mWindow, nsnull, NS_LITERAL_STRING("DOMActivate"), PR_TRUE, nsnull);
       break;
   }
 
@@ -765,7 +786,7 @@ nsNotificationArea::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     // dispatch the event
     PRBool preventDefault;
     nsresult rv;
-    rv = DispatchEvent(domWindow, nsnull, typeArg, &preventDefault);
+    rv = DispatchEvent(domWindow, nsnull, typeArg, PR_TRUE, &preventDefault);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (preventDefault)

@@ -85,7 +85,7 @@ protected:
   nsresult CreateMenu(nsIDOMElement* aElement, HMENU& subMenu);
   
   static nsresult DispatchEvent(nsIDOMWindow* aDOMWindow, nsIDOMEventTarget* aEventTarget, const nsAString& aType,
-    PRBool* aPreventDefault);
+    PRBool canBubble, PRBool* aPreventDefault);
   static void ShowPopupMenu(HWND hwnd, HMENU hmenu);
 
   static LRESULT CALLBACK ListenerWindowProc(

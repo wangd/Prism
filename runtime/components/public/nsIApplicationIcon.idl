@@ -92,6 +92,11 @@ interface nsIApplicationIcon : nsISupports
   void hide();
   
   /**
+   * Minimize the window to the notification area.
+   */
+  void minimize();
+  
+  /**
    * Display a popup over the icon. Displays a normal alert (using nsIAlertsService) on
    * platforms that don't support balloon tips.
    */
