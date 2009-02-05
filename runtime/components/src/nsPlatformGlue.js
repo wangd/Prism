@@ -449,7 +449,12 @@ PlatformGlue.prototype = {
   isRegisteredProtocolHandler : function isRegisteredProtocolHandler(uriScheme) {
     var shellService = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIShellService);
     var appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
-    return (shellService.getDefaultApplicationForURIScheme(uriScheme) == appInfo.name);
+    try {
+      return (shellService.getDefaultApplicationForURIScheme(uriScheme) == appInfo.name);
+    }
+    catch(e) {
+      return false;
+    }
   }
 }
 
