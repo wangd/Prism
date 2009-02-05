@@ -60,6 +60,22 @@ WebRunnerCommandLineHandler.prototype = {
       webapp = aCmdLine.handleFlagWithParam("webapp", false);
     }
 
+#ifdef XP_MACOSX
+    // On Mac, check for a webapp.ini inside the current app bundle
+    if (!webapp) {
+      var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+      var resourcesRoot = dirSvc.get("resource:app", Ci.nsIFile);
+      resourcesRoot.append("webapp");
+      
+      var iniPath = resourcesRoot.clone();
+      iniPath.append("webapp.ini");
+
+      if (iniPath.exists()) {
+        webapp = resourcesRoot.path;
+      }
+    }
+#endif    
+    
     if (webapp) {
       // Check for a bundle first
       try {
