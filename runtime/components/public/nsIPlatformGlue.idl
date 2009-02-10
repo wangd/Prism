@@ -162,4 +162,9 @@ interface nsIPlatformGlue : nsISupports
    * @param uriScheme Protocol to check.
    */
   boolean isRegisteredProtocolHandler(in AString uriScheme);
+  
+  /**
+   * Clear private data (cache, history, etc.).
+   */
+  void clearPrivateData();
 };

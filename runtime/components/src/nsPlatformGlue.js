@@ -455,6 +455,12 @@ PlatformGlue.prototype = {
     catch(e) {
       return false;
     }
+  },
+  
+  clearPrivateData : function clearPrivateData() {
+    Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader).
+      loadSubScript("chrome://webrunner/content/browser/sanitize.js", null);
+    Sanitizer.sanitize();
   }
 }
 

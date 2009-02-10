@@ -20,6 +20,8 @@ webrunner.jar:
 * content/preferences/preferences.xul  (content/preferences/preferences.xul)
   content/preferences/preferences.js   (content/preferences/preferences.js)
   content/unknownContentType.xul       (content/unknownContentType.xul)
+* content/browser/sanitize.xul         (content/browser/sanitize.xul)
+* content/browser/sanitize.js          (content/browser/sanitize.js)
   branding/brand.dtd                   (locale/@AB_CD@/brand/brand.dtd)
   branding/brand.properties            (locale/@AB_CD@/brand/brand.properties)
   branding/icon128.png                 (locale/@AB_CD@/brand/icon128.png)
@@ -53,6 +55,8 @@ classic.jar:
   preferences/connection.dtd           (locale/@AB_CD@/preferences/connection.dtd)
   preferences/preferences.dtd          (locale/@AB_CD@/preferences/preferences.dtd)
   preferences/preferences.properties   (locale/@AB_CD@/preferences/preferences.properties)
+  browser/sanitize.dtd                 (locale/@AB_CD@/browser/sanitize.dtd)
+  browser/browser.properties           (locale/@AB_CD@/browser/browser.properties)
 # Prism-specific overrides of generic strings
 * netError.dtd                         (locale/@AB_CD@/overrides/netError.dtd)
 % override chrome://global/locale/netErrorApp.dtd chrome://webrunner/locale/netError.dtd
