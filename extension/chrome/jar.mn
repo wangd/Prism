@@ -6,7 +6,6 @@ refractor.jar:
 %	locale	refractor	@AB_CD@	%locale/@AB_CD@/
 % overlay	chrome://browser/content/browser.xul  chrome://refractor/content/refractor-overlay.xul
 % resource prism .
-% resource prism-runtime .
   content/refractor-overlay.js                  (content/refractor-overlay.js)
   content/refractor-overlay.xul                 (content/refractor-overlay.xul)
   skin/classic/refractor.css                    (skin/refractor.css)

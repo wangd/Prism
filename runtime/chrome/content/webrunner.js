@@ -30,8 +30,8 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-Components.utils.import("resource://prism-runtime/modules/WebAppProperties.jsm");
-Components.utils.import("resource://prism-runtime/modules/HostUI.jsm");
+Components.utils.import("resource://prism/modules/WebAppProperties.jsm");
+Components.utils.import("resource://prism/modules/HostUI.jsm");
 
 window.addEventListener("load", function() { WebRunner.startup(); }, false);
 
@@ -211,9 +211,6 @@ var WebRunner = {
         if (keys[i].className == "nav")
           keys[i].parentNode.removeChild(keys[i]);
     }
-
-    // Default the name of the window to the webapp name
-    document.title = WebAppProperties.name;
   },
 
   _handleWindowClose : function(event) {
@@ -638,6 +635,9 @@ var WebRunner = {
       return;
     }
 
+    // Default the name of the window to the webapp name
+    document.title = WebAppProperties.name;
+
     // Set browser homepage as initial webapp page
     if (WebAppProperties.uri) {
       var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
@@ -840,7 +840,7 @@ var WebRunner = {
         goDoCommand(aCmd);
         break;
       case "cmd_prefs":
-        window.openDialog("chrome://webrunner/content/preferences/preferences.xul", "preferences", "chrome,extrachrome,dialog=no,centerscreen,toolbar");
+        window.openDialog("chrome://webrunner/content/preferences/preferences.xul", "preferences", "chrome,titlebar,toolbar,centerscreen,dialog=no");
         break;
       case "cmd_print":
         PrintUtils.print();

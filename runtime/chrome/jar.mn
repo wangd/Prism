@@ -1,11 +1,14 @@
 #filter substitution
 
 webrunner.jar:
+#ifdef XP_MACOSX
+% override chrome://branding/locale/brand.dtd resource://appbundle/branding/brand.dtd
+% override chrome://branding/locale/brand.properties resource://appbundle/branding/brand.properties
+#endif
 % content webrunner %content/ xpcnativewrappers=no
 % content branding %branding/
 % locale branding @AB_CD@ %branding/
 % overlay chrome://mozapps/content/downloads/unknownContentType.xul chrome://webrunner/content/unknownContentType.xul
-% resource prism-runtime .
   content/about.xul                    (content/about.xul)
   content/about.js                     (content/about.js)
   content/preferences/content.xul      (content/preferences/content.xul)

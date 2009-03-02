@@ -25,7 +25,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 Components.utils.import("resource://prism/modules/ImageUtils.jsm");
-Components.utils.import("resource://prism-runtime/modules/WebAppProperties.jsm");
+Components.utils.import("resource://prism/modules/WebAppProperties.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -194,10 +194,12 @@ var WebAppInstall =
     // Launch target with webapp
 #ifdef XP_MACOSX
     process.init(shortcut);
+    var restartArgs = [];
 #else
     process.init(target);
+    var restartArgs = ["-override", appOverride.path, "-webapp", id];
 #endif
-    process.run(false, ["-override", appOverride.path, "-webapp", id], 4);
+    process.run(false, restartArgs, restartArgs.length);
   },
 
   createApplication : function(params, clean) {
@@ -268,6 +270,12 @@ var WebAppInstall =
 
       bufferedStream.writeFrom(params.icon.stream, params.icon.stream.available());
       bufferedStream.close();
+      
+#ifdef XP_MACOSX
+      // Copy the icon into the bundle as well
+      var resources = appSandbox.parent;
+      appIcon.copyTo(resources, appIcon.leafName);
+#endif
     }
   },
 
@@ -312,39 +320,28 @@ var WebAppInstall =
   _createShortcut : function(target, name, arguments, extensionDir, root, locations) {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
-    // Locate the webapp resources
-    var appOverride = root.clone();
-    appOverride.append("override.ini");
-
-    arguments = "-override \"" + appOverride.path + "\" " + arguments;
-
-    var appIcon = root.clone();
-    appIcon.append("icons");
-    appIcon.append("default");
-    appIcon.append(WebAppProperties.icon + ImageUtils.getNativeIconExtension());
-
     var bundle = null;
     if (locations.indexOf("desktop") > -1) {
       var desk = dirSvc.get("Desk", Ci.nsIFile);
-      bundle = this._createBundle(target, name, arguments, extensionDir, appIcon, desk);
+      bundle = this._createBundle(target, name, arguments, extensionDir, desk);
     }
     if (locations.indexOf("applications") > -1) {
       var apps = dirSvc.get("LocApp", Ci.nsIFile);
       if (!apps.exists())
         apps.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
-      bundle = this._createBundle(target, name, arguments, extensionDir, appIcon, apps);
+      bundle = this._createBundle(target, name, arguments, extensionDir, apps);
     }
 
     // Return the exec script file so it can be spawned (for restart)
     var scriptFile = bundle.clone();
     scriptFile.append("Contents");
     scriptFile.append("MacOS");
-    scriptFile.append(name);
+    scriptFile.append("prism");
 
     return scriptFile;
   },
 
-  _createBundle : function(target, name, arguments, extensionDir, icon, location) {
+  _createBundle : function(target, name, arguments, extensionDir, location) {
     var contents =
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
     "<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
@@ -353,9 +350,9 @@ var WebAppInstall =
     "<key>CFBundleIdentifier</key>\n" +
     "<string>org.mozilla.prism." + WebAppProperties.id.substring(0, WebAppProperties.id.indexOf("@")) + "</string>\n" +
     "<key>CFBundleExecutable</key>\n" +
-    "<string>" + name + "</string>\n" +
+    "<string>prism</string>\n" +
     "<key>CFBundleIconFile</key>\n" +
-    "<string>" + icon.leafName + "</string>\n" +
+    "<string>" + WebAppProperties.icon + ImageUtils.getNativeIconExtension() + "</string>\n" +
     "</dict>\n" +
     "</plist>";
 
@@ -376,7 +373,12 @@ var WebAppInstall =
     var resources = location.clone();
     resources.append("Resources");
     resources.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
-    icon.copyTo(resources, icon.leafName);
+    
+    // On Mac, set the app root to the webapp subdirectory of the app bundle
+    var appRoot = resources.clone();
+    appRoot.append("webapp");
+    appRoot.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
+    WebAppProperties.appRoot = appRoot;
 
     var macos = location.clone();
     macos.append("MacOS");
@@ -394,12 +396,19 @@ var WebAppInstall =
       prismRoot = greHome.clone();
       prismRoot.append("Resources");
     }
+    
+    // Create the locale file with the app name (for the menu bar)
+    var infoPlistStrings = resources.clone();
+    infoPlistStrings.append("en.lproj");
+    infoPlistStrings.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
+    infoPlistStrings.append("InfoPlist.strings");
+    FileIO.stringToFile("CFBundleName = " + name + ";\n", infoPlistStrings, "UTF-16");
 
     if (extensionDir) {
       // Can't use the Firefox stub so we need to use the XR stub supplied with the extension
       greHome.append("MacOS");
       stub = prismRoot.clone();
-      stub.append("xulrunner");
+      stub.append("prism");
     }
     else {
       greHome.append("Frameworks");
@@ -412,34 +421,15 @@ var WebAppInstall =
     var applicationIni = prismRoot.clone();
     applicationIni.append("application.ini");
 
-    applicationIni.copyTo(resources, "application.ini");
-
-    // Create the extension file (points to the real extension)
-    var extension = prismRoot.clone();
-    extension.append("extensions");
-    extension.append("prism-runtime@developer.mozilla.org");
-
-    var extensionFile = resources.clone();
-    extensionFile.append("extensions");
-    extensionFile.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
-    extensionFile.append(extension.leafName);
-    FileIO.stringToFile(extension.path, extensionFile);
+    var iniString = FileIO.fileToString(applicationIni);
+    
+    applicationIni = resources.clone();
+    applicationIni.append("application.ini");
+    iniString += "\n[Environment]\nGRE_HOME=" + greHome.path + "\nPRISM_HOME=" + prismRoot.path + "\n";
+    FileIO.stringToFile(iniString, applicationIni);
 
     // Create the branding files and chrome overrides
     this._createBrandingFiles(resources, name);
-
-    // Create the shell script to launch the app
-    var cmd = "#!/bin/sh\n";
-
-    // Set GRE_HOME to the location of the Prism XULRunner runtime
-    cmd += "export GRE_HOME=\"" + greHome.path + "\"\n";
-
-    // Spawn the Prism stub in our bundle when the bundle is executed
-    cmd += "exec \"`dirname \"$0\"`/prism\" " + arguments + "\n";
-
-    var script = macos.clone();
-    script.append(name);
-    FileIO.stringToFile(cmd, script, 0755);
 
     return bundle;
   },
@@ -453,22 +443,13 @@ var WebAppInstall =
     var dtd = "<!ENTITY brandShortName \"" + name + "\">\n<!ENTITY brandFullName \"" + name + "\">\n";
     var dtdFile = branding.clone();
     dtdFile.append("brand.dtd");
-    FileIO.stringToFile(dtd, dtdFile, PR_PERMS_FILE);
+    FileIO.stringToFile(dtd, dtdFile);
 
     // Create properties
     var properties = "brandShortName=" + name + "\nbrandFullName=" + name + "\n";
     var propertiesFile = branding.clone();
     propertiesFile.append("brand.properties");
-    FileIO.stringToFile(properties, propertiesFile, PR_PERMS_FILE);
-
-    // Create manifest
-    var manifest = "override chrome://branding/locale/brand.dtd resource://app/branding/brand.dtd\n";
-    manifest += "override chrome://branding/locale/brand.properties resource://app/branding/brand.properties\n";
-    var manifestFile = resources.clone();
-    manifestFile.append("chrome");
-    manifestFile.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
-    manifestFile.append("chrome.manifest");
-    FileIO.stringToFile(manifest, manifestFile, PR_PERMS_FILE);
+    FileIO.stringToFile(properties, propertiesFile);
   },
 #else
 #ifdef XP_UNIX

@@ -44,12 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= chrome components
 
-export XPI_NAME        = prism-runtime
-INSTALL_EXTENSION_ID   = prism-runtime@developer.mozilla.org
-XPI_PKGNAME            = prism-runtime
-
-DIST_FILES = install.rdf
-
 APP_UA_NAME = $(shell echo $(MOZ_APP_DISPLAYNAME) | sed -e's/[^A-Za-z]//g')
 DEFINES += -DAPP_NAME=$(MOZ_APP_DISPLAYNAME) -DAPP_VERSION=$(MOZ_APP_VERSION) -DAPP_UA_NAME=$(APP_UA_NAME)
 

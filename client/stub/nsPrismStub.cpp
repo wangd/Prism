@@ -55,6 +55,7 @@
 #define R_OK 04
 #elif defined(XP_MACOSX)
 #include <CFBundle.h>
+#include <unistd.h>
 #define PATH_SEPARATOR_CHAR '/'
 #elif defined (XP_OS2)
 #define INCL_DOS
@@ -150,10 +151,62 @@ main(int argc, char **argv)
   char *lastSlash;
 
   char iniPath[MAXPATHLEN];
-  char tmpPath[MAXPATHLEN];
+  char webappPath[MAXPATHLEN] = { 0 };
+  char overridePath[MAXPATHLEN] = { 0 };
   char greDir[MAXPATHLEN];
   PRBool greFound = PR_FALSE;
+  char** newArgv = nsnull;
+  char newArgc = 0;
+  char* overrideFlag = "-override";
+  char *webappFlag = "-webapp";
+  
+  // Check for -override and find webapp home if there isn't one.
+  int i;
+  for (i=0; i<argc; i++) {
+    if (strcmp(argv[i], overrideFlag) == 0) {
+      if (i < argc-1) {
+        // -override without value will report an error in XRE_main
+        strcpy(overridePath, argv[i+1]);
+      }
+    }
+    else if (strcmp(argv[i], webappFlag) == 0) {
+      if (i < argc-1) {
+        // -webapp without value will report an error in nsCommandLineHandler.js
+        strcpy(webappPath, argv[i+1]);
+      }
+    }
+  }
 
+  if (strlen(webappPath) > 0) {
+    // Set the environment variable in case we restart without preserving command-line args
+    // (e.g. extension install or application update).
+    SetEnvironmentVariable("PRISM_WEBAPP", webappPath, nsnull);
+  }
+  else {
+    // Check whether the variable is already set
+#if defined(XP_WIN)
+    ::GetEnvironmentVariableA("PRISM_WEBAPP", webappPath, MAXPATHLEN);
+#else
+    const char* prismWebapp = getenv("PRISM_WEBAPP");
+    if (prismWebapp) {
+      strcpy(webappPath, prismWebapp);
+    }
+#endif
+  }
+  
+  if (strlen(overridePath) == 0 && strlen(webappPath) > 0) {
+    // Check for override.ini in the webapp home.
+    strcpy(overridePath, webappPath);
+    int len = strlen(overridePath);
+    overridePath[len] = PATH_SEPARATOR_CHAR;
+    strncpy(overridePath+len+1, "override.ini", sizeof(overridePath)-(len+1));
+
+    if (!access(greDir, R_OK)) {
+      // No override.ini there
+      overridePath[0] = '\0';
+    }
+  }
+    
 #if defined(XP_MACOSX)
   CFBundleRef appBundle = CFBundleGetMainBundle();
   if (!appBundle)
@@ -173,6 +226,18 @@ main(int argc, char **argv)
                                           absResourcesURL,
                                           CFSTR("application.ini"),
                                           false);
+  CFURLRef webappRootURL = 
+    CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault,
+                                          absResourcesURL,
+                                          CFSTR("webapp"),
+                                          false);
+  CFURLRef overrideFileURL =
+    CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault,
+                                          webappRootURL,
+                                          CFSTR("override.ini"),
+                                          false);
+ 
+  CFRelease(webappRootURL);
   CFRelease(absResourcesURL);
   if (!iniFileURL)
     return 1;
@@ -186,6 +251,23 @@ main(int argc, char **argv)
   CFStringGetCString(iniPathStr, iniPath, sizeof(iniPath),
                      kCFStringEncodingUTF8);
   CFRelease(iniPathStr);
+  
+  if ((strlen(overridePath) == 0) && overrideFileURL) {
+    // Check whether the file exists
+    FSRef fsRef;
+  	CFURLGetFSRef(overrideFileURL, &fsRef);
+    if (FSGetCatalogInfo(&fsRef, kFSCatInfoNone, NULL, NULL, NULL, NULL ) == noErr) {
+      // Add to XRE_main arguments
+      CFStringRef overridePathStr =
+        CFURLCopyFileSystemPath(overrideFileURL, kCFURLPOSIXPathStyle);
+      CFRelease(overrideFileURL);
+      if (overridePathStr) {
+        CFStringGetCString(overridePathStr, overridePath, sizeof(overridePath),
+                           kCFStringEncodingUTF8);
+        CFRelease(overridePathStr);
+      }
+    }
+  }
 
 #else
 
@@ -377,8 +459,38 @@ main(int argc, char **argv)
       NS_NewNativeLocalFile(nsDependentCString(greDir), PR_FALSE,
                             &appData->xreDirectory);
     }
+    
+#if defined(XP_MACOSX)
+    nsAutoString appBundlePath;
+    appData->directory->GetPath(appBundlePath);
+    setenv("PRISM_APP_BUNDLE", NS_ConvertUTF16toUTF8(appBundlePath).get(), 1);
+    
+    const char* prismHome = getenv("PRISM_HOME");
+    if (prismHome) {
+      NS_NewNativeLocalFile(nsCString(prismHome), PR_FALSE, &appData->directory);
+    }
+#endif
 
-    retval = XRE_main(argc, argv, appData);
+    // If we have an override path, copy it into the command-line args
+    if (strlen(overridePath) > 0) {
+      newArgv = new char*[argc+3];
+      newArgv[0] = argv[0];
+      newArgv[1] = overrideFlag;
+      newArgv[2] = overridePath;
+
+      for (i=1; i<argc; i++) {
+        newArgv[i+2] = argv[i];
+      }
+      
+      newArgc = argc+2;
+      newArgv[newArgc] = nsnull;
+    }
+
+    retval = XRE_main(newArgc ? newArgc : argc, newArgv ? newArgv : argv, appData);
+    
+    if (newArgv) {
+      delete newArgv;
+    }
   }
 
   NS_LogTerm();

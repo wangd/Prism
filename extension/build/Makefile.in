@@ -43,6 +43,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+APP_BINARY = $(MOZ_APP_NAME)$(BIN_SUFFIX)
+
 MODULE		= refractor
 
 XPI_NAME               = refractor
@@ -54,7 +56,7 @@ libs::
 		$(NSINSTALL) -D $(FINAL_TARGET)/components; \
 	fi
 
-	$(INSTALL) $(DIST)/bin/extensions/prism-runtime@developer.mozilla.org/components/* $(FINAL_TARGET)/components
+	$(INSTALL) $(DIST)/bin/components/* $(FINAL_TARGET)/components
 	rm $(FINAL_TARGET)/components/*.js
 
 	if test ! -d $(FINAL_TARGET)/modules; then \
@@ -77,5 +79,5 @@ libs::
 
 # On Mac we need the XULRunner stub since we can't use firefox -app
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-	cp $(LIBXUL_DIST)/bin/xulrunner$(BIN_SUFFIX) $(FINAL_TARGET)/prism/$(APP_BINARY)
+	cp $(DIST)/bin/$(APP_BINARY) $(FINAL_TARGET)/prism/
 endif

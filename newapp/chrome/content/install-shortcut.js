@@ -29,7 +29,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-Components.utils.import("resource://prism-runtime/modules/WebAppProperties.jsm");
+Components.utils.import("resource://prism/modules/WebAppProperties.jsm");
 Components.utils.import("resource://prism/modules/ImageUtils.jsm");
 Components.utils.import("resource://prism/modules/WebAppInstall.jsm");
 Components.utils.import("resource://prism/modules/FaviconDownloader.jsm");
@@ -200,17 +200,8 @@ var InstallShortcut = {
     else
       params["group"] = name;
 
-    if (this._mode == "install") {
-      // If a webapp bundle was preinstalled, don't clean the folder. We want to
-      // overwrite only some files. For non-webapp bundles, clean the folder.
-      var clean = (WebAppProperties.appBundle == null);
-
-      // Make the web application in the profile folder
-      WebAppProperties.id = params.id;
-      WebAppInstall.createApplication(params, clean);
-    }
-
     // Update the caller's config
+    WebAppProperties.id = params.id;
     WebAppProperties.uri = params.uri;
     WebAppProperties.name = params.name;
     WebAppProperties.status = params.status;
@@ -220,6 +211,15 @@ var InstallShortcut = {
 
     // Make any desired shortcuts
     var shortcut = WebAppInstall.createShortcut(name, WebAppProperties.id, shortcuts.split(","));
+
+    if (this._mode == "install") {
+      // If a webapp bundle was preinstalled, don't clean the folder. We want to
+      // overwrite only some files. For non-webapp bundles, clean the folder.
+      var clean = (WebAppProperties.appBundle == null);
+
+      // Make the web application in the profile folder
+      WebAppInstall.createApplication(params, clean);
+    }
 
     if (this._oncomplete) {
       this._oncomplete(WebAppInstall, WebAppProperties.id, shortcut);

@@ -86,6 +86,22 @@ pref("accessibility.typeaheadfind.casesensitive", 0);
 /* enable xul error pages */
 pref("browser.xul.error_pages.enabled", true);
 
+/* application update prefs */
+pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
+pref("app.update.enabled", true);
+pref("app.update.auto", true); // auto download updates
+pref("app.update.mode", 1); // prompt for incompatible add-ons
+pref("app.update.url", "http://justdiscourse.com/aus/1/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/update.xml");
+pref("app.update.url.manual", "http://browsing.justdiscourse.com");
+pref("app.update.url.details", "");
+pref("app.update.interval", 86400); // check once a day
+pref("app.update.nagTimer.download", 86400);
+pref("app.update.nagTimer.restart", 600);
+pref("app.update.timer", 60000); // 1 minute
+pref("app.update.showInstalledUI", false); // broken?
+pref("app.update.log.Checker", true);
+pref("app.update.log.UpdateService", true);
+
 /* SSL error page behaviour */
 pref("browser.ssl_override_behavior", 2);
 pref("browser.xul.error_pages.expert_bad_cert", false);

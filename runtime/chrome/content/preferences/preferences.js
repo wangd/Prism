@@ -1,7 +1,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-Components.utils.import("resource://prism-runtime/modules/WebAppProperties.jsm");
+Components.utils.import("resource://prism/modules/WebAppProperties.jsm");
 
 var WebRunnerPrefs =
 {

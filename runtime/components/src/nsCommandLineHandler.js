@@ -46,7 +46,7 @@ WebRunnerCommandLineHandler.prototype = {
     if (!aCmdLine)
       return;
       
-    Components.utils.import("resource://prism-runtime/modules/WebAppProperties.jsm");
+    Components.utils.import("resource://prism/modules/WebAppProperties.jsm");
 
     var file = null;
 
@@ -63,15 +63,20 @@ WebRunnerCommandLineHandler.prototype = {
 #ifdef XP_MACOSX
     // On Mac, check for a webapp.ini inside the current app bundle
     if (!webapp) {
-      var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-      var resourcesRoot = dirSvc.get("resource:app", Ci.nsIFile);
-      resourcesRoot.append("webapp");
-      
-      var iniPath = resourcesRoot.clone();
-      iniPath.append("webapp.ini");
+      var environment = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+      if (environment.exists("PRISM_APP_BUNDLE")) {
+        var resourcesPath = environment.get("PRISM_APP_BUNDLE");
+        var resourcesRoot = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+        resourcesRoot.initWithPath(resourcesPath);
+        
+        resourcesRoot.append("webapp");
+        
+        var iniPath = resourcesRoot.clone();
+        iniPath.append("webapp.ini");
 
-      if (iniPath.exists()) {
-        webapp = resourcesRoot.path;
+        if (iniPath.exists()) {
+          webapp = resourcesRoot.path;
+        }
       }
     }
 #endif    

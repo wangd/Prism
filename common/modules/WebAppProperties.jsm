@@ -178,6 +178,12 @@ var WebAppProperties =
       this.installRoot.append("WebApps");
 #endif
 #endif
+
+      // Register the directory provider for the web apps directory
+      var installRoot = this.getInstallRoot();
+      
+      var dirProvider = new WebRunnerDirectoryProvider(installRoot);
+      dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(dirProvider);
     }
     
     return this.installRoot;
@@ -188,15 +194,11 @@ var WebAppProperties =
       return this.appRoot.clone();
     }
     else {
-      var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
       if (!this.installRoot) {
-        // Register the directory provider for the web apps directory
-        var installRoot = this.getInstallRoot();
-        
-        var dirProvider = new WebRunnerDirectoryProvider(installRoot);
-        dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(dirProvider);
+        this.getInstallRoot();
       }
-
+    
+      var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
       var appRoot = dirSvc.get("WebAppD", Ci.nsIFile);
       appRoot.append(this.id);
       return appRoot;
@@ -309,14 +311,16 @@ var FileIO = {
   },
 
   // Saves the given text string to the given nsIFile
-  stringToFile : function(data, file) {
+  stringToFile : function(data, file, encoding) {
+    encoding = encoding || "UTF-8";
+        
     // Get a nsIFileOutputStream for the file
     var fos = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
     fos.init(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, (arguments.length == 3 ? arguments[2] : PR_PERMS_FILE), 0);
 
     // Get an intl-aware nsIConverterOutputStream for the file
     var os = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(Ci.nsIConverterOutputStream);
-    os.init(fos, "UTF-8", 0, 0x0000);
+    os.init(fos, encoding, 0, 0x0000);
 
     // Write data to the file
     os.writeString(data);
