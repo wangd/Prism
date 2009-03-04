@@ -30,6 +30,24 @@ const Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+var WebRunnerCloseEvent = function() {
+};
+
+WebRunnerCloseEvent.prototype = {
+  run: function() {
+    var appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+    appStartup.quit(appStartup.eForceQuit);
+  },
+  
+  QueryInterface: function(iid) {
+    if (iid.equals(Components.interfaces.nsIRunnable) ||
+        iid.equals(Components.interfaces.nsISupports)) {
+            return this;
+    }
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  }
+};
+
 function WebRunnerCommandLineHandler() {
 }
 
@@ -49,6 +67,13 @@ WebRunnerCommandLineHandler.prototype = {
     Components.utils.import("resource://prism/modules/WebAppProperties.jsm");
 
     var file = null;
+
+    if (aCmdLine.handleFlag("close", false)) {
+      var mainThread = Components.classes["@mozilla.org/thread-manager;1"].getService().mainThread;
+      mainThread.dispatch(new WebRunnerCloseEvent(), Ci.nsIEventTarget.DISPATCH_NORMAL);
+      aCmdLine.preventDefault = true;
+      return;
+    }
 
     // Check for a webapp profile
     var environment = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
