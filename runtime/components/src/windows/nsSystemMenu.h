@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matthew Gertner <matthew@allpeers.com> (Original author)
+ *   Matthew Gertner <matthew.gertner@gmail.com> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,7 +48,7 @@
 #include <windows.h>
 
 class nsIDOMDocument;
-class nsIDOMElement;
+class nsIDOMEventListener;
 
 // Encapsulation of system menu on Windows
 class nsSystemMenu : public nsINativeMenu
@@ -60,8 +60,6 @@ public:
   nsSystemMenu(HWND hWnd, nsIDOMDocument* aDocument);
   ~nsSystemMenu();
 
-  nsresult OnItemSelected(PRUint32 itemIndex, PRBool* preventDefault);
-
   static nsresult GetSystemMenu(HWND hWnd, nsIDOMDocument* aDocument, nsINativeMenu** _retval);
   static LRESULT APIENTRY WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -71,7 +69,7 @@ protected:
   HWND mWnd;
   nsCOMPtr<nsIDOMDocument> mDocument;
   WNDPROC mWndProc;
-  nsCOMArray<nsIDOMElement> mItems;
+  PRUint32 mItemCount;
 
   static nsInterfaceHashtable<nsUint32HashKey, nsSystemMenu> mSystemMenuMap;
 };

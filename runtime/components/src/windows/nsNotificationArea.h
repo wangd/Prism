@@ -60,6 +60,8 @@ class nsIDOMElement;
 class nsIDOMDocument;
 class nsIDOMEventTarget;
 class nsIDOMWindow;
+class nsINativeMenu;
+class nsIPrefBranch;
 class nsIURI;
 class nsIXULWindow;
 
@@ -84,6 +86,7 @@ protected:
   nsresult AddMenuChild(HMENU hMenu, nsIDOMElement* aElement);
   nsresult CreateMenu(nsIDOMElement* aElement, HMENU& subMenu);
   
+  static nsresult CreateEvent(nsIDOMWindow* aDOMWindow, const nsAString& aType, PRBool canBubble, nsIDOMEvent** _retval);
   static nsresult DispatchEvent(nsIDOMWindow* aDOMWindow, nsIDOMEventTarget* aEventTarget, const nsAString& aType,
     PRBool canBubble, PRBool* aPreventDefault);
   static void ShowPopupMenu(HWND hwnd, HMENU hmenu);
@@ -112,11 +115,11 @@ protected:
   static const TCHAR* S_PROPBEHAVIOR;
 
   /* menu */
-  HMENU mMenu;
+  nsCOMPtr<nsINativeMenu> mMenu;
   nsString mImageSpec;
   nsString mTitle;
-  PRUint32 mLastMenuId;
   nsCOMPtr<nsIDOMWindow> mWindow;
+  nsCOMPtr<nsIPrefBranch> mPrefs;
 };
 
 #endif // nsNotificationArea_h__

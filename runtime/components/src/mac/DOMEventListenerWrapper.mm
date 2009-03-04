@@ -38,14 +38,31 @@
 
 /* Development of this Contribution was supported by Yahoo! Inc. */
 
-class nsIDOMElement;
+#import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 
-@interface DOMElementWrapper : NSObject
+#include "DOMEventListenerWrapper.h"
+
+#include "nsIDOMEventListener.h"
+
+@implementation DOMEventListenerWrapper
+
+- (id)initWithEventListener:(nsIDOMEventListener*)eventListener
 {
-  nsIDOMElement* mElement;
+  mEventListener = eventListener;
+  NS_ADDREF(mEventListener);
+  return self;
 }
 
-- (id)initWithElement:(nsIDOMElement*)element;
-- (nsIDOMElement*)element;
+- (void)dealloc
+{
+  NS_RELEASE(mEventListener);
+  [super dealloc];
+}
+
+- (nsIDOMEventListener*)eventListener
+{
+  return mEventListener;
+}
 
 @end

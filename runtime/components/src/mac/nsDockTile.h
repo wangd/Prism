@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matthew Gertner <matthew@allpeers.com> (Original author)
+ *   Matthew Gertner <matthew.gertner@gmail.com> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,28 +40,26 @@
 #include "nsINativeMenu.h"
 #include "nsISecurityCheckedComponent.h"
 
-#include "nsCOMArray.h"
+#include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
+#include "nsStringAPI.h"
 
-class nsIDOMWindow;
-class nsIDOMElement;
+class nsIDOMDocument;
 
 // OS X dock tile
-class nsDockTile : public nsIApplicationIcon, public nsINativeMenu, public nsISecurityCheckedComponent
+class nsDockTile : public nsIApplicationIcon, public nsISecurityCheckedComponent
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAPPLICATIONICON
-  NS_DECL_NSINATIVEMENU
   NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
-  nsDockTile(nsIDOMWindow* aWindow);
+  nsDockTile(nsIDOMDocument* aDocument, NSMenu* aMenu);
 
 private:
   ~nsDockTile();
 
 protected:
-  nsCOMPtr<nsIDOMWindow> mWindow;
-  nsCOMArray<nsIDOMElement> mItems;
+  nsCOMPtr<nsINativeMenu> mMenu;
 };

@@ -38,6 +38,8 @@
  
 /* Development of this Contribution was supported by Yahoo! Inc. */
 
+#import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 #include <Carbon/Carbon.h>
 
 #include "nsDockTile.h"
@@ -47,15 +49,15 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
-#include "nsINativeMenu.h"
+#include "nsCocoaMenu.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringAPI.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsDockTile, nsIApplicationIcon, nsINativeMenu, nsISecurityCheckedComponent)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsDockTile, nsIApplicationIcon, nsISecurityCheckedComponent)
 
-nsDockTile::nsDockTile(nsIDOMWindow* aWindow)
+nsDockTile::nsDockTile(nsIDOMDocument* aDocument, NSMenu* menu)
 {
-  mWindow = aWindow;
+  mMenu = new nsCocoaMenu(aDocument, menu);
 }
 
 nsDockTile::~nsDockTile()
@@ -74,7 +76,7 @@ NS_IMETHODIMP nsDockTile::GetTitle(nsAString& aTitle)
 
 NS_IMETHODIMP nsDockTile::GetMenu(nsINativeMenu** _retval)
 {
-  return this->QueryInterface(NS_GET_IID(nsINativeMenu), (void**) _retval);
+  return CallQueryInterface(mMenu, _retval);
 }
 
 NS_IMETHODIMP nsDockTile::SetImageSpec(const nsAString& aImageSpec)
@@ -245,45 +247,6 @@ NS_IMETHODIMP nsDockTile::GetBehavior(PRUint32* aBehavior)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDockTile::GetItems(nsISimpleEnumerator** _retval)
-{
-  return NS_NewArrayEnumerator(_retval, mItems);
-}
-
-NS_IMETHODIMP nsDockTile::AddMenuItem(const nsAString& aId)
-{
-  nsresult rv;
-  nsCOMPtr<nsIDOMDocument> document;
-  rv = mWindow->GetDocument(getter_AddRefs(document));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsCOMPtr<nsIDOMElement> element;
-  rv = document->GetElementById(aId, getter_AddRefs(element));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!mItems.AppendObject(element))
-    return NS_ERROR_FAILURE;
-  else
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsDockTile::RemoveMenuItem(const nsAString& aId)
-{
-  nsresult rv;
-  nsCOMPtr<nsIDOMDocument> document;
-  rv = mWindow->GetDocument(getter_AddRefs(document));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsCOMPtr<nsIDOMElement> element;
-  rv = document->GetElementById(aId, getter_AddRefs(element));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  if (!mItems.RemoveObject(element))
-    return NS_ERROR_NOT_AVAILABLE;
-  else
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDockTile::ShowNotification(const nsAString& aTitle,
                                    const nsAString& aText,
@@ -299,12 +262,6 @@ nsDockTile::ShowNotification(const nsAString& aTitle,
   rv = alerts->ShowAlertNotification(EmptyString(), aTitle, aText, aIsClickable, EmptyString(), nsnull, EmptyString());
   NS_ENSURE_SUCCESS(rv, rv);
   
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDockTile::RemoveAllMenuItems()
-{
-  mItems.Clear();
   return NS_OK;
 }
 

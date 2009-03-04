@@ -38,7 +38,6 @@
 
 /* Development of this Contribution was supported by Yahoo! Inc. */
 
-#include "nsIDOMEventListener.h"
 #include "nsINativeMenu.h"
 
 #include "nsCOMPtr.h"
@@ -48,21 +47,19 @@ class nsIDOMDocument;
 class nsIDOMElement;
 class nsIDOMWindow;
 
-// Encapsulation of native menus on OS X using Cocoa APIs
-class nsDOMMenuBar : public nsINativeMenu, public nsIDOMEventListener
+// Encapsulation of native menus (cross-platform)
+class nsDOMMenuBar : public nsINativeMenu
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINATIVEMENU
-  NS_DECL_NSIDOMEVENTLISTENER
 
   nsDOMMenuBar(nsIDOMWindow* aWindow);
   ~nsDOMMenuBar();
 
-private:
-
 protected:
-  nsresult CreateXULMenu(nsIDOMDocument* aDocument, nsIDOMElement* aElement, const nsAString& aId, nsIDOMElement** _retval);
+  nsresult GetChromeDocument(nsIDOMDocument** _retval);
 
   nsCOMPtr<nsIDOMWindow> mWindow;
+  nsCOMPtr<nsIDOMElement> mMenuElement;
 };

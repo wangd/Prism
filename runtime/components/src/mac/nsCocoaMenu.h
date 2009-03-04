@@ -39,30 +39,35 @@
 /* Development of this Contribution was supported by Yahoo! Inc. */
 
 #include "nsINativeMenu.h"
+#include "nsISecurityCheckedComponent.h"
 
-class nsIDOMDocument;
-class nsIDOMElement;
 @class NSMenu;
 @class NativeMenuDelegate;
 
+class nsIDOMDocument;
+
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
+#include "nsStringAPI.h"
+#include "nsTArray.h"
 
 // Encapsulation of native menus on OS X using Cocoa APIs
-class nsCocoaMenu : public nsINativeMenu
+class nsCocoaMenu : public nsINativeMenu, public nsISecurityCheckedComponent
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINATIVEMENU
+  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
-  nsCocoaMenu(nsIDOMDocument* document, NSMenu* menu);
+  nsCocoaMenu(nsIDOMDocument* aDocument, NSMenu* menu);
   ~nsCocoaMenu();
 
 private:
 
 protected:
   nsCOMPtr<nsIDOMDocument> mDocument;
-  nsCOMArray<nsIDOMElement> mItems;
+  nsCOMArray<nsINativeMenu> mSubmenus;
+  nsTArray<nsString> mIds;
   NSMenu* mMenu;
   NativeMenuDelegate* mDelegate;
 };

@@ -67,6 +67,7 @@ REQUIRES	= \
 CPPSRCS = \
     nsICOEncoder.cpp \
     nsDesktopEnvironmentWin.cpp \
+    nsNativeMenu.cpp \
     nsNotificationArea.cpp \
     nsOSIntegrationModule.cpp \
     nsSystemMenu.cpp \

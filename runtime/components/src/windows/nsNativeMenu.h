@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-aWidth: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,48 +35,25 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-/* Development of this Contribution was supported by Yahoo! Inc. */
 
-#include "nsISupports.idl"
+#include "nsINativeMenu.h"
+#include "nsCOMArray.h"
 
-interface nsIDOMEventListener;
-interface nsIDOMWindow;
-interface nsISimpleEnumerator;
+#include <windows.h>
 
-/**
- * Support for platform-native menus.
- */
-[scriptable, uuid(9d3547d0-ff55-11dc-95ff-0800200c9a66)]
-interface nsINativeMenu : nsISupports
+// Encapsulation of popup menu on Windows
+class nsNativeMenu : public nsINativeMenu
 {
-  [noscript] readonly attribute voidPtr handle;
-  readonly attribute nsISimpleEnumerator items;
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSINATIVEMENU
 
-  /**
-   * Add the item to the menu.
-   *
-   * @param id Unique identifier for the menu item.
-   * @param label Label for the menu item.
-   * @param listener Listener triggered when the menu item is selected.
-   **/
-  void addMenuItem(in AString id, in AString label, in nsIDOMEventListener listener);
+  nsNativeMenu(HMENU aMenu);
+  ~nsNativeMenu();
 
-  /**
-   * Add a submenu.
-   *
-   * @param label Label for the submenu.
-   * @returns The new menu.
-   */
-  nsINativeMenu addSubmenu(in AString id, in AString label);
+private:
 
-  /**
-   * Remove the item from the menu.
-   **/
-  void removeMenuItem(in AString id);
-  
-  /**
-   * Remove all items from the menu.
-   */
-  void removeAllMenuItems();
+protected:
+  HMENU mMenu;
+  nsCOMArray<nsINativeMenu> mSubmenus;
 };

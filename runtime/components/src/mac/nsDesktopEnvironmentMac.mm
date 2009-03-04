@@ -47,7 +47,7 @@ extern "C" {
 
 #include "nsDesktopEnvironmentMac.h"
 
-#include "DOMElementWrapper.h"
+#include "DOMEventListenerWrapper.h"
 #include "nsCocoaMenu.h"
 #include "nsCOMPtr.h"
 #include "nsDockTile.h"
@@ -69,111 +69,48 @@ extern "C" {
 @interface DockMenuDelegate : NSObject
 {
   id mOldDelegate;
-  nsINativeMenu* mDockMenu;
+  NSMenu* mMenu;
 }
 
-- (id)initWithDockMenu:(nsINativeMenu*)dockMenu;
-- (void)addMenuChild:(NSMenu*)menu child:(nsIDOMElement*)child;
+- (id)initWithMenu:(NSMenu*)menu;
+- (void)cloneMenu:(NSMenu*)menu target:(NSMenu*)target;
 
 @end
 
 @implementation DockMenuDelegate
 
-- (id)initWithDockMenu:(nsINativeMenu*)dockMenu
+- (id)initWithMenu:(NSMenu*)menu
 {
-  mDockMenu = dockMenu;
-  NS_ADDREF(mDockMenu);
+  mMenu = menu;
   mOldDelegate = [[NSApplication sharedApplication] delegate];
   return self;
-}
-
-- (void)addMenuChild:(NSMenu*)menu child:(nsIDOMElement*)element
-{
-  nsAutoString label;
-  if (NS_SUCCEEDED(element->GetAttribute(NS_LITERAL_STRING("label"), label))) {
-    NSMenuItem *menuItem = [[NSMenuItem alloc]
-                             initWithTitle:[NSString stringWithCharacters:label.get() length:label.Length()]
-                             action:@selector(dockMenuItemSelected:)
-                             keyEquivalent:@""];
-    nsAutoString tagName;
-    element->GetTagName(tagName);
-    if (tagName == NS_LITERAL_STRING("MENU")) {
-      NSMenu* subMenu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
-      [menuItem setSubmenu:subMenu];
-
-      nsCOMPtr<nsIDOMNode> node;
-      element->GetFirstChild(getter_AddRefs(node));
-      
-      while (node) {
-        nsCOMPtr<nsIDOMElement> child(do_QueryInterface(node));
-        if (!child)
-          break;
-
-        [self addMenuChild:subMenu child:child];
-        
-        child->GetNextSibling(getter_AddRefs(node));
-      }
-    }
-    else if (tagName == NS_LITERAL_STRING("COMMAND")) {
-      [menuItem setTarget:self];
-      [menuItem setRepresentedObject:[[DOMElementWrapper alloc] initWithElement:element]];
-    }
-    else {
-      // We only handle <command> and <menu>
-      return;
-    }
-    [menu addItem:menuItem];
-    [menuItem release];
-  }
 }
 
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender
 {
   NSMenu* menu = [mOldDelegate applicationDockMenu:sender];
-  
- [menu addItem:[NSMenuItem separatorItem]];
-  
-  nsCOMPtr<nsISimpleEnumerator> items;
-  if (NS_SUCCEEDED(mDockMenu->GetItems(getter_AddRefs(items)))) {
-    PRBool more;
-    while (NS_SUCCEEDED(items->HasMoreElements(&more)) && more) {
-      nsCOMPtr<nsISupports> supports;
-      if (NS_SUCCEEDED(items->GetNext(getter_AddRefs(supports)))) {
-        nsCOMPtr<nsIDOMElement> element(do_QueryInterface(supports));
-        if (element) {
-          [self addMenuChild:menu child:element];
-        }
-      }
-    }
-  }
-  
+  [menu insertItem:[NSMenuItem separatorItem] atIndex:0];
+  [self cloneMenu:mMenu target:menu];
   return menu;
 }
 
-- (void)dockMenuItemSelected:(id)sender
+- (void)cloneMenu:(NSMenu*)menu target:(NSMenu*)target
 {
-  nsCOMPtr<nsIDOMElement> element = [[sender representedObject] element];
-  nsCOMPtr<nsIDOMDocument> document;
-  if (NS_FAILED(element->GetOwnerDocument(getter_AddRefs(document))))
-    return;
-    
-  nsCOMPtr<nsIDOMDocumentEvent> documentEvent(do_QueryInterface(document));
-  if (!documentEvent)
-    return;
-
-  nsCOMPtr<nsIDOMEvent> event;
-  if (NS_FAILED(documentEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event))))
-    return;
-
-  if (NS_FAILED(event->InitEvent(NS_LITERAL_STRING("DOMActivate"), PR_TRUE, PR_TRUE)))
-    return;
-
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(element));
-  if (!target)
-    return;
-
-  PRBool preventDefault;
-  target->DispatchEvent(event, &preventDefault);
+  NSInteger i;
+  NSInteger count = [menu numberOfItems];
+  for (i=0; i<count; i++) {
+    NSMenuItem* item = [menu itemAtIndex:i];
+    NSMenuItem* newItem = [target insertItemWithTitle:[item title] action:[item action] keyEquivalent:[item keyEquivalent] atIndex:i];
+    if ([item hasSubmenu]) {
+      NSMenu* submenu = [NSMenu alloc];
+      [self cloneMenu:[item submenu] target:submenu];
+      [newItem setSubmenu:submenu];
+    }
+    else {
+      [newItem setTarget:[item target]];
+      [newItem setRepresentedObject:[item representedObject]];
+    }
+  }
 }
 
 - (BOOL)respondsToSelector:(SEL)aSelector
@@ -206,7 +143,6 @@ extern "C" {
 
 - (void)dealloc
 {
-  NS_RELEASE(mDockMenu);
   [super dealloc];
 }
 
@@ -294,18 +230,22 @@ NS_IMETHODIMP nsDesktopEnvironment::CreateShortcut(
 
 NS_IMETHODIMP nsDesktopEnvironment::GetApplicationIcon(nsIDOMWindow* aWindow, nsIApplicationIcon** _retval)
 {
+  NS_ENSURE_ARG(aWindow);
+
   nsresult rv;
   if (!mDockTile) {
-    mDockTile = new nsDockTile(aWindow);
-    NS_ENSURE_TRUE(mDockTile, NS_ERROR_OUT_OF_MEMORY);
-    
-    // Register our delegate for dock menu customization
-    nsCOMPtr<nsINativeMenu> dockMenu;
-    rv = mDockTile->GetMenu(getter_AddRefs(dockMenu));
+    nsCOMPtr<nsIDOMDocument> document;
+    rv = aWindow->GetDocument(getter_AddRefs(document));
     NS_ENSURE_SUCCESS(rv, rv);
     
-    id delegate = [[DockMenuDelegate alloc] initWithDockMenu:dockMenu];
-    [[NSApplication sharedApplication] setDelegate:delegate];
+    id menu = [NSMenu alloc];
+
+    mDockTile = new nsDockTile(document, menu);
+    NS_ENSURE_TRUE(mDockTile, NS_ERROR_OUT_OF_MEMORY);
+    
+    id delegate = [[DockMenuDelegate alloc] initWithMenu:menu];
+    id application = [NSApplication sharedApplication];
+    [application setDelegate:delegate];
   }
   
   *_retval = mDockTile;

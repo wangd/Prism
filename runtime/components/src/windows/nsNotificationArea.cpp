@@ -53,14 +53,18 @@
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsINativeIcon.h"
 #include "nsIIOService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIURI.h"
 #include "nsIXULWindow.h"
+#include "nsNativeMenu.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringAPI.h"
 
@@ -93,14 +97,15 @@ nsNotificationArea::nsNotificationArea(nsIDOMWindow* aWindow) : mMenu(NULL)
 {
   memset(&mIconData, 0, sizeof(NOTIFYICONDATAW));
   mWindow = aWindow;
-  mLastMenuId = MENU_ITEM_BASE_ID;
+  
+  nsCOMPtr<nsIPrefService> prefService(do_GetService("@mozilla.org/preferences-service;1"));
+  if (prefService) {
+    prefService->GetBranch("notificationarea.", getter_AddRefs(mPrefs));
+  }
 }
 
 nsNotificationArea::~nsNotificationArea()
 {
-  if (mMenu)
-    ::DestroyMenu(mMenu);
-
   BOOL windowClassUnregistered = ::UnregisterClass(
     (LPCTSTR)nsNotificationArea::s_wndClass,
     ::GetModuleHandle(NULL));
@@ -260,85 +265,30 @@ nsNotificationArea::GetBadgeText(nsAString& aBadgeText)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsNotificationArea::GetHandle(void** _retval)
+{
+  NS_ENSURE_STATE(mMenu);
+  
+  return mMenu->GetHandle(_retval);
+}
+
 NS_IMETHODIMP
-nsNotificationArea::AddMenuItem(const nsAString& aId)
+nsNotificationArea::AddMenuItem(const nsAString& aId, const nsAString& aLabel, nsIDOMEventListener* aListener)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDOMElement> element;
-  rv = GetElementById(aId, getter_AddRefs(element));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  if (!element)
-    return NS_ERROR_FAILURE;
-  
   if (!mMenu) {
-    mMenu = ::CreatePopupMenu();
-    NS_ENSURE_TRUE(mMenu, NS_ERROR_FAILURE);
+    HMENU hMenu = ::CreatePopupMenu();
+    mMenu = new nsNativeMenu(hMenu);
+    NS_ENSURE_TRUE(mMenu, NS_ERROR_OUT_OF_MEMORY);
   }
   
-  rv = AddMenuChild(mMenu, element);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  return NS_OK;
+  return mMenu->AddMenuItem(aId, aLabel, aListener);
 }
 
-nsresult nsNotificationArea::AddMenuChild(HMENU hMenu, nsIDOMElement* aElement)
+nsresult nsNotificationArea::AddSubmenu(const nsAString& aId, const nsAString& aLabel, nsINativeMenu** _retval)
 {
-  nsresult rv;
-  nsAutoString tagName;
-  rv = aElement->GetTagName(tagName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_STATE(mMenu);
   
-  nsAutoString label;
-  rv = aElement->GetAttribute(NS_LITERAL_STRING("label"), label);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (tagName == NS_LITERAL_STRING("COMMAND")) {
-    PRUint32 itemId = mLastMenuId++;
-    ::AppendMenuW(hMenu, MF_STRING, itemId, label.get());
-  
-    // Set the pointer to the element
-    MENUITEMINFO itemInfo;
-    itemInfo.cbSize = sizeof(itemInfo);
-    itemInfo.fMask = MIIM_DATA;
-    itemInfo.dwItemData = (DWORD_PTR) (nsIDOMElement *) aElement;
-    ::SetMenuItemInfo(hMenu, itemId, FALSE, &itemInfo);
-  }
-  else if (tagName == NS_LITERAL_STRING("MENU")) {
-    HMENU subMenu;
-    rv = CreateMenu(aElement, subMenu);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    ::AppendMenuW(hMenu, MF_STRING|MF_POPUP, (UINT) subMenu, label.get());
-  }
-  else {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  return NS_OK;
-}
-
-nsresult nsNotificationArea::CreateMenu(nsIDOMElement* aElement, HMENU& subMenu)
-{
-  nsresult rv;
-  subMenu = ::CreatePopupMenu();
-  
-  nsCOMPtr<nsIDOMNode> node;
-  rv = aElement->GetFirstChild(getter_AddRefs(node));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  while (node) {
-    nsCOMPtr<nsIDOMElement> child(do_QueryInterface(node, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    rv = AddMenuChild(subMenu, child);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    rv = child->GetNextSibling(getter_AddRefs(node));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  
-  return NS_OK;
+  return mMenu->AddSubmenu(aId, aLabel, _retval);
 }
 
 NS_IMETHODIMP
@@ -346,38 +296,15 @@ nsNotificationArea::RemoveMenuItem(const nsAString& aId)
 {
   NS_ENSURE_STATE(mMenu);
 
-  nsresult rv;
-  nsCOMPtr<nsIDOMElement> element;
-  rv = GetElementById(aId, getter_AddRefs(element));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  MENUITEMINFO itemInfo;
-  itemInfo.cbSize = sizeof(itemInfo);
-  itemInfo.fMask = MIIM_DATA;
-  PRUint32 i;
-  for (i=0; ::GetMenuItemInfo(mMenu, i, TRUE, &itemInfo); i++) {
-    if ((nsIDOMElement *) itemInfo.dwItemData == (nsIDOMElement *) element) {
-      ::RemoveMenu(mMenu, i, MF_BYPOSITION);
-      return NS_OK;
-    }
-  }
-  
-  return NS_ERROR_NOT_AVAILABLE;
+  return mMenu->RemoveMenuItem(aId);
 }
 
 NS_IMETHODIMP
 nsNotificationArea::RemoveAllMenuItems()
 {
-  if (mMenu) {
-    int menuCount = ::GetMenuItemCount(mMenu);
-    
-    PRUint32 i;
-    for (i=menuCount; i>0; i--) {
-      ::RemoveMenu(mMenu, i-1, MF_BYPOSITION);
-    }
-  }
+  NS_ENSURE_STATE(mMenu);
   
-  return NS_OK;
+  return mMenu->RemoveAllMenuItems();
 }
 
 NS_IMETHODIMP
@@ -385,18 +312,7 @@ nsNotificationArea::GetItems(nsISimpleEnumerator** _retval)
 {
   NS_ENSURE_STATE(mMenu);
 
-  nsCOMArray<nsIDOMElement> items;
-  
-  MENUITEMINFO itemInfo;
-  itemInfo.cbSize = sizeof(itemInfo);
-  itemInfo.fMask = MIIM_DATA;
-  PRUint32 i;
-  for (i=0; ::GetMenuItemInfo(mMenu, i, TRUE, &itemInfo); i++) {
-    if (!items.AppendObject((nsIDOMElement *) itemInfo.dwItemData))
-      return NS_ERROR_FAILURE;
-  }
-  
-  return NS_NewArrayEnumerator(_retval, items);
+  return mMenu->GetItems(_retval);
 }
 
 NS_IMETHODIMP
@@ -572,25 +488,11 @@ nsNotificationArea::GetIconForWnd(HWND hwnd, HICON& result)
 }
 
 nsresult
-nsNotificationArea::DispatchEvent(
-  nsIDOMWindow* aDOMWindow,
-  nsIDOMEventTarget* aEventTarget,
-  const nsAString& aType,
-  PRBool canBubble,
-  PRBool* aPreventDefault)
+nsNotificationArea::CreateEvent(nsIDOMWindow* aDOMWindow, const nsAString& aType, PRBool canBubble, nsIDOMEvent** _retval)
 {
   NS_ENSURE_ARG(aDOMWindow);
 
   nsresult rv;
-  nsCOMPtr<nsIDOMEventTarget> eventTarget;
-  if (aEventTarget) {
-    eventTarget = aEventTarget;
-  }
-  else {
-    eventTarget = do_QueryInterface(aDOMWindow, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   nsCOMPtr<nsIDOMDocument> document;
   rv = aDOMWindow->GetDocument(getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -610,6 +512,34 @@ nsNotificationArea::DispatchEvent(
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = privateEvent->SetTrusted(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *_retval = event;
+  NS_ADDREF(*_retval);
+  
+  return NS_OK;
+}
+
+nsresult
+nsNotificationArea::DispatchEvent(
+  nsIDOMWindow* aDOMWindow,
+  nsIDOMEventTarget* aEventTarget,
+  const nsAString& aType,
+  PRBool canBubble,
+  PRBool* aPreventDefault)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDOMEventTarget> eventTarget;
+  if (aEventTarget) {
+    eventTarget = aEventTarget;
+  }
+  else {
+    eventTarget = do_QueryInterface(aDOMWindow, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsCOMPtr<nsIDOMEvent> event;
+  rv = CreateEvent(aDOMWindow, aType, canBubble, getter_AddRefs(event));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool ret;
@@ -681,9 +611,17 @@ nsNotificationArea::ListenerWindowProc(HWND hwnd,
 {
   nsRefPtr<nsNotificationArea> notificationArea;
   notificationArea = (nsNotificationArea *)  GetProp(hwnd, S_PROPINST);
-
+  
   if (!notificationArea)
     return TRUE;
+
+  HMENU hMenu;
+  if (notificationArea->mMenu) {
+    notificationArea->mMenu->GetHandle((void **) &hMenu);
+  }
+  else {
+    hMenu = NULL;
+  }
 
   switch(uMsg) {
     case WM_TRAYICON:
@@ -693,17 +631,20 @@ nsNotificationArea::ListenerWindowProc(HWND hwnd,
     case WM_NCCREATE:
       return TRUE;
     case WM_COMMAND:
-      if (HIWORD(wParam) == 0) {
+      if (hMenu && (HIWORD(wParam) == 0)) {
         MENUITEMINFO itemInfo;
         itemInfo.cbSize = sizeof(itemInfo);
         itemInfo.fMask = MIIM_DATA;
-        if (!::GetMenuItemInfo(notificationArea->mMenu, LOWORD(wParam), FALSE, &itemInfo))
-          return NS_ERROR_NOT_AVAILABLE;
+        if (!::GetMenuItemInfo(hMenu, LOWORD(wParam), FALSE, &itemInfo))
+          return TRUE;
           
-        nsCOMPtr<nsIDOMElement> element = (nsIDOMElement *) itemInfo.dwItemData;
-        nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(element));
-        
-        DispatchEvent(notificationArea->mWindow, eventTarget, NS_LITERAL_STRING("DOMActivate"), PR_FALSE, nsnull);
+        nsCOMPtr<nsIDOMEventListener> listener = (nsIDOMEventListener *) itemInfo.dwItemData;
+        nsCOMPtr<nsIDOMEvent> event;
+        CreateEvent(notificationArea->mWindow, NS_LITERAL_STRING("DOMActivate"), PR_FALSE, getter_AddRefs(event));
+
+        if (event) {
+          listener->HandleEvent(event);
+        }
       }
       return FALSE;
     default:
@@ -712,11 +653,21 @@ nsNotificationArea::ListenerWindowProc(HWND hwnd,
 
   switch (lParam) {
     case WM_RBUTTONDOWN:
-      if (notificationArea->mMenu) {
-        ShowPopupMenu(hwnd, notificationArea->mMenu);
+      if (hMenu) {
+        ShowPopupMenu(hwnd, hMenu);
       }
       break;
     case WM_LBUTTONDOWN:
+      if (notificationArea->mPrefs) {
+        PRBool leftButtonMenu;
+        if (NS_SUCCEEDED(notificationArea->mPrefs->GetBoolPref("leftButtonMenu", &leftButtonMenu)) && leftButtonMenu) {
+          if (hMenu) {
+            ShowPopupMenu(hwnd, hMenu);
+          }
+          return FALSE;
+        }
+      }
+    case WM_LBUTTONDBLCLK:
       DispatchEvent(notificationArea->mWindow, nsnull, NS_LITERAL_STRING("DOMActivate"), PR_TRUE, nsnull);
       break;
   }

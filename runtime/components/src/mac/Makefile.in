@@ -62,7 +62,7 @@ CPPSRCS		= \
     $(NULL)
 
 CMMSRCS = \
-  DOMElementWrapper.mm \
+  DOMEventListenerWrapper.mm \
   nsCocoaMenu.mm \
   nsDesktopEnvironmentMac.mm \
   nsDockTile.mm \

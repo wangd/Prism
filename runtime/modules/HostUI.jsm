@@ -49,7 +49,7 @@ var HostUI = {
   },
   
   showPreferences : function(paneToShow) {
-    this._window.openDialog("chrome://webrunner/content/preferences/preferences.xul", "preferences", "chrome,titlebar,toolbar,centerscreen,dialog=no", paneToShow);
+    this._window.openDialog("chrome://webrunner/content/preferences/preferences.xul", "preferences", "chrome,titlebar,toolbar,centerscreen,dialog", paneToShow);
   },
   
   showAlert : function(aImage, aTitle, aMsg) {

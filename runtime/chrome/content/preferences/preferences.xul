@@ -63,11 +63,11 @@
             onload="WebRunnerPrefs.init()"
             ondialoghelp="openPrefsHelp()"
 #ifdef USE_WIN_TITLE_STYLE
-            title="&prefWindow.titleWin;"
+            title="&brandShortName; - &prefWindow.titleWin;"
 #else
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
-            title="&prefWindow.titleGNOME;"
+            title="&brandShortName; - &prefWindow.titleGNOME;"
 #endif
 #endif
 #endif
@@ -87,9 +87,11 @@
     <stringbundle id="bundlePreferences"
                   src="chrome://webrunner/locale/preferences/preferences.properties"/>
 
-    <prefpane id="paneContent" label="&paneContent.title;"
+    <prefpane id="paneContent"
+              label="&paneContent.title;"
               src="chrome://webrunner/content/preferences/content.xul"/>
-    <prefpane id="paneAdvanced" label="&paneAdvanced.title;"
+    <prefpane id="paneAdvanced"
+              label="&paneAdvanced.title;"
               src="chrome://webrunner/content/preferences/connection.xul"/>
 
 </prefwindow>

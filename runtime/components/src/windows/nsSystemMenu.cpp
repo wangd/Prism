@@ -44,6 +44,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMEventListener.h"
 #include "nsIDOMWindow.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsSystemMenu, nsINativeMenu)
@@ -51,75 +52,78 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsSystemMenu, nsINativeMenu)
 nsInterfaceHashtable<nsUint32HashKey, nsSystemMenu> nsSystemMenu::mSystemMenuMap;
 PRBool mapInitialized = PR_FALSE;
 
-nsSystemMenu::nsSystemMenu(HWND hWnd, nsIDOMDocument* aDocument)
+nsSystemMenu::nsSystemMenu(HWND hWnd, nsIDOMDocument* aDocument) : mWnd(hWnd), mDocument(aDocument), mWndProc(NULL), mItemCount(0)
 {
-  mWnd = hWnd;
-  mDocument = aDocument;
-  mWndProc = NULL;
 }
 
 nsSystemMenu::~nsSystemMenu()
 {
 }
 
-NS_IMETHODIMP nsSystemMenu::AddMenuItem(const nsAString& aId)
+NS_IMETHODIMP nsSystemMenu::GetHandle(void** _retval)
+{
+  HMENU hSystemMenu = ::GetSystemMenu(mWnd, FALSE);
+  if (!hSystemMenu) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  *_retval = (void *) hSystemMenu;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSystemMenu::AddMenuItem(const nsAString& aId, const nsAString& aLabel, nsIDOMEventListener* aListener)
 {
   NS_ENSURE_STATE(mDocument);
   NS_ENSURE_STATE(mWnd);
 
-  nsresult rv;
-
   // Get the element with the associated id from the document
-  nsCOMPtr<nsIDOMElement> element;
-  rv = mDocument->GetElementById(aId, getter_AddRefs(element));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!element)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  // Add the element to the system menu
-  nsAutoString label;
-  rv = element->GetAttribute(NS_LITERAL_STRING("label"), label);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   HMENU hSystemMenu = ::GetSystemMenu(mWnd, FALSE);
   NS_ENSURE_TRUE(hSystemMenu, NS_ERROR_UNEXPECTED);
 
-  mItems.AppendObject(element);
-
-  if (mItems.Count() == 1)
+  if (mItemCount == 0)
     ::InsertMenuW(hSystemMenu, 0, MF_SEPARATOR|MF_BYPOSITION, 0, 0);
+    
+  PRUint32 itemId = nsStringHashKey::HashKey(&aId);
 
-  if (!::InsertMenuW(hSystemMenu, mItems.Count()-1, MF_STRING|MF_BYPOSITION, mItems.Count(), label.get()))
+  if (!::InsertMenuW(hSystemMenu, mItemCount, MF_STRING|MF_BYPOSITION, itemId, nsString(aLabel).get())) {
     return NS_ERROR_FAILURE;
+  }
+    
+  mItemCount++;
+    
+  // Set the pointer to the element
+  MENUITEMINFO itemInfo;
+  itemInfo.cbSize = sizeof(itemInfo);
+  itemInfo.fMask = MIIM_DATA;
+  itemInfo.dwItemData = (DWORD_PTR) aListener;
+  ::SetMenuItemInfo(hSystemMenu, itemId, FALSE, &itemInfo);
 
   // Subclass the window so we get the WM_SYSCOMMAND messages
-  if (!mWndProc)
+  if (!mWndProc) {
     mWndProc = (WNDPROC) ::SetWindowLong(mWnd, GWL_WNDPROC, (LONG) nsSystemMenu::WindowProc);
+  }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsSystemMenu::AddSubmenu(const nsAString& aId, const nsAString& aLabel, nsINativeMenu** _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsSystemMenu::RemoveMenuItem(const nsAString& aId)
 {
   NS_ENSURE_STATE(mWnd);
 
-  nsresult rv;
-  nsCOMPtr<nsIDOMElement> element;
-  rv = mDocument->GetElementById(aId, getter_AddRefs(element));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 index = mItems.IndexOf(element);
-  if (index == nsTArray<nsIDOMElement*>::NoIndex)
-    return NS_ERROR_NOT_AVAILABLE;
-
   HMENU hSystemMenu = ::GetSystemMenu(mWnd, FALSE);
-  ::RemoveMenu(hSystemMenu, index, MF_BYPOSITION);
-  if (mItems.Count() == 1)
+  PRUint32 itemId = nsStringHashKey::HashKey(&aId);
+  ::RemoveMenu(hSystemMenu, itemId, MF_BYCOMMAND);
+  mItemCount--;
+
+  if (mItemCount == 0) {
      // Remove the separator
      ::RemoveMenu(hSystemMenu, 0, MF_BYPOSITION);
-
-  mItems.RemoveObjectAt(index);
+  }
 
   return NS_OK;
 }
@@ -130,12 +134,12 @@ nsSystemMenu::RemoveAllMenuItems()
   NS_ENSURE_STATE(mWnd);
   
   HMENU hSystemMenu = ::GetSystemMenu(mWnd, FALSE);
-  PRUint32 menuCount = mItems.Count();
   PRUint32 index;
-  for (index=menuCount; index>0; index--) {
+  for (index=mItemCount; index>0; index--) {
     ::RemoveMenu(hSystemMenu, index-1, MF_BYPOSITION);
-    mItems.RemoveObjectAt(index-1);
   }
+  
+  mItemCount = 0;
   
   return NS_OK;
 }
@@ -143,29 +147,7 @@ nsSystemMenu::RemoveAllMenuItems()
 NS_IMETHODIMP
 nsSystemMenu::GetItems(nsISimpleEnumerator** _retval)
 {
-  return NS_NewArrayEnumerator(_retval, mItems);
-}
-
-nsresult nsSystemMenu::OnItemSelected(PRUint32 itemIndex, PRBool* preventDefault)
-{
-  nsresult rv;
-  NS_ENSURE_TRUE(itemIndex < mItems.Count(), NS_ERROR_NOT_AVAILABLE);
-
-  nsCOMPtr<nsIDOMElement> element = mItems[itemIndex];
-  nsCOMPtr<nsIDOMDocumentEvent> documentEvent(do_QueryInterface(mDocument, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMEvent> event;
-  rv = documentEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = event->InitEvent(NS_LITERAL_STRING("command"), PR_TRUE, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(element, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return target->DispatchEvent(event, preventDefault);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsSystemMenu::GetSystemMenu(HWND hWnd, nsIDOMDocument* aDocument, nsINativeMenu** _retval)
@@ -195,10 +177,31 @@ LRESULT APIENTRY nsSystemMenu::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
   WNDPROC oldProc = menu->mWndProc;
 
   if (uMsg == WM_SYSCOMMAND && wParam < 0xf000) {
-    PRBool preventDefault;
-    // Subtract one since we start the ids at one instead of zero.
-    if (NS_SUCCEEDED(menu->OnItemSelected((PRUint32) wParam-1, &preventDefault)) && preventDefault)
-      return 0;
+    HMENU hSystemMenu = ::GetSystemMenu(hWnd, FALSE);
+    MENUITEMINFO itemInfo;
+    itemInfo.cbSize = sizeof(itemInfo);
+    itemInfo.fMask = MIIM_DATA;
+
+    if (!::GetMenuItemInfo(hSystemMenu, LOWORD(wParam), FALSE, &itemInfo))
+      return TRUE;
+
+    nsCOMPtr<nsIDOMEventListener> listener = (nsIDOMEventListener *) itemInfo.dwItemData;
+    if (!listener)
+      return TRUE;
+      
+    nsCOMPtr<nsIDOMDocumentEvent> documentEvent(do_QueryInterface(menu->mDocument));
+    if (!documentEvent)
+      return TRUE;
+    
+    nsCOMPtr<nsIDOMEvent> event;
+    documentEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+    if (!event)
+      return TRUE;
+
+    event->InitEvent(NS_LITERAL_STRING("command"), PR_TRUE, PR_TRUE);
+    listener->HandleEvent(event);
+
+    return FALSE;
   }
   else if (uMsg == WM_CLOSE) {
     ::SetWindowLong(hWnd, GWL_WNDPROC, (LONG) oldProc);
