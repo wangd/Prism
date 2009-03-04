@@ -619,6 +619,9 @@ var WebRunner = {
       document.getElementById("menu_file").hidden = true;
     }
 
+    var browser = this._getBrowser();
+    browser.addEventListener("DOMTitleChanged", function(aEvent) { self._domTitleChanged(aEvent); }, true);
+
     if (!window.arguments || !window.arguments[0] || !(window.arguments[0] instanceof Ci.nsICommandLine)) {
       // Not the main window, so we're done
       return;
@@ -698,8 +701,6 @@ var WebRunner = {
 
     window.addEventListener("close", function(event) { self._handleWindowClose(event); }, false);
 
-    var browser = this._getBrowser();
-    browser.addEventListener("DOMTitleChanged", function(aEvent) { self._domTitleChanged(aEvent); }, true);
     browser.addEventListener("dragover", function(aEvent) { self._dragOver(aEvent); }, true);
     browser.addEventListener("dragdrop", function(aEvent) { self._dragDrop(aEvent); }, true);
     browser.addEventListener("command", function(aEvent) { self._handleContentCommand(aEvent); }, false);
