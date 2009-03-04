@@ -38,7 +38,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="webrunner"
         windowtype="navigator:browser"
-        title="&app.title;"
+        title=""
         width="750" height="550"
         onclose="return WebRunner.tryClose();"
         >
@@ -120,7 +120,7 @@
 
     <panel id="popup_autocomplete" type="autocomplete" noautofocus="true"/>
   </popupset>
-
+  
   <toolbox id="toolbox_main">
     <menubar id="menu_main" style="min-height: 0px;">
       <menu id="menu_file" label="&file.label;">
