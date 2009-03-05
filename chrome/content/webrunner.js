@@ -1088,7 +1088,7 @@ var WebRunner = {
       observerService.removeObserver(this, "quit-application-requested");
     }
     else if (aTopic == "session-save") {
-      new XPCNativeWrapper(aSubject.QueryInterface(Ci.nsISupportsPRBool)).data = this.shutdownQuery();
+      aSubject.QueryInterface(Ci.nsISupportsPRBool).data = this.shutdownQuery();
     }
   },
 
