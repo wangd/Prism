@@ -9,6 +9,7 @@ webrunner.jar:
 % content branding %branding/
 % locale branding @AB_CD@ %branding/
 % overlay chrome://mozapps/content/downloads/unknownContentType.xul chrome://webrunner/content/unknownContentType.xul
+% resource prism ..
   content/about.xul                    (content/about.xul)
   content/about.js                     (content/about.js)
   content/preferences/content.xul      (content/preferences/content.xul)

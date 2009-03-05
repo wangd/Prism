@@ -43,6 +43,21 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= runtime newapp client extension
+DIRS		= chrome components newapp client extension
+
+APP_UA_NAME = $(shell echo $(MOZ_APP_DISPLAYNAME) | sed -e's/[^A-Za-z]//g')
+DEFINES += -DAPP_NAME=$(MOZ_APP_DISPLAYNAME) -DAPP_VERSION=$(MOZ_APP_VERSION) -DAPP_UA_NAME=$(APP_UA_NAME)
+
+PREF_JS_EXPORTS = $(srcdir)/defaults/preferences/preferences.js
+
+EXTRA_JS_MODULES = \
+  $(srcdir)/modules/HostUI.jsm \
+  $(NULL)
+
+EXTRA_PP_JS_MODULES = \
+  $(srcdir)/common/modules/WebAppProperties.jsm \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DAPP_VERSION=$(MOZ_APP_VERSION)

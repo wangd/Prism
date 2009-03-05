@@ -84,8 +84,8 @@ libs repackage:: application.ini
 	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" -e "s/%APP_BINARY%/$(APP_BINARY)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
 	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj/InfoPlist.strings
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Resources/branding
-	cp $(srcdir)/../runtime/chrome/locale/en-US/brand/brand.dtd $(DIST)/$(APP_NAME).app/Contents/Resources/branding/
-	cp $(srcdir)/../runtime/chrome/locale/en-US/brand/brand.properties $(DIST)/$(APP_NAME).app/Contents/Resources/branding/
+	cp $(srcdir)/../chrome/locale/en-US/brand/brand.dtd $(DIST)/$(APP_NAME).app/Contents/Resources/branding/
+	cp $(srcdir)/../chrome/locale/en-US/brand/brand.properties $(DIST)/$(APP_NAME).app/Contents/Resources/branding/
 	cp $(DIST)/bin/$(APP_BINARY) $(DIST)/$(APP_NAME).app/Contents/MacOS/$(APP_BINARY)
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)
 	$(RM) $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/$(APP_BINARY)
@@ -93,7 +93,7 @@ libs repackage:: application.ini
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Frameworks
 	rsync -a --copy-unsafe-links --exclude nsinstall $(LIBXUL_DIST)/XUL.framework/Versions/Current/. $(DIST)/$(APP_NAME).app/Contents/Frameworks/XUL.framework
 	cd $(XUL_FRAMEWORK) && $(RM) -f $(SDK_STRIP)
-	cp $(srcdir)/../runtime/chrome/locale/$(MOZ_UI_LOCALE)/updater.ini $(XUL_FRAMEWORK)/updater.app/Contents/MacOS
+	cp $(srcdir)/../chrome/locale/$(MOZ_UI_LOCALE)/updater.ini $(XUL_FRAMEWORK)/updater.app/Contents/MacOS
 #	remove .svn dirs from packaged app
 	find $(DIST)/$(APP_NAME).app -type d -name ".svn" -prune -exec rm -rf {} \;
 
@@ -112,5 +112,5 @@ endif
 	$(NSINSTALL) -D $(DIST)/bin/xulrunner
 	(cd $(LIBXUL_SDK)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)
 	cd $(DIST)/bin/xulrunner && $(RM) -f $(SDK_STRIP)
-	cp $(srcdir)/../runtime/chrome/locale/$(MOZ_UI_LOCALE)/updater.ini $(DIST)/bin/xulrunner
+	cp $(srcdir)/../chrome/locale/$(MOZ_UI_LOCALE)/updater.ini $(DIST)/bin/xulrunner
 endif

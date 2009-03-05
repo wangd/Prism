@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,15 +11,16 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Operating System Integration extension.
+# The Original Code is Mozilla.
 #
 # The Initial Developer of the Original Code is
-# Matthew Gertner
+# the Mozilla Foundation <http://www.mozilla.org/>.
 # Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#    Matthew Gertner <matthew@allpeers.com> (Original author)
+#   Dave Townsend <dtownsend@oxymoronical.com>
+#   Matthew Gertner <matthew@allpeers.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,52 +36,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH   = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE            = $(MOZ_APP_NAME)
-LIBRARY_NAME      = $(MOZ_APP_NAME)
-IS_COMPONENT      = 1
-USE_STATIC_LIBS   = 1
-EMBED_MANIFEST_AT = 2
-
-REQUIRES	= \
-    xpcom \
-    imglib2 \
-    string \
-    gfx \
-    necko \
-    appshell \
-    docshell \
-    widget \
-    dom \
-    caps \
-    content \
-    prism_win \
-    $(NULL)
-
-CPPSRCS = \
-    nsICOEncoder.cpp \
-    nsDesktopEnvironmentWin.cpp \
-    nsNativeMenu.cpp \
-    nsNotificationArea.cpp \
-    nsOSIntegrationModule.cpp \
-    nsSystemMenu.cpp \
-    $(NULL)
-
-LOCAL_INCLUDES += -I$(srcdir)/..
-
-EXTRA_DSO_LDOPTS = \
-    ../$(LIB_PREFIX)$(MOZ_APP_NAME)_static.$(LIB_SUFFIX) \
-    $(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-    $(XPCOM_FROZEN_LDOPTS) \
-    $(NSPR_LIBS) \
-    $(NULL)
-    
-OS_LIBS += $(call EXPAND_LIBNAME,ole32 version uuid shell32)
+DEFINES += -DAB_CD=$(MOZ_UI_LOCALE) -DPACKAGE=newapp
 
 include $(topsrcdir)/config/rules.mk

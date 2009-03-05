@@ -151,6 +151,7 @@ main(int argc, char **argv)
   char *lastSlash;
 
   char iniPath[MAXPATHLEN];
+  char tmpPath[MAXPATHLEN];
   char webappPath[MAXPATHLEN] = { 0 };
   char overridePath[MAXPATHLEN] = { 0 };
   char greDir[MAXPATHLEN];

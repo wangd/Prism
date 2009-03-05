@@ -2,7 +2,6 @@
 
 newapp.jar:
 % content newapp %content/
-% resource prism ..
 * content/install-shortcut.js          (content/install-shortcut.js)
 * content/install-shortcut.xul         (content/install-shortcut.xul)
   content/install-advanced.js          (content/install-advanced.js)

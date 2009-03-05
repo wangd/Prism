@@ -15,12 +15,12 @@
 # The Original Code is Operating System Integration extension.
 #
 # The Initial Developer of the Original Code is
-# Matthew Gertner 
+# Matthew Gertner
 # Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#    Matthew Gertner <matthew@allpeers.com> (Original author)
+#    Matthew Gertner <matthew.gertner@gmail.com> (Original author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,16 +36,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE       = $(MOZ_APP_NAME)
-LIBRARY_NAME = $(MOZ_APP_NAME)
-IS_COMPONENT = 1
+MODULE            = $(MOZ_APP_NAME)
+LIBRARY_NAME      = $(MOZ_APP_NAME)
+IS_COMPONENT      = 1
+USE_STATIC_LIBS   = 1
+EMBED_MANIFEST_AT = 2
 
 REQUIRES	= \
     xpcom \
@@ -53,35 +55,33 @@ REQUIRES	= \
     string \
     gfx \
     necko \
+    appshell \
+    docshell \
+    widget \
+    dom \
     caps \
-    alerts \
-    prism_mac \
+    content \
+    prism_win \
     $(NULL)
 
-CPPSRCS		= \
+CPPSRCS = \
+    nsICOEncoder.cpp \
+    nsDesktopEnvironmentWin.cpp \
+    nsNativeMenu.cpp \
+    nsNotificationArea.cpp \
+    nsOSIntegrationModule.cpp \
+    nsSystemMenu.cpp \
     $(NULL)
 
-CMMSRCS = \
-  DOMEventListenerWrapper.mm \
-  nsCocoaMenu.mm \
-  nsDesktopEnvironmentMac.mm \
-  nsDockTile.mm \
-  nsICNSEncoder.mm \
-  nsOSIntegrationModule.mm \
-  $(NULL)
-  
-CMSRCS = IconFamily.m
-OS_LIBS += -framework Cocoa
+LOCAL_INCLUDES += -I$(srcdir)/..
 
 EXTRA_DSO_LDOPTS = \
+    ../$(LIB_PREFIX)$(MOZ_APP_NAME)_static.$(LIB_SUFFIX) \
     $(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
     $(XPCOM_FROZEN_LDOPTS) \
     $(NSPR_LIBS) \
     $(NULL)
-
-# Need to link with CoreFoundation on Mac
-EXTRA_DSO_LDOPTS += \
-		$(TK_LIBS) \
-		$(NULL)
+    
+OS_LIBS += $(call EXPAND_LIBNAME,ole32 version uuid shell32)
 
 include $(topsrcdir)/config/rules.mk

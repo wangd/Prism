@@ -20,7 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#    Matthew Gertner <matthew.gertner@gmail.com> (Original author)
+#    Matthew Gertner <matthew@allpeers.com> (Original author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,13 +36,52 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src
+MODULE       = $(MOZ_APP_NAME)
+LIBRARY_NAME = $(MOZ_APP_NAME)
+IS_COMPONENT = 1
+
+REQUIRES	= \
+    xpcom \
+    imglib2 \
+    string \
+    gfx \
+    necko \
+    caps \
+    alerts \
+    prism_mac \
+    $(NULL)
+
+CPPSRCS		= \
+    $(NULL)
+
+CMMSRCS = \
+  DOMEventListenerWrapper.mm \
+  nsCocoaMenu.mm \
+  nsDesktopEnvironmentMac.mm \
+  nsDockTile.mm \
+  nsICNSEncoder.mm \
+  nsOSIntegrationModule.mm \
+  $(NULL)
+  
+CMSRCS = IconFamily.m
+OS_LIBS += -framework Cocoa
+
+EXTRA_DSO_LDOPTS = \
+    $(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+    $(XPCOM_FROZEN_LDOPTS) \
+    $(NSPR_LIBS) \
+    $(NULL)
+
+# Need to link with CoreFoundation on Mac
+EXTRA_DSO_LDOPTS += \
+		$(TK_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
