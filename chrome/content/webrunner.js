@@ -722,6 +722,7 @@ var WebRunner = {
     // dock Quit menu item, for example).
     var observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     observerService.addObserver(this, "quit-application-requested", false);
+    observerService.addObserver(this, "session-save", false);
 
     setTimeout(function() { self._delayedStartup(); }, 0);
   },
@@ -1085,6 +1086,9 @@ var WebRunner = {
 
       var observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
       observerService.removeObserver(this, "quit-application-requested");
+    }
+    else if (aTopic == "session-save") {
+      new XPCNativeWrapper(aSubject.QueryInterface(Ci.nsISupportsPRBool)).data = this.shutdownQuery();
     }
   },
 
