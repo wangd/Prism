@@ -200,10 +200,12 @@ main(int argc, char **argv)
     // Check for override.ini in the webapp home.
     strcpy(overridePath, webappPath);
     int len = strlen(overridePath);
-    overridePath[len] = PATH_SEPARATOR_CHAR;
-    strncpy(overridePath+len+1, "override.ini", sizeof(overridePath)-(len+1));
-
-    if (!access(greDir, R_OK)) {
+    if (overridePath[len-1] != PATH_SEPARATOR_CHAR) {
+      overridePath[len++] = PATH_SEPARATOR_CHAR;
+    }
+    strncpy(overridePath+len, "override.ini", sizeof(overridePath)-(len));
+    
+    if (access(overridePath, R_OK) != 0) {
       // No override.ini there
       overridePath[0] = '\0';
     }
