@@ -36,14 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsXPCOMGlue.h"
-#include "nsINIParser.h"
-#include "prtypes.h"
-#include "nsXPCOMPrivate.h" // for XP MAXPATHLEN
-#include "nsMemory.h" // for NS_ARRAY_LENGTH
-#include "nsXULAppAPI.h"
-#include "nsILocalFile.h"
-
 #include <stdarg.h>
 
 #ifdef XP_WIN
@@ -70,6 +62,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 #define PATH_SEPARATOR_CHAR '/'
 #endif
 
@@ -81,6 +74,14 @@
 #include <Entry.h>
 #include <Path.h>
 #endif
+
+#include "nsXPCOMGlue.h"
+#include "nsINIParser.h"
+#include "prtypes.h"
+#include "nsXPCOMPrivate.h" // for XP MAXPATHLEN
+#include "nsMemory.h" // for NS_ARRAY_LENGTH
+#include "nsXULAppAPI.h"
+#include "nsILocalFile.h"
 
 #define VERSION_MAXLEN 128
 
@@ -157,7 +158,7 @@ main(int argc, char **argv)
   char greDir[MAXPATHLEN];
   PRBool greFound = PR_FALSE;
   char** newArgv = nsnull;
-  char newArgc = 0;
+  int newArgc = 0;
   char* overrideFlag = "-override";
   char *webappFlag = "-webapp";
   
@@ -207,7 +208,7 @@ main(int argc, char **argv)
       overridePath[0] = '\0';
     }
   }
-    
+
 #if defined(XP_MACOSX)
   CFBundleRef appBundle = CFBundleGetMainBundle();
   if (!appBundle)
