@@ -20,7 +20,7 @@
 #
 # Contributor(s):
 #   Dave Townsend <dtownsend@oxymoronical.com>
-#   Matthew Gertner <matthew@allpeers.com>
+#   Matthew Gertner <matthew.gertner@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,11 +50,11 @@ DEFINES += -DAPP_NAME=$(MOZ_APP_DISPLAYNAME) -DAPP_VERSION=$(MOZ_APP_VERSION) -D
 
 PREF_JS_EXPORTS = $(srcdir)/defaults/preferences/preferences.js
 
-EXTRA_JS_MODULES = \
+EXTRA_JS_MODULES += \
   $(srcdir)/modules/HostUI.jsm \
   $(NULL)
 
-EXTRA_PP_JS_MODULES = \
+EXTRA_PP_JS_MODULES += \
   $(srcdir)/common/modules/WebAppProperties.jsm \
   $(NULL)
 

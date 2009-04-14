@@ -46,11 +46,11 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = chrome
 
-EXTRA_JS_MODULES = \
+EXTRA_JS_MODULES += \
   $(srcdir)/modules/FaviconDownloader.jsm \
   $(NULL)
 
-EXTRA_PP_JS_MODULES = \
+EXTRA_PP_JS_MODULES += \
   $(srcdir)/modules/ImageUtils.jsm \
   $(srcdir)/modules/WebAppInstall.jsm \
   $(NULL)

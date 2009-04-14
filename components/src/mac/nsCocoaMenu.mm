@@ -48,7 +48,11 @@
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIWindowMediator.h"
 #include "nsMemory.h"
+#include "nsServiceManagerUtils.h"
 #include "nsStringAPI.h"
 #include "nsTArray.h"
 
@@ -75,9 +79,25 @@
 
 - (void)menuItemSelected:(id)sender
 {
+ nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
+  if (!windowMediator)
+    return;
+    
+  nsCOMPtr<nsIDOMWindowInternal> windowInternal;
+  if (NS_FAILED(windowMediator->GetMostRecentWindow(NS_LITERAL_STRING("navigator:browser").get(), getter_AddRefs(windowInternal))))
+    return;
+    
+  nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(windowInternal));
+  if (!window)
+    return;
+    
+  nsCOMPtr<nsIDOMDocument> document;
+  if (NS_FAILED(window->GetDocument(getter_AddRefs(document))))
+    return;
+
   nsCOMPtr<nsIDOMEventListener> listener = [[sender representedObject] eventListener];
     
-  nsCOMPtr<nsIDOMDocumentEvent> documentEvent(do_QueryInterface(mDocument));
+  nsCOMPtr<nsIDOMDocumentEvent> documentEvent(do_QueryInterface(document));
   if (!documentEvent)
     return;
 

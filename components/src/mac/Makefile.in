@@ -54,6 +54,8 @@ REQUIRES	= \
     gfx \
     necko \
     caps \
+    dom \
+    appshell \
     alerts \
     prism_mac \
     $(NULL)

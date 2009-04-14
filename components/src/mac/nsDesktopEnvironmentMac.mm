@@ -96,8 +96,8 @@ extern "C" {
 
 - (void)cloneMenu:(NSMenu*)menu target:(NSMenu*)target
 {
-  NSInteger i;
-  NSInteger count = [menu numberOfItems];
+  PRUint32 i;
+  PRUint32 count = [menu numberOfItems];
   for (i=0; i<count; i++) {
     NSMenuItem* item = [menu itemAtIndex:i];
     NSMenuItem* newItem = [target insertItemWithTitle:[item title] action:[item action] keyEquivalent:[item keyEquivalent] atIndex:i];
