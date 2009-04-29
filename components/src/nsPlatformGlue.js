@@ -234,6 +234,7 @@ PlatformGlue.prototype = {
 
   _prefs : Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch),
   _window : null,
+  _chromeWindow : null,
   _icon : null,
   _protocolCallbacks : {},
 
@@ -293,6 +294,7 @@ PlatformGlue.prototype = {
     
       if (aWebProgress.DOMWindow == browser.contentWindow) {
         this._window = aWebProgress.DOMWindow;
+        this._chromeWindow = win;
       }
     }
   },
@@ -461,6 +463,20 @@ PlatformGlue.prototype = {
     Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader).
       loadSubScript("chrome://webrunner/content/browser/sanitize.js", null);
     Sanitizer.sanitize();
+  },
+  
+  getAttention : function getAttention() {
+    this._chromeWindow.getAttention();
+  },
+  
+  showPreferences : function showPreferences(paneToShow)
+  {
+    this._chromeWindow.openDialog("chrome://webrunner/content/preferences/preferences.xul", "preferences", "chrome,titlebar,toolbar,centerscreen,dialog", paneToShow);
+  },
+  
+  showAbout : function showAbout()
+  {
+    this._chromeWindow.openDialog("chrome://webrunner/content/about.xul", "about", "centerscreen,modal");
   }
 }
 

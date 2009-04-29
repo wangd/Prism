@@ -562,7 +562,7 @@ var WebRunner = {
   {
     var link = aEvent.target;
 
-    if (link instanceof HTMLAnchorElement && this._isLinkExternal(link)) {
+    if (link instanceof HTMLAnchorElement && WebRunner._isLinkExternal(link)) {
       aEvent.stopPropagation();
     }
   },
@@ -571,12 +571,12 @@ var WebRunner = {
   {
     var link = aEvent.target;
 
-    if (link instanceof HTMLAnchorElement && this._isLinkExternal(link)) {
+    if (link instanceof HTMLAnchorElement && WebRunner._isLinkExternal(link)) {
       // We don't want to open external links in this process: do so in the
       // default browser.
-      var resolvedURI = this._ios.newURI(link.href, null, null);
+      var resolvedURI = WebRunner._ios.newURI(link.href, null, null);
 
-      this._loadExternalURI(resolvedURI);
+      WebRunner._loadExternalURI(resolvedURI);
 
       aEvent.preventDefault();
       aEvent.stopPropagation();
@@ -927,8 +927,12 @@ var WebRunner = {
 
   attachDocument : function(aDocument) {
     var self = this;
-    aDocument.addEventListener("click", function(aEvent) { self._domClick(aEvent); }, true);
-    aDocument.addEventListener("DOMActivate", function(aEvent) { self._domActivate(aEvent); }, true);
+    // Remove handlers in case we already added them to this document
+    aDocument.removeEventListener("click", self._domClick, true);
+    aDocument.removeEventListener("DOMActivate", self._domActivate, true);
+    
+    aDocument.addEventListener("click", self._domClick, true);
+    aDocument.addEventListener("DOMActivate", self._domActivate, true);
   },
 
   // nsIXULBrowserWindow implementation to display link destinations in the statusbar

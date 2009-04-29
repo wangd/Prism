@@ -164,6 +164,23 @@ interface nsIPlatformGlue : nsISupports
   boolean isRegisteredProtocolHandler(in AString uriScheme);
   
   /**
+   * Use the appropriate platform-specific mechanism to indicate that the window requires attention.
+   */
+  void getAttention();
+  
+  /**
+   * Display the preferences dialog.
+   *
+   * @param paneToShow The name of the pane to display when the dialog is opened.
+   */
+  void showPreferences(in AString paneToShow);
+  
+  /**
+   * Display the About dialog.
+   */
+  void showAbout();
+  
+  /**
    * Clear private data (cache, history, etc.).
    */
   void clearPrivateData();

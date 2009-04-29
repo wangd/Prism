@@ -44,7 +44,9 @@ function onload(aEvent)
   userAgent.value = navigator.userAgent;
 
   var credits = document.getElementById("credits");
-  credits.value = window.arguments[0].credits.replace("\\n", "\n", "g");
+  if (window.arguments && window.arguments[0]) {
+    credits.value = window.arguments[0].credits.replace("\\n", "\n", "g");
+  }
 
   if (credits.value.length == 0) {
     document.getElementById("box_credits").hidden = true;
