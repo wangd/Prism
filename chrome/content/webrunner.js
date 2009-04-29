@@ -31,7 +31,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Components.utils.import("resource://prism/modules/WebAppProperties.jsm");
-Components.utils.import("resource://prism/modules/HostUI.jsm");
 
 window.addEventListener("load", function() { WebRunner.startup(); }, false);
 
@@ -588,13 +587,9 @@ var WebRunner = {
     // Initialize the platform glue
     var platform = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
 
-    HostUI._document = document;
-    HostUI._window = window;
-
     WebAppProperties.script["XMLHttpRequest"] = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1");
     WebAppProperties.script["window"] = this._getBrowser().contentWindow;
     WebAppProperties.script["properties"] = WebAppProperties;
-    WebAppProperties.script["host"] = HostUI;
   },
 
   startup : function()
