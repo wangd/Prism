@@ -402,7 +402,7 @@ var WebAppInstall =
     infoPlistStrings.append("en.lproj");
     infoPlistStrings.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
     infoPlistStrings.append("InfoPlist.strings");
-    FileIO.stringToFile("CFBundleName = " + name + ";\n", infoPlistStrings, "UTF-16");
+    FileIO.stringToFile("CFBundleName = \"" + name + "\";\n", infoPlistStrings, "UTF-16");
 
     if (extensionDir) {
       // Can't use the Firefox stub so we need to use the XR stub supplied with the extension
