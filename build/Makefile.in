@@ -19,7 +19,6 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Dave Townsend <dtownsend@oxymoronical.com>
 #   Matthew Gertner <matthew.gertner@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
@@ -36,13 +35,21 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= chrome components newapp build client extension
+APP_UA_NAME = $(shell echo $(MOZ_APP_DISPLAYNAME) | sed -e's/[^A-Za-z]//g')
+
+DEFINES += -DAPP_NAME=$(MOZ_APP_DISPLAYNAME) -DAPP_VERSION=$(MOZ_APP_VERSION) -DAPP_UA_NAME=$(APP_UA_NAME)
+
+EXTRA_PP_JS_MODULES += \
+  $(srcdir)/../common/modules/WebAppProperties.jsm \
+  $(NULL)
+
+PREF_JS_EXPORTS = $(srcdir)/../defaults/preferences/preferences.js
 
 include $(topsrcdir)/config/rules.mk
