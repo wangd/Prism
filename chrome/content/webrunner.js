@@ -629,7 +629,7 @@ var WebRunner = {
 
     // Set browser homepage as initial webapp page
     if (WebAppProperties.uri) {
-      var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+      var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
       prefs.setCharPref("browser.startup.homepage", WebAppProperties.uri);
     }
 
