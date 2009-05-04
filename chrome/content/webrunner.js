@@ -80,7 +80,8 @@ var WebRunner = {
       if (WebAppProperties.hasOwnProperty("id")) {
         var nativeJSON = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
         var json = nativeJSON.encode(settings);
-        var file = WebAppProperties.getAppRoot();
+        var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+        var file = dirSvc.get("ProfD", Ci.nsIFile);
         file.append("localstore.json");
         FileIO.stringToFile(json, file);
       }
@@ -90,7 +91,8 @@ var WebRunner = {
     // Load using JSON format
     var settings;
     if (WebAppProperties.hasOwnProperty("id")) {
-      var file = WebAppProperties.getAppRoot();
+      var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+      var file = dirSvc.get("ProfD", Ci.nsIFile);
       file.append("localstore.json");
       if (file.exists()) {
         var json = FileIO.fileToString(file);
