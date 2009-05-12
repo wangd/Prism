@@ -635,9 +635,11 @@ var WebRunner = {
 
     // Add handlers for the main page
     window.addEventListener("unload", function() { WebRunner.shutdown(); }, false);
+#ifdef XP_WIN
     window.addEventListener("minimizing", function(event) { WebRunner.onMinimizing(event); }, false);
     window.addEventListener("closing", function(event) { WebRunner.onClosing(event); }, false);
     window.addEventListener("DOMActivate", function(event) { WebRunner.onActivate(event); }, false);
+#endif
 
     var install = false;
 
