@@ -443,16 +443,11 @@ var WebRunner = {
 
   _getBaseDomain : function(aUri) {
     try {
-      if (aUri.host == "localhost") {
-        return aUri.host;
-      }
-      else {
-        return this._tld.getBaseDomain(aUri.QueryInterface(Ci.nsIURL));
-      }
+      return this._tld.getBaseDomain(aUri.QueryInterface(Ci.nsIURL));
     }
     catch(e) {
-      // Don't know how to get the domain for this URL
-      return null;
+      // Just use the host
+      return aUri.host;
     }
   },
 
