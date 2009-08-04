@@ -130,6 +130,11 @@ private:
 
 PRBool PR_CALLBACK SetEnvironmentVariable(const char* aString, const char* aValue, void* aClosure)
 {
+  if (aClosure) {
+    // Let the caller know that we set something
+    *((PRBool *) aClosure) = PR_TRUE;
+  }
+
   // Only need this on OS X
 #if defined(XP_MACOSX)
   setenv(aString, aValue, 1);
@@ -360,7 +365,15 @@ main(int argc, char **argv)
   }
   
   // Register any environment variables. This is Prism-specific.
-  parser.GetStrings("Environment", SetEnvironmentVariable, nsnull);
+  PRBool found = PR_FALSE;
+  parser.GetStrings("Environment", SetEnvironmentVariable, &found);
+  if (!found && strlen(overridePath) > 0) {
+    // Look in override.ini as well
+    nsINIParser overrideParser;
+    if (NS_SUCCEEDED(overrideParser.Init(overridePath))) {
+      overrideParser.GetStrings("Environment", SetEnvironmentVariable, nsnull);
+    }
+  }
 
   if (!greFound) {
     char minVersion[VERSION_MAXLEN];
