@@ -63,11 +63,13 @@ LIBS = \
   $(XPCOM_STANDALONE_GLUE_LDOPTS) \
   $(NULL)
 
-# Need to link with CoreFoundation on Mac
+# Need to add path to Carbon headers and link with CoreFoundation on Mac
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 LIBS            += \
 		$(TK_LIBS) \
 		$(NULL)
+
+LOCAL_INCLUDES    += -I$(MACOS_SDK_DIR)/Developer/Headers/FlatCarbon
 endif
 
 ifeq (WINNT,$(OS_ARCH))
