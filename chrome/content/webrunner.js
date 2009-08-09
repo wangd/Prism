@@ -921,9 +921,15 @@ var WebRunner = {
 
   attachDocument : function(aDocument) {
     var self = this;
-    // Remove handlers in case we already added them to this document
-    aDocument.removeEventListener("click", self._domClick, true);
-    aDocument.removeEventListener("DOMActivate", self._domActivate, true);
+    
+    try {
+      // Remove handlers in case we already added them to this document
+      aDocument.removeEventListener("click", self._domClick, true);
+      aDocument.removeEventListener("DOMActivate", self._domActivate, true);
+    }
+    catch(e) {
+      // Just ignore if we can't remove the event listeners since that probably means the document has just been created
+    }
     
     aDocument.addEventListener("click", self._domClick, true);
     aDocument.addEventListener("DOMActivate", self._domActivate, true);
