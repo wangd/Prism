@@ -704,7 +704,13 @@ var WebRunner = {
     if (WebAppProperties.uri) {
       var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
       this._uri = uriFixup.createFixupURI(WebAppProperties.uri, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
-      this._currentDomain = this._getBaseDomain(this._uri);
+      try {
+        this._currentDomain = this._getBaseDomain(this._uri);
+      }
+      catch(e) {
+        // Doesn't have a domain (e.g. IP address)
+        this._currentDomain = "";
+      }
     }
 
     // Register ourselves as the default window creator so we can control handling of external links
