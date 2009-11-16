@@ -119,7 +119,7 @@ PlatformGlueSound.prototype = {
   }
 }
 
-function MakeProtocolHandlerFactory(contractid) {
+function MakeProtocolHandlerFactory(contractid, platformGlue) {
   var factory = {
     QueryInterface: function (aIID) {
       if (!aIID.equals(Components.interfaces.nsISupports) &&
@@ -130,15 +130,16 @@ function MakeProtocolHandlerFactory(contractid) {
     createInstance: function (outer, iid) {
       if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
-      return (new PlatformProtocolHandler(contractid)).QueryInterface(iid);
+      return (new PlatformProtocolHandler(contractid, platformGlue)).QueryInterface(iid);
     }
   };
 
   return factory;
 }
 
-function PlatformProtocolHandler(contractid) {
+function PlatformProtocolHandler(contractid, platformGlue) {
   this._ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  this._platformGlue = platformGlue;
 }
 
 PlatformProtocolHandler.prototype = {
@@ -170,9 +171,8 @@ PlatformProtocolHandler.prototype = {
   },
 
   newURI: function newURI(aSpec, anOriginalCharset, aBaseURI) {
-    var platformGlue = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
     var callback = {};
-    var uriString = platformGlue.getProtocolURI(aSpec, callback);
+    var uriString = this._platformGlue.getProtocolURI(aSpec, callback);
     if (!callback.value) {
       return this._ioService.newURI(uriString, "", null);
     }
@@ -195,55 +195,30 @@ PlatformProtocolHandler.prototype = {
   }
 }
 
-//=================================================
-// Factory - Treat PlatformGlue as a singleton
-// XXX This is required, because we're registered for the 'JavaScript global
-// privileged property' category, whose handler always calls createInstance.
-// See bug 386535.
-var gSingleton = null;
-var PlatformGlueFactory = {
-  createInstance: function af_ci(aOuter, aIID) {
-    if (aOuter != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-
-    if (gSingleton == null) {
-      gSingleton = new PlatformGlue();
-    }
-
-    return gSingleton.QueryInterface(aIID);
-  }
-};
+var protocolCallbacks = {};
 
 function PlatformGlue() {
-  // WebProgressListener for getting notification of new doc loads.
-  var progress = Cc["@mozilla.org/docloaderservice;1"].getService(Ci.nsIWebProgress);
-  progress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
 }
 
 PlatformGlue.prototype = {
   classDescription: "Platform web API",
-  classID:          Components.ID("{3960e4b8-89d1-4c20-ae24-4d10d0900c4d}"),
+  classID:          Components.ID("{d3a004e0-0532-4b0d-b7be-8ed90eab675f}"),
   contractID:       "@mozilla.org/platform-web-api;1",
 
-  _xpcom_factory : PlatformGlueFactory,
-
   _xpcom_categories : [
-    { category: "JavaScript global property", entry: "platform"},
-    { category: "app-startup", service: true }
+     { category: "JavaScript global constructor", entry: "PlatformAPI" },
   ],
 
   _prefs : Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch),
   _window : null,
   _chromeWindow : null,
   _icon : null,
-  _protocolCallbacks : {},
 
   QueryInterface: XPCOMUtils.generateQI(
     [Ci.nsIPlatformGlue,
+     Ci.nsIPlatformGlueInternal,
      Ci.nsISecurityCheckedComponent,
      Ci.nsISupportsWeakReference,
-     Ci.nsIWebProgressListener,
-     Ci.nsIObserver,
      Ci.nsIClassInfo]),
 
   // nsIClassInfo
@@ -252,10 +227,9 @@ PlatformGlue.prototype = {
 
   getInterfaces: function getInterfaces(aCount) {
     var interfaces = [Ci.nsIPlatformGlue,
+                      Ci.nsIPlatformGlueInternal,
                       Ci.nsISecurityCheckedComponent,
                       Ci.nsISupportsWeakReference,
-                      Ci.nsIWebProgressListener,
-                      Ci.nsIObserver,
                       Ci.nsIClassInfo];
     aCount.value = interfaces.length;
     return interfaces;
@@ -284,50 +258,21 @@ PlatformGlue.prototype = {
     Components.utils.reportError(propertyName);
     return "NoAccess";
   },
-
-  // nsIWebProgressListener
-  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_TRANSFERRING && !(aWebProgress.DOMWindow instanceof Ci.nsIDOMChromeWindow)) {
-      var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-      var win = windowMediator.getMostRecentWindow("navigator:browser");
-      var browser = win.document.getElementById("browser_content");
-    
-      if (aWebProgress.DOMWindow == browser.contentWindow) {
-        this._window = aWebProgress.DOMWindow;
-        this._chromeWindow = win;
-      }
-    }
-  },
-
-  onProgressChange: function(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
-  },
-
-  onLocationChange: function(aWebProgress, aRequest, aLocation) {
-  },
-
-  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {
-  },
-
-  onSecurityChange: function(aWebProgress, aRequest, aState) {
+  
+  // nsIPlatformGlueInternal
+  setWindow : function setWindow(aWindow) {
+    this._window = aWindow;
+    var webNav = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+    var rootTreeItem = webNav.QueryInterface(Ci.nsIDocShellTreeItem).rootTreeItem;
+    var xulWindow = rootTreeItem.treeOwner.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIXULWindow);
+    this._chromeWindow = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowInternal).QueryInterface(Ci.nsIDOMWindow);
   },
   
-  //nsIObserver
-  observe: function (aSubject, aTopic, aData) {
-    switch (aTopic) {
-    case "app-startup":
-      var observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-      observerService.addObserver(this, "profile-after-change", false);
-      break;
-      
-    case "profile-after-change":
-      // Register factories for any protocol handlers
-      var prefs = this._prefs.QueryInterface(Ci.nsIPrefService).getBranch(PRISM_PROTOCOL_PREFIX);
-      var protocols = prefs.getChildList("", {});
-      for (protocolNum in protocols) {
-        this._registerProtocolFactory(protocols[protocolNum]);
-      }
-      break;
-    }
+  registerProtocolFactory : function(uriScheme) {
+    var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+    var contractId = "@mozilla.org/network/protocol;1?name=" + uriScheme;
+    registrar.registerFactory(PROTOCOL_HANDLER_CID, PROTOCOL_HANDLER_CLASSNAME, contractId,
+      MakeProtocolHandlerFactory(contractId, this));
   },
   
   //nsIPlatformGlue
@@ -392,27 +337,20 @@ PlatformGlue.prototype = {
     return this._icon;
   },
   
-  _registerProtocolFactory : function(uriScheme) {
-    var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-    var contractId = "@mozilla.org/network/protocol;1?name=" + uriScheme;
-    registrar.registerFactory(PROTOCOL_HANDLER_CID, PROTOCOL_HANDLER_CLASSNAME, contractId,
-      MakeProtocolHandlerFactory(contractId));
-  },
-  
   registerProtocolHandler: function registerProtocol(uriScheme, uriString) {
     // First register the protocol with the shell
     var shellService = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIShellService);
     shellService.registerProtocol(uriScheme, null, null);
     
     // Register with the component registrar
-    this._registerProtocolFactory(uriScheme);
+    this.registerProtocolFactory(uriScheme);
     
     // Then store a pref so we remember the URI string we want to load
     this._prefs.setCharPref(PRISM_PROTOCOL_PREFIX + uriScheme, uriString);
   },
   
   registerProtocolCallback : function(uriScheme, callback) {
-    this._protocolCallbacks[uriScheme] = callback;
+    protocolCallbacks[uriScheme] = callback;
   },
   
   unregisterProtocolHandler: function unregisterProtocol(uriScheme) {
@@ -429,15 +367,15 @@ PlatformGlue.prototype = {
     this._prefs.clearUserPref(PRISM_PROTOCOL_PREFIX + uriScheme);
     
     // Remove the callback, if any
-    if (uriScheme in this._protocolCallbacks) {
-      delete this._protocolCallbacks[uriScheme];
+    if (uriScheme in protocolCallbacks) {
+      delete protocolCallbacks[uriScheme];
     }
   },
   
   getProtocolURI : function getProtocolURI(uriSpec, callback) {
     var uriScheme = uriSpec.replace(/(.*):.*/, "$1");
-    if (callback && uriScheme in this._protocolCallbacks) {
-      callback.value = this._protocolCallbacks[uriScheme];
+    if (callback && uriScheme in protocolCallbacks) {
+      callback.value = protocolCallbacks[uriScheme];
     }
     try {
       var uriString = this._prefs.getCharPref(PRISM_PROTOCOL_PREFIX + uriScheme);

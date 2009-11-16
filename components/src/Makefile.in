@@ -43,29 +43,58 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE            = $(MOZ_APP_NAME)
-LIBRARY_NAME      = $(MOZ_APP_NAME)_static
-USE_STATIC_LIBS   = 1
-FORCE_STATIC_LIB  = 1
+MODULE       = $(MOZ_APP_NAME)
+LIBRARY_NAME = $(MOZ_APP_NAME)
+IS_COMPONENT = 1
 
 REQUIRES = \
+  js \
   layout \
+  content \
+  widget \
+  appshell \
   docshell \
+  necko \
+  caps \
+  alerts \
+  imglib2 \
+  gfx \
   dom \
   xpcom \
   $(NULL)
 
+CPPSRCS = \
+  nsDOMMenuBar.cpp \
+  nsPlatformGlueModule.cpp \
+  nsPlatformGlueSingleton.cpp \
+  $(NULL)
+
 ifeq ($(OS_ARCH),WINNT)
-DIRS = windows
+EMBED_MANIFEST_AT = 2
+
+CPPSRCS += \
+  windows/nsICOEncoder.cpp \
+  windows/nsDesktopEnvironmentWin.cpp \
+  windows/nsNativeMenu.cpp \
+  windows/nsNotificationArea.cpp \
+  windows/nsSystemMenu.cpp \
+  $(NULL)
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-DIRS = mac
-endif
+REQUIRES += prism_mac
 
-CPPSRCS = \
-  nsDOMMenuBar.cpp \
+CMMSRCS = \
+  mac/DOMEventListenerWrapper.mm \
+  mac/nsCocoaMenu.mm \
+  mac/nsDesktopEnvironmentMac.mm \
+  mac/nsDockTile.mm \
+  mac/nsICNSEncoder.mm \
   $(NULL)
+
+CMSRCS = mac/IconFamily.m
+OS_LIBS += -framework Cocoa
+endif
 
 EXTRA_PP_COMPONENTS = \
   nsCommandLineHandler.js \
@@ -76,4 +105,28 @@ ifeq ($(OS_ARCH),Darwin)
 EXTRA_PP_COMPONENTS += nsAppStartup.js
 endif
 
+EXTRA_DSO_LDOPTS = \
+    $(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+    $(XPCOM_FROZEN_LDOPTS) \
+    $(NSPR_LIBS) \
+    $(NULL)
+
+ifeq ($(OS_ARCH),Darwin)
+# Need to link with CoreFoundation on Mac
+EXTRA_DSO_LDOPTS += \
+		$(TK_LIBS) \
+		$(NULL)
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS += $(call EXPAND_LIBNAME,ole32 version uuid shell32)
+endif
+
+LOCAL_INCLUDES=-I$(srcdir)/windows -I$(srcdir)/mac
+
 include $(topsrcdir)/config/rules.mk
+
+export::
+	mkdir -p mac
+	mkdir -p windows
+

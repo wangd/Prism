@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Operating System Integration extension.
+ * The Original Code is mozilla.org Code.
  *
  * The Initial Developer of the Original Code is
- * Matthew Gertner.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Mozilla.org.
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matthew Gertner <matthew@allpeers.com> (Original author)
+ * Matthew Gertner <matthew.gertner@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,40 +36,28 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+/* Development of this Contribution was supported by Yahoo! Inc. */
 
-//#include <Carbon/Carbon.h>
+#include "nsISupports.idl"
 
-//#include "IconFamily.h"
+interface nsIDOMWindow;
 
-#include "imgIEncoder.h"
-#include "nsINativeIcon.h"
-
-#define NS_ICNSENCODER_CID \
-{ /* 4de52056-a8d6-11dc-8314-0800200c9a66 */         \
-     0x4de52056,                                     \
-     0xa8d6,                                         \
-     0x11dc,                                         \
-    {0x83, 0x14, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66} \
-}
-
-// Provides ICNS encoding functionality. Use InitFromData() to do the
-// encoding. See that function definition for encoding options.
-class nsICNSEncoder : public imgIEncoder, public nsINativeIcon
+/**
+ * Private interface for platform functionality.
+ */
+[scriptable, uuid(11646003-f275-42ab-96e0-e839001340bf)]
+interface nsIPlatformGlueInternal : nsISupports
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_IMGIENCODER
-  NS_DECL_NSIINPUTSTREAM
-  NS_DECL_NSINATIVEICON
+  /**
+   * Set the window associated with this platform glue instance.
+   */
+  void setWindow(in nsIDOMWindow window);
 
-  nsICNSEncoder();
-
-private:
-  ~nsICNSEncoder();
-
-protected:
-  void* mIconFamily;
-  void* mIconData;
-  PRUint32 mIconSize;
-  PRUint32 mReadPosition;
+  /**
+   * Register a factory for the specified URI scheme.
+   *
+   * @param uriScheme The scheme to register.
+   */
+  void registerProtocolFactory(in AString uriScheme);
 };

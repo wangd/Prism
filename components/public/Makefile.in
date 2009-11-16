@@ -20,7 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#    Matthew Gertner <matthew@allpeers.com> (Original author)
+#    Matthew Gertner <matthew.gertner@gmail.com> (Original author)
 #    Mark Finkle <mark.finkle@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
@@ -56,6 +56,7 @@ XPIDLSRCS	= \
     nsINativeIcon.idl \
     nsINativeMenu.idl \
     nsIPlatformGlue.idl \
+    nsIPlatformGlueInternal.idl \
     nsIShellService.idl \
     $(NULL)
 

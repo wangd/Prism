@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Operating System Integration extension.
+ * The Original Code is WebRunner
  *
  * The Initial Developer of the Original Code is
  * Matthew Gertner.
@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Matthew Gertner <matthew@allpeers.com> (Original author)
+ *   Matthew Gertner <matthew.gertner@gmail.com> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +36,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//#include <Carbon/Carbon.h>
+/* Development of this Contribution was supported by Yahoo! Inc. */
 
-//#include "IconFamily.h"
+#include "nsIObserver.h"
 
-#include "imgIEncoder.h"
-#include "nsINativeIcon.h"
+class nsIComponentManager;
+class nsIFile;
+struct nsModuleComponentInfo;
 
-#define NS_ICNSENCODER_CID \
-{ /* 4de52056-a8d6-11dc-8314-0800200c9a66 */         \
-     0x4de52056,                                     \
-     0xa8d6,                                         \
-     0x11dc,                                         \
-    {0x83, 0x14, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66} \
-}
+#define NS_PLATFORMGLUESINGLETON_CONTRACTID "@mozilla.org/platform-glue-singleton;1"
+#define NS_PLATFORMGLUESINGLETON_CID {0x2a7fe1a8, 0xdc4f, 0x47e9, {0xa5, 0x05, 0x4f, 0xe9, 0x46, 0xd2, 0x78, 0x50}}
 
-// Provides ICNS encoding functionality. Use InitFromData() to do the
-// encoding. See that function definition for encoding options.
-class nsICNSEncoder : public imgIEncoder, public nsINativeIcon
+// Wrapper so that nsPlatformGlue can access the associated window
+class nsPlatformGlueSingleton : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGIENCODER
-  NS_DECL_NSIINPUTSTREAM
-  NS_DECL_NSINATIVEICON
+  NS_DECL_NSIOBSERVER
 
-  nsICNSEncoder();
+  nsPlatformGlueSingleton();
+  ~nsPlatformGlueSingleton();
 
-private:
-  ~nsICNSEncoder();
+  static NS_METHOD OnRegistration(nsIComponentManager *aCompMgr,
+    nsIFile *aPath, const char *registryLocation, const char *componentType,
+    const nsModuleComponentInfo *info);
 
+  static NS_METHOD OnUnregistration(nsIComponentManager *aCompMgr,
+    nsIFile *aPath, const char *registryLocation,
+    const nsModuleComponentInfo *info);
+    
 protected:
-  void* mIconFamily;
-  void* mIconData;
-  PRUint32 mIconSize;
-  PRUint32 mReadPosition;
 };

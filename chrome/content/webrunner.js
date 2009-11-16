@@ -34,6 +34,53 @@ Components.utils.import("resource://prism/modules/WebAppProperties.jsm");
 
 window.addEventListener("load", function() { WebRunner.startup(); }, false);
 
+function WebRunnerChannelListener()
+{
+}
+
+WebRunnerChannelListener.prototype =
+{
+  _originalListener : null,
+  
+  _streamData : function(aRequest, aContext, str) {
+    var stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
+    var length = str.length;
+    stream.setData(str, length);
+    try {
+      this._originalListener.onDataAvailable(aRequest, aContext, stream, 0, length);
+    } catch(e) {
+      // For some reason some Ajax requests throw 0x80540006 so just ignore
+    }
+  },
+
+  onStartRequest : function(aRequest, aContext) {
+    this._originalListener.onStartRequest(aRequest, aContext);
+    
+    if (aRequest.QueryInterface(Ci.nsIHttpChannel).getResponseHeader("content-type").substr(0, 9) == "text/html") {
+      var script = "<script>";
+      script += "window.__defineGetter__('platform', function() {\n";
+      script += " return (window._platform ? window._platform : window.loadPlatformAPI()); })\n\n";
+
+      script += "window.loadPlatformAPI = function() {\n";
+      script += "window._platform =  new PlatformAPI();\n";
+      script += "window._platform.setWindow(window);\n";
+
+      script += " return window._platform };\n";
+      script += "</script>";
+  
+      this._streamData(aRequest, aContext, script);
+    }
+  },
+  
+  onStopRequest : function(aRequest, aContext, aStatusCode) {
+    this._originalListener.onStopRequest(aRequest, aContext, aStatusCode);
+  },
+  
+  onDataAvailable : function(aRequest, aContext, aInputStream, aOffset, aCount) {
+    this._originalListener.onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount);
+  }
+};
+
 /**
  * Main application code.
  */
@@ -47,6 +94,7 @@ var WebRunner = {
   _minimizedState : 0,
   _zoomLevel : 1,
   _loadError : false,
+  _firstLoad : true,
 
   _getBrowser : function() {
     return document.getElementById("browser_content");
@@ -169,12 +217,16 @@ var WebRunner = {
     var browser = WebRunner._getBrowser();
     // Don't fire for iframes
     if (event.target == browser.contentDocument) {
-      browser.removeEventListener("DOMContentLoaded", WebRunner._contentLoaded, true);
-      if (!WebRunner._loadError) {
-        WebAppProperties.script.load();
-      }
-      else if (WebAppProperties.script.error) {
-        WebAppProperties.script.error();
+      WebAppProperties.script["window"] = browser.contentWindow.wrappedJSObject;
+
+      if (WebRunner._firstLoad) {
+        WebRunner._firstLoad = false;
+        if (!WebRunner._loadError) {
+          WebAppProperties.script.load();
+        }
+        else if (WebAppProperties.script.error) {
+          WebAppProperties.script.error();
+        }
       }
     }
   },
@@ -217,7 +269,7 @@ var WebRunner = {
     var errorDoc = ot.ownerDocument;
 
     // If the event came from an ssl error page, it is probably either the "Add
-    // Exception…" or "Get me out of here!" button
+    // ExceptionÃ–" or "Get me out of here!" button
     if (/^about:neterror\?e=nssBadCert/.test(errorDoc.documentURI)) {
       if (ot == errorDoc.getElementById('exceptionDialogButton')) {
         var params = { exceptionAdded : false };
@@ -585,7 +637,7 @@ var WebRunner = {
     var platform = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
 
     WebAppProperties.script["XMLHttpRequest"] = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1");
-    WebAppProperties.script["window"] = this._getBrowser().contentWindow;
+    WebAppProperties.script["window"] = this._getBrowser().contentWindow.wrappedJSObject;
     WebAppProperties.script["properties"] = WebAppProperties;
   },
 
@@ -723,6 +775,8 @@ var WebRunner = {
     var observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     observerService.addObserver(this, "quit-application-requested", false);
     observerService.addObserver(this, "session-save", false);
+    observerService.addObserver(this, "http-on-examine-response", false);
+    observerService.addObserver(this, "http-on-examine-cached-response", false);
 
     setTimeout(function() { self._delayedStartup(); }, 0);
   },
@@ -987,9 +1041,6 @@ var WebRunner = {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
         this._loadError = false;
       }
-      else if (aStateFlags & Ci.nsIWebProgressListener.STATE_TRANSFERRING) {
-        WebAppProperties.script["window"] = aWebProgress.DOMWindow;
-      }
       else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         var domDocument = aWebProgress.DOMWindow.document;
         this.attachDocument(domDocument);
@@ -1052,7 +1103,7 @@ var WebRunner = {
         security.setAttribute("level", "high");
         security.setAttribute("label", browser.contentWindow.location.host);
         break;
-      case Ci.nsIWebProgressListener.STATE_IS_SECURE | Ci.nsIWebProgressListener.STATE_SECURE_MEDIUM:
+      case Ci.nsIWebProgressListener.STATE_IS_SECURE | Ci.nsIWebProgressListener.STATE_SECURE_MED:
         security.setAttribute("level", "med");
         security.setAttribute("label", browser.contentWindow.location.host);
         break;
@@ -1099,6 +1150,11 @@ var WebRunner = {
     }
     else if (aTopic == "session-save") {
       aSubject.QueryInterface(Ci.nsISupportsPRBool).data = this.shutdownQuery();
+    }
+    else if (aTopic == "http-on-examine-response" || aTopic == "http-on-examine-cached-response") {
+      var channel = aSubject.QueryInterface(Ci.nsITraceableChannel);
+      var listener = new WebRunnerChannelListener();
+      listener._originalListener = channel.setNewListener(listener);
     }
   },
 
