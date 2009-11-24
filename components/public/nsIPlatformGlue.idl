@@ -167,6 +167,11 @@ interface nsIPlatformGlue : nsISupports
    * Use the appropriate platform-specific mechanism to indicate that the window requires attention.
    */
   void getAttention();
+
+  /**
+   * Restore minimized window
+   */
+  void restoreWindow();
   
   /**
    * Display the preferences dialog.

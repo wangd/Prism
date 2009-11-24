@@ -407,6 +407,12 @@ PlatformGlue.prototype = {
     this._chromeWindow.getAttention();
   },
   
+  restoreWindow : function restoreWindow() {
+    var evt = this._window.document.createEvent("Events");
+    evt.initEvent("DOMActivate", true, false);
+    this._chromeWindow.dispatchEvent(evt);
+  },
+
   showPreferences : function showPreferences(paneToShow)
   {
     this._chromeWindow.openDialog("chrome://webrunner/content/preferences/preferences.xul", "preferences", "chrome,titlebar,toolbar,centerscreen,dialog", paneToShow);
