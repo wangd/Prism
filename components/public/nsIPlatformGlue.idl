@@ -72,6 +72,23 @@ interface nsIPlatformProtocolCallback : nsISupports
 };
 
 /**
+ * Interface which must by implemented by listeners for showNotification
+ */
+[scriptable, uuid(5edb55a7-3303-4d58-ac22-5b1712752caf)]
+interface nsIPlatformNotificationListener : nsISupports
+{
+  /**
+   * Callback executed when the user clicks on the notification.
+   */
+  void onClick();
+  
+  /**
+   * Callback executed when the notification is finished and fades out.
+   */
+  void onFinished();
+};
+
+/**
  * Interface that gives simplified access to platform functionality
  */
 [scriptable, uuid(64ef7c50-ec69-11dc-95ff-0800200c9a66)]
@@ -85,8 +102,21 @@ interface nsIPlatformGlue : nsISupports
    *          The text of the alert
    * @param   aImageURI
    *          The URI of an image to use in alert. Can be null for no image.
+   * @param   textClickable
+   *          Make notification text clickable. Will execute click() method of
+   *          listener on click.
+   * @param   aListener
+   *          An object to receive callbacks from the notification. Can be null
+   *          for no callback functionality.
+   *          Implements a click() method executed when the user clicks on the
+   *          notification and a finished() method executed on notification fade
+   *          out.
    */
-  void showNotification(in AString aTitle, in AString aText, in AString aImageURI);
+  void showNotification(in AString aTitle,
+                      in AString aText,
+                      [optional] in AString aImageURI,
+                      [optional] in boolean textClickable,
+                      [optional] in nsIPlatformNotificationListener aListener);
 
   /**
    * Post a name/value pair to the browser chrome. The browser is free to do

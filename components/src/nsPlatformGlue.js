@@ -276,9 +276,29 @@ PlatformGlue.prototype = {
   },
   
   //nsIPlatformGlue
-  showNotification: function showNotification(aTitle, aText, aImageURI) {
+  showNotification: function showNotification(aTitle, aText, aImageURI,
+    textClickable, aListener)
+  {
+    var alertListener = (!aListener) ? null :
+      {
+        observe: function(subject, topic, data) {
+            if ((topic === "alertclickcallback") && !!textClickable) {
+              aListener.onClick();
+            } else if (topic === "alertfinished") {
+              /* Workaround to allow optional callback. Checking for null is not
+               * possible as the interface and not the passed object is tested.
+               */
+              try {
+                aListener.onFinished();
+              } catch(err) {
+                // Do nothing.
+              }
+            }
+          }
+      };
+
     var alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-    alerts.showAlertNotification(aImageURI, aTitle, aText, false, "", null);
+    alerts.showAlertNotification(aImageURI, aTitle, aText, !!textClickable, "", alertListener);
   },
 
   postStatus: function postStatus(aName, aValue) {
