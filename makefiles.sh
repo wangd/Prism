@@ -38,4 +38,5 @@
 
 add_makefiles "
 prism/installer/Makefile
+prism/Makefile
 "
