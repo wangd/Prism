@@ -307,18 +307,23 @@ NS_IMETHODIMP nsDesktopEnvironment::GetDefaultApplicationForURIScheme(const nsAS
   ::CFRelease(tempURL);
   ::CFRelease(urlString);
   
-  CFStringRef leafName = ::CFURLCopyLastPathComponent(appURL);
-  CFRange extension = ::CFStringFind(leafName, CFSTR(".app"), 0);
-  if (extension.location == kCFNotFound) {
-    // Fail if we haven't found an app bundle
-    return NS_ERROR_FAILURE;
-  }
+  if (appURL) {
+    CFStringRef leafName = ::CFURLCopyLastPathComponent(appURL);
+    CFRange extension = ::CFStringFind(leafName, CFSTR(".app"), 0);
+    if (extension.location == kCFNotFound) {
+      // Fail if we haven't found an app bundle
+      return NS_ERROR_FAILURE;
+    }
 
-  PRUnichar* buffer = new PRUnichar[extension.location+1];
-  ::CFStringGetCharacters(leafName, CFRangeMake(0, extension.location), buffer);
-  buffer[extension.location] = 0;
-  _retval = buffer;
-  delete [] buffer;
+    PRUnichar* buffer = new PRUnichar[extension.location+1];
+    ::CFStringGetCharacters(leafName, CFRangeMake(0, extension.location), buffer);
+    buffer[extension.location] = 0;
+    _retval = buffer;
+    delete [] buffer;
+  }
+  else {
+    _retval = EmptyString();
+  }
 
   return err == noErr ? NS_OK : NS_ERROR_FAILURE;
 }
