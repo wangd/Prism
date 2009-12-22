@@ -101,6 +101,13 @@ var WebRunner = {
   },
 
   _saveSettings : function() {
+#ifdef XP_MACOSX
+      // On Mac the windowState never changed back to STATE_NORMAL once it has been maximized (see https://bugzilla.mozilla.org/show_bug.cgi?id=535215)
+      if (window.windowState == window.STATE_MAXIMIZED) {
+        window.moveTo(window.screenX, window.screenY);
+      }
+#endif
+
       var settings = {};
       settings.version = "1";
 
@@ -168,6 +175,9 @@ var WebRunner = {
           document.getElementById("splitter_sidebar").setAttribute("state", settings.sidebar.visible ? "open" : "collapsed");
           document.getElementById("box_sidebar").width = settings.sidebar.width;
         }
+      }
+      else if (WebAppProperties.maximize) {
+        window.maximize();
       }
     }
   },

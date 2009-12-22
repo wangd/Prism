@@ -156,11 +156,12 @@ var WebAppProperties =
   exclude : null,
   refresh : null,
   iconic : false,
+  maximize: false,
   appBundle : null,
   appRoot : null,
   installRoot : null,
   flags : ["id", "name", "uri", "icon", "status", "location", "sidebar", "trayicon", "navigation",
-           "credits", "splashscreen", "include", "exclude", "refresh", "iconic"],
+           "credits", "splashscreen", "include", "exclude", "refresh", "iconic", "maximize"],
 
   getInstallRoot : function() {
     if (!this.installRoot) {
