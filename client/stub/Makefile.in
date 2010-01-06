@@ -50,9 +50,6 @@ REQUIRES  = xpcom string xulapp
 
 CPPSRCS   = nsPrismStub.cpp
 
-# Statically link the CRT when possible
-USE_STATIC_LIBS = 1
-
 PROGRAM   = prism$(BIN_SUFFIX)
 
 LOCAL_INCLUDES = -I$(topsrcdir)/xpcom/build
