@@ -198,6 +198,12 @@ PlatformProtocolHandler.prototype = {
 var protocolCallbacks = {};
 
 function PlatformGlue() {
+  var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+  var win = windowMediator.getMostRecentWindow("navigator:browser");
+  if (win) {
+    var browser = win.document.getElementById("browser_content");
+    this.setWindow(browser.contentWindow);
+  }
 }
 
 PlatformGlue.prototype = {
@@ -206,7 +212,7 @@ PlatformGlue.prototype = {
   contractID:       "@mozilla.org/platform-web-api;1",
 
   _xpcom_categories : [
-     { category: "JavaScript global constructor", entry: "PlatformAPI" },
+     { category: "JavaScript global property", entry: "platform" },
   ],
 
   _prefs : Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch),
@@ -258,7 +264,7 @@ PlatformGlue.prototype = {
     Components.utils.reportError(propertyName);
     return "NoAccess";
   },
-  
+
   // nsIPlatformGlueInternal
   setWindow : function setWindow(aWindow) {
     this._window = aWindow;
@@ -276,8 +282,7 @@ PlatformGlue.prototype = {
   },
   
   //nsIPlatformGlue
-  showNotification: function showNotification(aTitle, aText, aImageURI,
-    textClickable, aListener)
+  showNotification: function showNotification(aTitle, aText, aImageURI, textClickable, aListener)
   {
     var alertListener = (!aListener) ? null :
       {

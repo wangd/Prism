@@ -34,53 +34,6 @@ Components.utils.import("resource://prism/modules/WebAppProperties.jsm");
 
 window.addEventListener("load", function() { WebRunner.startup(); }, false);
 
-function WebRunnerChannelListener()
-{
-}
-
-WebRunnerChannelListener.prototype =
-{
-  _originalListener : null,
-  
-  _streamData : function(aRequest, aContext, str) {
-    var stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
-    var length = str.length;
-    stream.setData(str, length);
-    try {
-      this._originalListener.onDataAvailable(aRequest, aContext, stream, 0, length);
-    } catch(e) {
-      // For some reason some Ajax requests throw 0x80540006 so just ignore
-    }
-  },
-
-  onStartRequest : function(aRequest, aContext) {
-    this._originalListener.onStartRequest(aRequest, aContext);
-    
-    if (aRequest.QueryInterface(Ci.nsIHttpChannel).getResponseHeader("content-type").substr(0, 9) == "text/html") {
-      var script = "<script>";
-      script += "window.__defineGetter__('platform', function() {\n";
-      script += " return (window._platform ? window._platform : window.loadPlatformAPI()); })\n\n";
-
-      script += "window.loadPlatformAPI = function() {\n";
-      script += "window._platform =  new PlatformAPI();\n";
-      script += "window._platform.setWindow(window);\n";
-
-      script += " return window._platform };\n";
-      script += "</script>";
-  
-      this._streamData(aRequest, aContext, script);
-    }
-  },
-  
-  onStopRequest : function(aRequest, aContext, aStatusCode) {
-    this._originalListener.onStopRequest(aRequest, aContext, aStatusCode);
-  },
-  
-  onDataAvailable : function(aRequest, aContext, aInputStream, aOffset, aCount) {
-    this._originalListener.onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount);
-  }
-};
-
 /**
  * Main application code.
  */
@@ -643,9 +596,6 @@ var WebRunner = {
 
   _prepareWebAppScript : function()
   {
-    // Initialize the platform glue
-    var platform = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
-
     WebAppProperties.script["XMLHttpRequest"] = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1");
     WebAppProperties.script["window"] = this._getBrowser().contentWindow.wrappedJSObject;
     WebAppProperties.script["properties"] = WebAppProperties;
@@ -785,8 +735,6 @@ var WebRunner = {
     var observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     observerService.addObserver(this, "quit-application-requested", false);
     observerService.addObserver(this, "session-save", false);
-    observerService.addObserver(this, "http-on-examine-response", false);
-    observerService.addObserver(this, "http-on-examine-cached-response", false);
 
     setTimeout(function() { self._delayedStartup(); }, 0);
   },
@@ -1160,11 +1108,6 @@ var WebRunner = {
     }
     else if (aTopic == "session-save") {
       aSubject.QueryInterface(Ci.nsISupportsPRBool).data = this.shutdownQuery();
-    }
-    else if (aTopic == "http-on-examine-response" || aTopic == "http-on-examine-cached-response") {
-      var channel = aSubject.QueryInterface(Ci.nsITraceableChannel);
-      var listener = new WebRunnerChannelListener();
-      listener._originalListener = channel.setNewListener(listener);
     }
   },
 
