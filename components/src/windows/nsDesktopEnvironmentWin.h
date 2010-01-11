@@ -41,7 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDirectoryService.h"
 #include "nsIObserver.h"
-#include "nsIShellService.h"
+#include "nsIWebProtocolService.h"
 #include "nsStringAPI.h"
 
 class nsIApplicationIcon;
@@ -65,14 +65,14 @@ struct nsModuleComponentInfo;
 class nsDesktopEnvironment : public nsIDesktopEnvironment,
                              public nsIDirectoryServiceProvider,
                              public nsIObserver,
-                             public nsIShellService
+                             public nsIWebProtocolService
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDESKTOPENVIRONMENT
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSISHELLSERVICE
+  NS_DECL_NSIWEBPROTOCOLSERVICE
 
   nsDesktopEnvironment();
 

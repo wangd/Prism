@@ -77,7 +77,7 @@
 #define MAX_BUF 4096
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsDesktopEnvironment, nsIDesktopEnvironment,
-  nsIDirectoryServiceProvider, nsIObserver, nsIShellService)
+  nsIDirectoryServiceProvider, nsIObserver, nsIWebProtocolService)
 
 nsDesktopEnvironment::nsDesktopEnvironment()
 {

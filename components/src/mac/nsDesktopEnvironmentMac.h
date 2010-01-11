@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDesktopEnvironment.h"
-#include "nsIShellService.h"
+#include "nsIWebProtocolService.h"
 #include "nsCOMPtr.h"
 
 class nsIApplicationIcon;
@@ -55,12 +55,12 @@ struct nsModuleComponentInfo;
 #define NS_DESKTOPENVIRONMENT_CONTRACTID "@mozilla.org/desktop-environment;1"
 
 // Desktop integration for Mac OS X platforms.
-class nsDesktopEnvironment : public nsIDesktopEnvironment, public nsIShellService
+class nsDesktopEnvironment : public nsIDesktopEnvironment, public nsIWebProtocolService
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDESKTOPENVIRONMENT
-  NS_DECL_NSISHELLSERVICE
+  NS_DECL_NSIWEBPROTOCOLSERVICE
 
   nsDesktopEnvironment();
 

@@ -46,7 +46,7 @@ interface nsIFile;
  * Access to operating system user interface services.
  */
 [scriptable, uuid(a4a139c5-b6a5-4652-89b6-fb1ea9dbf9b3)]
-interface nsIShellService : nsISupports
+interface nsIWebProtocolService : nsISupports
 {
   /**
    * Register an application to be used for a URI scheme.

@@ -364,7 +364,7 @@ PlatformGlue.prototype = {
   
   registerProtocolHandler: function registerProtocol(uriScheme, uriString) {
     // First register the protocol with the shell
-    var shellService = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIShellService);
+    var shellService = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIWebProtocolService);
     shellService.registerProtocol(uriScheme, null, null);
     
     // Register with the component registrar
@@ -380,7 +380,7 @@ PlatformGlue.prototype = {
   
   unregisterProtocolHandler: function unregisterProtocol(uriScheme) {
     // Unregister the protocol with the shell so the URI scheme no longer invokes the application
-    var shellService = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIShellService);
+    var shellService = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIWebProtocolService);
     shellService.unregisterProtocol(uriScheme);
     
     // Unregister with the component registrar
@@ -412,7 +412,7 @@ PlatformGlue.prototype = {
   },
   
   isRegisteredProtocolHandler : function isRegisteredProtocolHandler(uriScheme) {
-    var shellService = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIShellService);
+    var shellService = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIWebProtocolService);
     var appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
     try {
       return (shellService.getDefaultApplicationForURIScheme(uriScheme) == appInfo.name);

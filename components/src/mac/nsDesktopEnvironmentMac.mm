@@ -148,7 +148,7 @@ extern "C" {
 
 @end
 
-NS_IMPL_ISUPPORTS2(nsDesktopEnvironment, nsIDesktopEnvironment, nsIShellService)
+NS_IMPL_ISUPPORTS2(nsDesktopEnvironment, nsIDesktopEnvironment, nsIWebProtocolService)
 
 nsDesktopEnvironment::nsDesktopEnvironment()
 {

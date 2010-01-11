@@ -57,7 +57,7 @@ XPIDLSRCS	= \
     nsINativeMenu.idl \
     nsIPlatformGlue.idl \
     nsIPlatformGlueInternal.idl \
-    nsIShellService.idl \
+    nsIWebProtocolService.idl \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk
