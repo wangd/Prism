@@ -56,5 +56,7 @@ DIST_FILES = install.rdf
 EXTRA_PP_JS_MODULES = \
   $(srcdir)/../common/modules/WebAppProperties.jsm \
   $(NULL)
+  
+DEFINES += -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
 
 include $(topsrcdir)/config/rules.mk
