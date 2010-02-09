@@ -416,6 +416,8 @@ var WebAppInstall =
     }
 
     stub.copyTo(macos, "prism");
+    macos.append("prism");
+    macos.permissions = 0755;
 
     // Copy application.ini into the bundle
     var applicationIni = prismRoot.clone();
