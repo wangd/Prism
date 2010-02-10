@@ -80,4 +80,5 @@ libs::
 # On Mac we need the XULRunner stub since we can't use firefox -app
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(DIST)/bin/$(APP_BINARY) $(FINAL_TARGET)/prism/
+	cp $(srcdir)/dependentlibs.list $(FINAL_TARGET)/prism/
 endif

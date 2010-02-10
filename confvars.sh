@@ -20,7 +20,7 @@
 #
 # Contributor(s):
 #   Dave Townsend <dtownsend@oxymoronical.com>
-#   Matthew Gertner <matthew@allpeers.com>
+#   Matthew Gertner <matthew.gertner@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,7 +38,7 @@
 
 MOZ_APP_NAME=prism
 MOZ_APP_DISPLAYNAME=Prism
-MOZ_APP_VERSION=1.0b3pre
+MOZ_APP_VERSION=1.0b3
 
 MOZ_XUL_APP=1
 MOZ_UPDATER=1

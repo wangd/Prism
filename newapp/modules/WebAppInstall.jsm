@@ -405,8 +405,18 @@ var WebAppInstall =
     FileIO.stringToFile("CFBundleName = \"" + name + "\";\n", infoPlistStrings, "UTF-16");
 
     if (extensionDir) {
-      // Can't use the Firefox stub so we need to use the XR stub supplied with the extension
       greHome.append("MacOS");
+
+      // Copy in dependentlibs.list if necessary (see bug 542004)
+      var dependentlibs = greHome.clone();
+      dependentlibs.append("dependentlibs.list");
+      if (!dependentlibs.exists()) {
+        dependentlibs = prismRoot.clone();
+        dependentlibs.append("dependentlibs.list");
+        dependentlibs.copyTo(greHome, null);
+      }
+
+      // Can't use the Firefox stub so we need to use the XR stub supplied with the extension
       stub = prismRoot.clone();
       stub.append("prism");
     }
