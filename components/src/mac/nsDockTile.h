@@ -62,4 +62,5 @@ private:
 
 protected:
   nsCOMPtr<nsINativeMenu> mMenu;
+  PRUint32 mBehavior;
 };

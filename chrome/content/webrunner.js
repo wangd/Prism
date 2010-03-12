@@ -705,7 +705,20 @@ var WebRunner = {
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow =
       new nsBrowserAccess(this._getBrowser());
 
-    window.addEventListener("close", function(event) { self._handleWindowClose(event); }, false);
+    window.addEventListener("close", function(event) {
+#ifdef XP_MACOSX
+      var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
+      var icon = desktop.getApplicationIcon(self._getBrowser().contentWindow);
+      if (icon.behavior & Ci.nsIApplicationIcon.HIDE_ON_CLOSE) {
+        self._xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
+        event.preventDefault();
+        return;
+      }
+#endif
+        if (!self._handleWindowClose(event)) {
+          event.preventDefault();
+        }
+    }, false);
 
     browser.addEventListener("dragover", function(aEvent) { self._dragOver(aEvent); }, true);
     browser.addEventListener("dragdrop", function(aEvent) { self._dragDrop(aEvent); }, true);

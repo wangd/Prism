@@ -51,6 +51,7 @@ extern "C" {
 #include "nsCocoaMenu.h"
 #include "nsCOMPtr.h"
 #include "nsDockTile.h"
+#include "nsIBaseWindow.h"
 #include "nsICategoryManager.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentEvent.h"
@@ -63,6 +64,9 @@ extern "C" {
 #include "nsINativeMenu.h"
 #include "nsIObserverService.h"
 #include "nsIProperties.h"
+#include "nsISimpleEnumerator.h"
+#include "nsIWindowMediator.h"
+#include "nsIXULWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringAPI.h"
 
@@ -84,6 +88,40 @@ extern "C" {
   mMenu = menu;
   mOldDelegate = [[NSApplication sharedApplication] delegate];
   return self;
+}
+
+- (BOOL)applicationShouldHandleReopen:(NSApplication*)theApp hasVisibleWindows:(BOOL)flag
+{
+  // Check whether we have a single window, which might be hidden to the dock
+  // In that case, simply unhide it
+  // Would be cleaner to check if it is hidden but nsIBaseWindow::GetVisibility isn't implemented
+  nsresult rv;
+  nsCOMPtr<nsIWindowMediator> wm(do_GetService("@mozilla.org/appshell/window-mediator;1", &rv));
+  NS_ENSURE_SUCCESS(rv, NO);
+  
+  nsCOMPtr<nsISimpleEnumerator> windows;
+  rv = wm->GetXULWindowEnumerator(NS_LITERAL_STRING("navigator:browser").get(), getter_AddRefs(windows));
+  NS_ENSURE_SUCCESS(rv, NO);
+  
+  PRUint32 windowCount = 0;
+  PRBool more;
+  nsCOMPtr<nsISupports> supports;
+  while (NS_SUCCEEDED(windows->HasMoreElements(&more)) && more) {
+    rv = windows->GetNext(getter_AddRefs(supports));
+    NS_ENSURE_SUCCESS(rv, NO);
+    
+    windowCount++;
+  }
+  
+  if (windowCount == 1) {
+    nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(supports, &rv));
+    NS_ENSURE_SUCCESS(rv, NO);
+    
+    baseWindow->SetVisibility(PR_TRUE);
+  }
+  
+  // Forward to old delegate
+  return [mOldDelegate applicationShouldHandleReopen:theApp hasVisibleWindows:flag];
 }
 
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender

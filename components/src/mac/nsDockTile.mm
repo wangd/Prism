@@ -55,7 +55,7 @@
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsDockTile, nsIApplicationIcon, nsISecurityCheckedComponent)
 
-nsDockTile::nsDockTile(nsIDOMDocument* aDocument, NSMenu* menu)
+nsDockTile::nsDockTile(nsIDOMDocument* aDocument, NSMenu* menu) : mBehavior(0)
 {
   mMenu = new nsCocoaMenu(aDocument, menu);
 }
@@ -237,13 +237,13 @@ NS_IMETHODIMP nsDockTile::Minimize()
 
 NS_IMETHODIMP nsDockTile::SetBehavior(PRUint32 aBehavior)
 {
-  // Ignored on OS X
+  mBehavior = aBehavior;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDockTile::GetBehavior(PRUint32* aBehavior)
 {
-  *aBehavior = 0;
+  *aBehavior = mBehavior;
   return NS_OK;
 }
 
