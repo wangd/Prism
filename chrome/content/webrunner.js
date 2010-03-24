@@ -942,10 +942,10 @@ var WebRunner = {
         document.getElementById("findbar").onFindCommand();
         break;
       case "cmd_findNext":
-        document.getElementById("findbar").onFindAgainCommand(true);
+        document.getElementById("findbar").onFindAgainCommand(false);
         break;
       case "cmd_findPrevious":
-        document.getElementById("findbar").onFindAgainCommand(false);
+        document.getElementById("findbar").onFindAgainCommand(true);
         break;
     }
   },
