@@ -220,7 +220,20 @@ var WebRunner = {
 
   _handleWindowClose : function(event) {
     // Handler for clicking on the 'x' to close the window
-    return this.shutdownQuery();
+    if (!this.shutdownQuery()) {
+      return false;
+    }
+    
+#ifdef XP_MACOSX
+    var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
+    var icon = desktop.getApplicationIcon(this._getBrowser().contentWindow);
+    if (icon.behavior & Ci.nsIApplicationIcon.HIDE_ON_CLOSE) {
+      this._xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
+      return false;
+    }
+#endif
+
+    return true;
   },
 
   _handleContentCommand: function(event) {
@@ -706,18 +719,9 @@ var WebRunner = {
       new nsBrowserAccess(this._getBrowser());
 
     window.addEventListener("close", function(event) {
-#ifdef XP_MACOSX
-      var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
-      var icon = desktop.getApplicationIcon(self._getBrowser().contentWindow);
-      if (icon.behavior & Ci.nsIApplicationIcon.HIDE_ON_CLOSE) {
-        self._xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = false;
+      if (!self._handleWindowClose(event)) {
         event.preventDefault();
-        return;
       }
-#endif
-        if (!self._handleWindowClose(event)) {
-          event.preventDefault();
-        }
     }, false);
 
     browser.addEventListener("dragover", function(aEvent) { self._dragOver(aEvent); }, true);
@@ -880,7 +884,7 @@ var WebRunner = {
         this._getBrowser().reload();
         break;
       case "cmd_close":
-        if (this.shutdownQuery())
+        if (this._handleWindowClose())
           close();
         break;
       case "cmd_quit":
