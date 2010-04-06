@@ -141,7 +141,9 @@ PRBool PR_CALLBACK SetEnvironmentVariable(const char* aString, const char* aValu
   setenv(aString, aValue, 1);
 #endif
 #if defined(XP_WIN)
-  ::SetEnvironmentVariableA(aString, aValue);
+  char buffer[4096];
+  sprintf(buffer, "%s=%s", aString, aValue);
+  putenv(buffer);
 #endif
   return PR_TRUE;
 }
