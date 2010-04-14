@@ -33,6 +33,8 @@
 %brandDTD;
 <!ENTITY % webrunnerDTD SYSTEM "chrome://webrunner/locale/webrunner.dtd">
 %webrunnerDTD;
+<!ENTITY % baseMenuDTD SYSTEM "chrome://webrunner/locale/browser/baseMenuOverlay.dtd">
+%baseMenuDTD;
 ]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -75,6 +77,9 @@
     <command id="cmd_find" label="&findOnCmd.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_findNext" label="&findNextCmd.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_findPrevious" label="&findPreviousCmd.label;" oncommand="WebRunner.doCommand(this.id);"/>
+#ifdef XP_MACOSX
+    <command id="cmd_minimizeWindow" label="&minimizeWindow.label;" oncommand="window.minimize();" />
+#endif
   </commandset>
 
   <keyset id="keyset_main">
@@ -89,6 +94,7 @@
 #ifdef XP_MACOSX
     <key id="key_hideThisApp" key="&hideThisApp.commandkey;" modifiers="&hideThisApp.modifiers;"/>
     <key id="key_hideOtherApps" key="&hideOtherApps.commandkey;" modifiers="&hideOtherApps.modifiers;"/>
+    <key id="key_minimizeWindow" command="cmd_minimizeWindow" key="&minimizeWindow.key;" modifiers="accel"/>
 #endif
     <key id="key_zoomIn" key="&zoomIn.commandkey;" modifiers="&zoomIn.modifiers;" command="cmd_zoomIn"/>
     <key                 key="&zoomIn.commandkey2;" modifiers="&zoomIn.modifiers;" command="cmd_zoomIn"/>

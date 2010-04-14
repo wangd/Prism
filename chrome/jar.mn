@@ -61,6 +61,7 @@ classic.jar:
   preferences/preferences.properties   (locale/@AB_CD@/preferences/preferences.properties)
   browser/sanitize.dtd                 (locale/@AB_CD@/browser/sanitize.dtd)
   browser/browser.properties           (locale/@AB_CD@/browser/browser.properties)
+  browser/baseMenuOverlay.dtd          (locale/@AB_CD@/browser/baseMenuOverlay.dtd)
 # Prism-specific overrides of generic strings
 * netError.dtd                         (locale/@AB_CD@/overrides/netError.dtd)
 % override chrome://global/locale/netErrorApp.dtd chrome://webrunner/locale/netError.dtd
