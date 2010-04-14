@@ -214,6 +214,10 @@ WebRunnerCommandLineHandler.prototype = {
     var win = windowMediator.getMostRecentWindow("navigator:browser");
 
     if (win) {
+      // Make sure it's visible (might have been hidden on close)
+      var xulWindow = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShellTreeItem).treeOwner.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIXULWindow);
+      xulWindow.QueryInterface(Ci.nsIBaseWindow).visibility = true;
+
       var event = win.document.QueryInterface(Ci.nsIDOMDocumentEvent).createEvent("Events");
       event.initEvent("DOMActivate", true, true);
       win.QueryInterface(Ci.nsIDOMEventTarget).dispatchEvent(event);
