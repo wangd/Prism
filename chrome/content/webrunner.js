@@ -636,8 +636,22 @@ var WebRunner = {
       document.getElementById("menu_file").hidden = true;
     }
 
+    // Remember the base domain of the web app
+    if (WebAppProperties.uri) {
+      var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+      this._uri = uriFixup.createFixupURI(WebAppProperties.uri, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
+      try {
+        this._currentDomain = this._getBaseDomain(this._uri);
+      }
+      catch(e) {
+        // Doesn't have a domain (e.g. IP address)
+        this._currentDomain = "";
+      }
+    }
+
     var browser = this._getBrowser();
     browser.addEventListener("DOMTitleChanged", function(aEvent) { self._domTitleChanged(aEvent); }, true);
+    browser.webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
 
     if (!window.arguments || !window.arguments[0] || !(window.arguments[0] instanceof Ci.nsICommandLine)) {
       // Not the main window, so we're done
@@ -727,20 +741,6 @@ var WebRunner = {
     browser.addEventListener("dragover", function(aEvent) { self._dragOver(aEvent); }, true);
     browser.addEventListener("dragdrop", function(aEvent) { self._dragDrop(aEvent); }, true);
     browser.addEventListener("command", function(aEvent) { self._handleContentCommand(aEvent); }, false);
-    browser.webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
-
-    // Remember the base domain of the web app
-    if (WebAppProperties.uri) {
-      var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
-      this._uri = uriFixup.createFixupURI(WebAppProperties.uri, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
-      try {
-        this._currentDomain = this._getBaseDomain(this._uri);
-      }
-      catch(e) {
-        // Doesn't have a domain (e.g. IP address)
-        this._currentDomain = "";
-      }
-    }
 
     // Register ourselves as the default window creator so we can control handling of external links
     this._windowCreator = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIWindowCreator);
