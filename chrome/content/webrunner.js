@@ -481,13 +481,11 @@ var WebRunner = {
 
   _isLinkExternal : function(aLink) {
     var isExternal;
-    if (aLink instanceof HTMLAnchorElement) {
-      if (aLink.target == "_self" || aLink.target == "_top") {
-        isExternal = false;
-      }
-      else {
-        isExternal = this._isURIExternal(this._ios.newURI(aLink.href, null, null));
-      }
+    if ((aLink instanceof HTMLAnchorElement) && (aLink.target == "_self" || aLink.target == "_top")) {
+      isExternal = false;
+    }
+    else {
+      isExternal = this._isURIExternal(this._ios.newURI(aLink.href, null, null));
     }
     return isExternal;
   },
@@ -586,7 +584,7 @@ var WebRunner = {
   {
     var link = aEvent.target;
 
-    if (link instanceof HTMLAnchorElement && WebRunner._isLinkExternal(link)) {
+    if ((link.href != undefined) && WebRunner._isLinkExternal(link)) {
       aEvent.stopPropagation();
     }
   },
@@ -595,7 +593,7 @@ var WebRunner = {
   {
     var link = aEvent.target;
 
-    if (link instanceof HTMLAnchorElement && WebRunner._isLinkExternal(link)) {
+    if ((link.href != undefined) && WebRunner._isLinkExternal(link)) {
       // We don't want to open external links in this process: do so in the
       // default browser.
       var resolvedURI = WebRunner._ios.newURI(link.href, null, null);
