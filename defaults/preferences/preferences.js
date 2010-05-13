@@ -105,3 +105,6 @@ pref("app.update.log.UpdateService", true);
 /* SSL error page behaviour */
 pref("browser.ssl_override_behavior", 2);
 pref("browser.xul.error_pages.expert_bad_cert", false);
+
+/* Prism-specific prefs */
+pref("prism.shortcut.aboutConfig.enabled", false);

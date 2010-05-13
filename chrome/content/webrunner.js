@@ -949,6 +949,17 @@ var WebRunner = {
       case "cmd_findPrevious":
         document.getElementById("findbar").onFindAgainCommand(true);
         break;
+      case "cmd_aboutConfig":
+        var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+        if (prefs.getBoolPref("prism.shortcut.aboutConfig.enabled")) {
+          if (this._getBrowser().contentWindow.location.href != "about:config") {
+            this._getBrowser().loadURI("about:config", null, null);
+          }
+          else {
+            this._getBrowser().loadURI(WebAppProperties.uri, null, null);
+          }
+        }
+        break;
     }
   },
 

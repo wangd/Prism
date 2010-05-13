@@ -77,6 +77,7 @@
     <command id="cmd_find" label="&findOnCmd.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_findNext" label="&findNextCmd.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_findPrevious" label="&findPreviousCmd.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_aboutConfig" oncommand="WebRunner.doCommand(this.id);"/>
 #ifdef XP_MACOSX
     <command id="cmd_minimizeWindow" label="&minimizeWindow.label;" oncommand="window.minimize();" />
 #endif
@@ -105,6 +106,7 @@
     <key id="key_findPrevious" key="&findNextCmd.commandkey;" command="cmd_findPrevious" modifiers="accel,shift"/>
     <key keycode="&findNextCmd.commandkey2;" command="cmd_findNext"/>
     <key keycode="&findNextCmd.commandkey2;"  command="cmd_findPrevious" modifiers="shift"/>
+    <key id="key_aboutConfig" key="a" command="cmd_aboutConfig" modifiers="control,shift"/>
   </keyset>
 
   <popupset id="popupset_main">
