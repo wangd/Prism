@@ -794,6 +794,10 @@ var WebRunner = {
   },
 
   shutdownQuery : function() {
+    if (WebAppProperties.script.shutdown && !WebAppProperties.script.shutdown()) {
+      return false;
+    }
+
     this._saveSettings();
 
     return true;
@@ -806,9 +810,6 @@ var WebRunner = {
       var icon = desktop.getApplicationIcon(this._getBrowser().contentWindow);
       icon.hide();
     }
-
-    if (WebAppProperties.script.shutdown)
-      WebAppProperties.script.shutdown();
   },
 
   tryClose : function()
