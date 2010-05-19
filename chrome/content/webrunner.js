@@ -1142,7 +1142,7 @@ var WebRunner = {
   observe : function(aSubject, aTopic, aData) {
     if (aTopic == "quit-application-requested") {
       if (!this.shutdownQuery()) {
-        aSubject.data = true;
+        aSubject.QueryInterface(Ci.nsISupportsPRBool).data = true;
         return;
       }
 
