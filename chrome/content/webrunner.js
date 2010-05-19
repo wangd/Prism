@@ -330,12 +330,24 @@ var WebRunner = {
       if (elem instanceof HTMLAnchorElement && elem.href) {
         foundLink = true;
         break;
-    }
+      }
       elem = elem.parentNode;
     }
+    
+    var saveImage = document.getElementById("menuitem_saveImage");
+    var foundImage = false;
+    if (target instanceof Ci.nsIImageLoadingContent && new XPCNativeWrapper(target.QueryInterface(Ci.nsIImageLoadingContent)).currentURI) {
+      // Make sure image is loaded
+      let request = new XPCNativeWrapper(target.QueryInterface(Ci.nsIImageLoadingContent)).getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+      if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE)) {
+        foundImage = true;
+      }
+    }
 
+    
     copylink.hidden = !foundLink;
-    copylinkSep.hidden = !foundLink;
+    saveImage.hidden = !foundImage;
+    copylinkSep.hidden = !foundLink && !foundImage;
 
     InlineSpellCheckerUI.clearSuggestionsFromMenu();
     InlineSpellCheckerUI.uninit();
@@ -846,7 +858,7 @@ var WebRunner = {
     var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
     desktop.setZLevel(window, Ci.nsIDesktopEnvironment.zLevelTop);
   },
-
+  
   doCommand : function(aCmd) {
     switch (aCmd) {
       case "cmd_cut":
@@ -856,6 +868,10 @@ var WebRunner = {
       case "cmd_selectAll":
       case "cmd_copyLink":
         goDoCommand(aCmd);
+        break;
+      case "cmd_saveImage":
+        var image = new XPCNativeWrapper(document.popupNode.QueryInterface(Ci.nsIImageLoadingContent));
+        saveImageURL(image.currentURI.spec, null, "SaveImageTitle", false, false, document.documentURIObject);
         break;
       case "cmd_prefs":
         window.openDialog("chrome://webrunner/content/preferences/preferences.xul", "preferences", "chrome,titlebar,toolbar,centerscreen,dialog", "paneContent");

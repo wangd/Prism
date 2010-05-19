@@ -47,6 +47,7 @@
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
+  <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
   <script type="application/x-javascript" src="chrome://webrunner/content/webrunner.js"/>
 
@@ -54,6 +55,7 @@
     <command id="cmd_cut" label="&cut.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_copy" label="&copy.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_copyLink" label="&copylink.label;" oncommand="WebRunner.doCommand(this.id);"/>
+    <command id="cmd_saveImage" label="&saveImage.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_paste" label="&paste.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_delete" label="&delete.label;" oncommand="WebRunner.doCommand(this.id);"/>
     <command id="cmd_selectAll" label="&selectAll.label;" oncommand="WebRunner.doCommand(this.id);"/>
@@ -122,6 +124,7 @@
       <menuitem id="menuitem_selectAll" command="cmd_selectAll"/>
       <menuseparator id="menusep_copyLink"/>
       <menuitem id="menuitem_copyLink" command="cmd_copyLink"/>
+      <menuitem id="menuitem_saveImage" command="cmd_saveImage"/>
     </menupopup>
 
     <tooltip id="tooltip_content"/>
