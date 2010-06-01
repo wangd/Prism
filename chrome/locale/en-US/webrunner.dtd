@@ -5,6 +5,7 @@
 <!ENTITY cut.label                  "Cut">
 <!ENTITY copy.label                 "Copy">
 <!ENTITY copylink.label             "Copy Link Location">
+<!ENTITY saveImage.label            "Save Image As...">
 <!ENTITY paste.label                "Paste">
 <!ENTITY delete.label               "Delete">
 <!ENTITY selectAll.label            "Select All">

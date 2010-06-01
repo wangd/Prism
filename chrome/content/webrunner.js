@@ -219,11 +219,6 @@ var WebRunner = {
   },
 
   _handleWindowClose : function(event) {
-    // Handler for clicking on the 'x' to close the window
-    if (!this.shutdownQuery()) {
-      return false;
-    }
-    
 #ifdef XP_MACOSX
     var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
     var icon = desktop.getApplicationIcon(this._getBrowser().contentWindow);
@@ -233,6 +228,11 @@ var WebRunner = {
     }
 #endif
 
+    // Handler for clicking on the 'x' to close the window
+    if (!this.shutdownQuery()) {
+      return false;
+    }
+    
     return true;
   },
 
@@ -903,8 +903,7 @@ var WebRunner = {
           close();
         break;
       case "cmd_quit":
-        if (this.shutdownQuery())
-          goQuitApplication();
+        goQuitApplication();
         break;
       case "cmd_console":
         window.open("chrome://global/content/console.xul", "_blank", "chrome,extrachrome,dependent,menubar,resizable,scrollbars,status,toolbar");
