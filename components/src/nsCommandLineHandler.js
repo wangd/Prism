@@ -85,6 +85,8 @@ WebRunnerCommandLineHandler.prototype = {
       webapp = aCmdLine.handleFlagWithParam("webapp", false);
     }
 
+	var url = aCmdLine.handleFlagWithParam("url", false);
+
 #ifdef XP_MACOSX
     // On Mac, check for a webapp.ini inside the current app bundle
     if (!webapp) {
@@ -156,7 +158,7 @@ WebRunnerCommandLineHandler.prototype = {
         }
       }
     }
-    
+
     if (file && file.exists()) {
       // Bundles are files and need to be installed
       if (!file.isDirectory()) {
@@ -184,8 +186,6 @@ WebRunnerCommandLineHandler.prototype = {
     if (protocolURI && protocolURI.length > 0) {
       WebAppProperties.uri = protocolURI;
     }
-    
-    var win = this.activateWindow();
 
     if (callback.value) {
       // Invoke the callback and don't load a new page
@@ -195,24 +195,57 @@ WebRunnerCommandLineHandler.prototype = {
       return;
     }
 
+    if (!url) {
+      url = WebAppProperties.uri;
+    }
+
+    var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+    newURI = uriFixup.createFixupURI(url, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
+
+    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1']
+                                  .getService(Components.interfaces.nsIWindowMediator);
+
+    var win;
+    // Check if a window exists with the given url
+    var enumerator = windowManager.getEnumerator("navigator:browser");  
+    while(enumerator.hasMoreElements()) {  
+      var helpwin = enumerator.getNext();
+
+      if (helpwin.document.getElementById("browser_content").currentURI.spec == newURI.spec) {
+        win = helpwin;
+        break;
+      }
+    } 
+
+    if (!win) {
+      var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+      win = windowMediator.getMostRecentWindow("navigator:browser");
+    
+      if (win && url) {
+        var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(Components.interfaces.nsIWindowWatcher);
+        win = ww.openWindow(win, url, "_blank", null, null);
+      }
+    }
+
+    this.activateWindow(win);
+
     // Check for an existing window and reuse it if there is one
     if (win) {
       if (protocolURI) {
         win.document.getElementById("browser_content").loadURI(WebAppProperties.uri, null, null);
       }
-      
       aCmdLine.preventDefault = true;
       return;
     }
-    
+    else if (url) {
+      WebAppProperties.uri = url;
+    }
+
     if (WebAppProperties.script.startup)
       WebAppProperties.script.startup();
   },
   
-  activateWindow : function() {
-    var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-    var win = windowMediator.getMostRecentWindow("navigator:browser");
-
+  activateWindow : function(win) {
     if (win) {
       // Make sure it's visible (might have been hidden on close)
       var xulWindow = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShellTreeItem).treeOwner.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIXULWindow);
@@ -222,7 +255,7 @@ WebRunnerCommandLineHandler.prototype = {
       event.initEvent("DOMActivate", true, true);
       win.QueryInterface(Ci.nsIDOMEventTarget).dispatchEvent(event);
     }
-    
+
     return win;
   },
 
