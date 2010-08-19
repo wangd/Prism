@@ -41,6 +41,10 @@ pref("browser.download.manager.focusWhenStarting", false);
 pref("browser.download.manager.flashCount", 2);
 pref("browser.download.manager.displayedHistoryDays", 7);
 
+/* for preferences */
+pref("browser.download.show_plugins_in_list", true);
+pref("browser.download.hide_plugins_without_extensions", true);
+
 /* download alerts */
 pref("alerts.slideIncrement", 1);
 pref("alerts.slideIncrementTime", 10);

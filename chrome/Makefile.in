@@ -20,7 +20,7 @@
 #
 # Contributor(s):
 #   Dave Townsend <dtownsend@oxymoronical.com>
-#   Matthew Gertner <matthew@allpeers.com>
+#   Matthew Gertner <matthew.gertner@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,6 +43,8 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES += -DAB_CD=$(MOZ_UI_LOCALE) -DPACKAGE=newapp
+DIRS = skin
+
+DEFINES += -DAB_CD=$(MOZ_UI_LOCALE)
 
 include $(topsrcdir)/config/rules.mk

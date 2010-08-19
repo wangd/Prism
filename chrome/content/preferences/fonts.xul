@@ -42,8 +42,11 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+#ifdef XP_MACOSX
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
+#endif
 
-<!DOCTYPE prefwindow SYSTEM "chrome://webrunner/locale/preferences/fonts.dtd" >
+<!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/fonts.dtd" >
 
 <prefwindow id="FontsDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -60,6 +63,8 @@
             style="width: &window.width; !important;">
 #endif
 
+  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+
   <prefpane id="FontsDialogPane"
             helpTopic="prefs-fonts-and-colors">
   
@@ -71,8 +76,9 @@
       <preference id="intl.charset.default" name="intl.charset.default" type="wstring"/>
     </preferences>
     
+    <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
     <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
-    <script type="application/x-javascript" src="chrome://webrunner/content/fonts.js"/>
+    <script type="application/x-javascript" src="chrome://browser/content/preferences/fonts.js"/>
 
     <!-- Fonts for: [ Language ] -->
     <groupbox>
@@ -146,7 +152,7 @@
                      accesskey="&sizeProportional.accesskey;"
                      control="sizeVar"/>
             </hbox>  
-            <menulist id="sizeVar" class="small-margin">
+            <menulist id="sizeVar">
               <menupopup>
                 <menuitem value="9" label="9"/>
                 <menuitem value="10" label="10"/>

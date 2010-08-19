@@ -59,5 +59,7 @@ XPIDLSRCS	= \
     nsIPlatformGlueInternal.idl \
     nsIWebProtocolService.idl \
     $(NULL)
+    
+DIRS = feeds
 
 include $(topsrcdir)/config/rules.mk

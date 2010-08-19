@@ -1,56 +1,86 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-Components.utils.import("resource://prism/modules/WebAppProperties.jsm");
+const builtinPanes = ["paneMain", "paneTabs", "paneContent", "paneApplications", "panePrivacy", "paneSecurity", "paneAdvanced"];
+
+function PrefsOverlayObserver(aPrefsElement) {
+  this._prefs = aPrefsElement;
+}
+
+PrefsOverlayObserver.prototype = {
+  observe : function(aSubject, aTopic, aData) {
+    // Add buttons for new panes
+    var panes = document.getElementsByTagName("prefpane");
+    for (var i=0; i<panes.length; i++) {
+      var pane = panes.item(i);
+      var builtin = false;
+      for (var j=0; j<builtinPanes.length; j++) {
+        if (builtinPanes[j] == pane.id) {
+          builtin = true;
+          break;
+        }
+      }
+      
+      if (!builtin) {
+        this._prefs._makePaneButton(pane);
+      }
+    }
+    
+    // Remove buttons for deleted panes
+    var button = this._prefs._selector.firstChild;
+    while (button) {
+      var next = button.nextSibling;
+      if (!document.getElementById(button.getAttribute("pane"))) {
+        this._prefs._selector.removeChild(button);
+      }
+      button = next;
+    }
+
+    // Show the current pane again since applying the overlay causes it to be displayed with no content
+    var prefwindow = this._prefs;
+    setTimeout(function() { prefwindow.showPane(prefwindow.currentPane); }, 0);
+  }
+}
 
 var WebRunnerPrefs =
 {
   init : function() {
-    var prefXUL = WebAppProperties.getAppRoot();
-    prefXUL.append("preferences");
-    prefXUL.append("prefs.xul");
+    var prefwindow = document.getElementById("BrowserPreferences");
+    var obs = new PrefsOverlayObserver(prefwindow);
+    document.loadOverlay("resource://webapp/preferences/preferences.xul", obs);
+  },
+  
+  paneLoad : function(e) {
+    var paneElement = e.originalTarget;
+    var paneSpec = paneElement.src;
+    var parts = paneSpec.split('/');
+    var filename = parts[parts.length-1];
+    var overlaySpec = "resource://webapp/preferences/" + filename;
 
-    if (prefXUL.exists()) {
-      var prefProperties = WebAppProperties.getAppRoot();
-      prefProperties.append("preferences");
-      prefProperties.append("prefs.properties");
-      
-      var label;
-      if (prefProperties.exists()) {
-        var bundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-        bundle = bundle.createBundle("resource://webapp/preferences/prefs.properties");
-        label = bundle.GetStringFromName("pane.label");
-      }
-      else {
-        label = WebAppProperties.name;
-      }
-    
-      var prefPane = document.createElement("prefpane");
-      prefPane.id = "paneWebApp";
-      prefPane.setAttribute("label", label);
-      prefPane.src = "resource://webapp/preferences/prefs.xul";
-      prefPane.image = "resource://webapp/preferences/prefs.png";
-      
-      var prefWindow = document.getElementById("BrowserPreferences");
-
-      prefWindow.insertBefore(prefPane, prefWindow.firstChild);
-      var radio = document.createElement("radio");
-      radio.setAttribute("pane", prefPane.id);
-      radio.setAttribute("label", prefPane.label);
-      // Expose preference group choice to accessibility APIs as an unchecked list item
-      // The parent group is exposed to accessibility APIs as a list
-      radio.setAttribute("src", prefPane.image);
-      radio.style.listStyleImage = prefPane.style.listStyleImage;
-      var selector = document.getAnonymousElementByAttribute(prefWindow, "anonid", "selector");
-      selector.insertBefore(radio, selector.firstChild);
-
-      if ("arguments" in window && window.arguments[0] && document.getElementById(window.arguments[0]) && document.getElementById(window.arguments[0]).nodeName == "prefpane") {
-        prefWindow.showPane(document.getElementById(window.arguments[0]));
-      }
-      else
+    function OverlayLoadObserver(aPrefsElement, aPaneElement, aContentHeight)
+    {
+      this._prefs = aPrefsElement;
+      this._pane = aPaneElement;
+      this._contentHeight = aContentHeight;
+    }
+    OverlayLoadObserver.prototype = { 
+      observe: function (aSubject, aTopic, aData) 
       {
-        prefWindow.showPane(prefPane);
+        if (this._prefs._shouldAnimate) {
+          var dummyPane = document.createElement("prefpane");
+          dummyPane.id = "paneDummy";
+          dummyPane.contentHeight = this._contentHeight;
+          document.documentElement.appendChild(dummyPane);
+          this._prefs.lastSelected = "paneDummy";
+          this._prefs._selectPane(this._pane);
+          document.documentElement.removeChild(dummyPane);
+        }
       }
     }
+    
+    var obs = new OverlayLoadObserver(document.getElementById("BrowserPreferences"), paneElement, paneElement.contentHeight);
+    document.loadOverlay(overlaySpec, obs);
   }
 };
+
+window.addEventListener("paneload", WebRunnerPrefs.paneLoad, false);

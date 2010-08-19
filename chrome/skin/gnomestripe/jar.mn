@@ -1,0 +1,7 @@
+classic.jar:
+% skin browser classic/1.0 %
+  preferences/alwaysAsk.png      (preferences/alwaysAsk.png)
+  preferences/mail.png           (preferences/mail.png)
+  preferences/Options.png        (preferences/Options.png)
+* preferences/preferences.css    (preferences/preferences.css)
+  preferences/applications.css   (preferences/applications.css)

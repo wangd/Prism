@@ -39,8 +39,11 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+#ifdef XP_MACOSX
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
+#endif
 
-<!DOCTYPE prefwindow SYSTEM "chrome://webrunner/locale/preferences/colors.dtd" >
+<!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/colors.dtd" >
 
 <prefwindow id="ColorsDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -53,6 +56,7 @@
             style="width: &window.width; !important;">
 #endif
 
+  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <prefpane id="ColorsDialogPane"
             helpTopic="prefs-fonts-and-colors">
   

@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-var WebRunnerAdvancedPrefs = {
+var gConnectionsDialog = {
   beforeAccept: function ()
   {
     var proxyTypePref = document.getElementById("network.proxy.type");

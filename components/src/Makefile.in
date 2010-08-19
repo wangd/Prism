@@ -99,6 +99,7 @@ endif
 EXTRA_PP_COMPONENTS = \
   nsCommandLineHandler.js \
   nsPlatformGlue.js \
+  feeds/WebContentConverter.js \
   $(NULL)
 
 ifeq ($(OS_ARCH),Darwin)

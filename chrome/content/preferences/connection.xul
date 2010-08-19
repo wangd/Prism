@@ -38,14 +38,30 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<!DOCTYPE overlay SYSTEM "chrome://webrunner/locale/preferences/connection.dtd">
+<!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/connection.dtd">
 
-<overlay id="AdvancedPaneOverlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<?xml-stylesheet href="chrome://global/skin/"?>
 
-  <prefpane id="paneAdvanced">
+<prefwindow id="ConnectionsDialog" type="child"
+            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            title="&connectionsDialog.title;"
+            dlgbuttons="accept,cancel,help"
+            onbeforeaccept="return gConnectionsDialog.beforeAccept();"
+            onload="gConnectionsDialog.checkForSystemProxy();"
+            ondialoghelp="openPrefsHelp()"
+#ifdef XP_MACOSX
+            style="width: &window.macWidth; !important;">
+#else
+            style="width: &window.width; !important;">
+#endif
+
+  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+
+  <prefpane id="ConnectionsDialogPane"
+            helpTopic="prefs-connection-settings">
 
     <preferences>
-      <preference id="network.proxy.type"         name="network.proxy.type"         type="int" onchange="WebRunnerAdvancedPrefs.proxyTypeChanged();"/>
+      <preference id="network.proxy.type"         name="network.proxy.type"         type="int" onchange="gConnectionsDialog.proxyTypeChanged();"/>
       <preference id="network.proxy.http"         name="network.proxy.http"         type="string"/>
       <preference id="network.proxy.http_port"    name="network.proxy.http_port"    type="int"/>
       <preference id="network.proxy.ftp"          name="network.proxy.ftp"          type="string"/>
@@ -77,15 +93,15 @@
       <preference id="network.proxy.backup.gopher_port"  name="network.proxy.backup.gopher_port"  type="int"/>
     </preferences>
     
-    <script type="application/x-javascript" src="chrome://webrunner/content/preferences/connection.js"/>
+    <script type="application/x-javascript" src="chrome://browser/content/preferences/connection.js"/>
 
-    <stringbundle id="preferencesBundle" src="chrome://webrunner/locale/preferences/preferences.properties"/>
+    <stringbundle id="preferencesBundle" src="chrome://browser/locale/preferences/preferences.properties"/>
 
     <groupbox>
       <caption label="&proxyTitle.label;"/>
 
       <radiogroup id="networkProxyType" preference="network.proxy.type"
-                  onsyncfrompreference="return WebRunnerAdvancedPrefs.readProxyType();">
+                  onsyncfrompreference="return gConnectionsDialog.readProxyType();">
         <radio value="0" label="&noProxyTypeRadio.label;" accesskey="&noProxyTypeRadio.accesskey;"/>
         <radio value="4" label="&WPADTypeRadio.label;" accesskey="&WPADTypeRadio.accesskey;"/>
         <radio value="5" label="&systemTypeRadio.label;" accesskey="&systemTypeRadio.accesskey;" id="systemPref" hidden="true"/>
@@ -102,10 +118,10 @@
               </hbox>
               <hbox align="center">
                 <textbox id="networkProxyHTTP" flex="1"
-                         preference="network.proxy.http" onsyncfrompreference="return WebRunnerAdvancedPrefs.readHTTPProxyServer();"/>
+                         preference="network.proxy.http" onsyncfrompreference="return gConnectionsDialog.readHTTPProxyServer();"/>
                 <label value="&port.label;" accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port"/>
                 <textbox id="networkProxyHTTP_Port" type="number" max="65535" size="5"
-                         preference="network.proxy.http_port" onsyncfrompreference="return WebRunnerAdvancedPrefs.readHTTPProxyPort();"/>
+                         preference="network.proxy.http_port" onsyncfrompreference="return gConnectionsDialog.readHTTPProxyPort();"/>
               </hbox>
             </row>
             <row>
@@ -113,7 +129,7 @@
               <hbox>
                 <checkbox id="shareAllProxies" label="&shareproxy.label;" accesskey="&shareproxy.accesskey;"
                           preference="network.proxy.share_proxy_settings"
-                          onsyncfrompreference="return WebRunnerAdvancedPrefs.updateProtocolPrefs();"/>
+                          onsyncfrompreference="return gConnectionsDialog.updateProtocolPrefs();"/>
               </hbox>
             </row>
             <row align="center">
@@ -122,10 +138,10 @@
               </hbox>
               <hbox align="center">
                 <textbox id="networkProxySSL" flex="1" preference="network.proxy.ssl"
-                         onsyncfrompreference="return WebRunnerAdvancedPrefs.readProxyProtocolPref('ssl', false);"/>
+                         onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ssl', false);"/>
                 <label value="&port.label;" accesskey="&SSLport.accesskey;" control="networkProxySSL_Port"/>
                 <textbox id="networkProxySSL_Port" type="number" max="65535" size="5" preference="network.proxy.ssl_port"
-                         onsyncfrompreference="return WebRunnerAdvancedPrefs.readProxyProtocolPref('ssl', true);"/>
+                         onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ssl', true);"/>
               </hbox>
             </row>
             <row align="center">
@@ -134,10 +150,10 @@
               </hbox>
               <hbox align="center">
                 <textbox id="networkProxyFTP" flex="1" preference="network.proxy.ftp"
-                         onsyncfrompreference="return WebRunnerAdvancedPrefs.readProxyProtocolPref('ftp', false);"/>
+                         onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', false);"/>
                 <label value="&port.label;" accesskey="&FTPport.accesskey;" control="networkProxyFTP_Port"/>
                 <textbox id="networkProxyFTP_Port" type="number" max="65535" size="5" preference="network.proxy.ftp_port"
-                         onsyncfrompreference="return WebRunnerAdvancedPrefs.readProxyProtocolPref('ftp', true);"/>
+                         onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('ftp', true);"/>
               </hbox>
             </row>
             <row align="center">
@@ -146,10 +162,10 @@
               </hbox>
               <hbox align="center">
                 <textbox id="networkProxyGopher" flex="1" preference="network.proxy.gopher"
-                         onsyncfrompreference="return WebRunnerAdvancedPrefs.readProxyProtocolPref('gopher', false);"/>
+                         onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('gopher', false);"/>
                 <label value="&port.label;" accesskey="&gopherPort.accesskey;" control="networkProxyGopher_Port"/>
                 <textbox id="networkProxyGopher_Port" type="number" max="65535" size="5" preference="network.proxy.gopher_port"
-                         onsyncfrompreference="return WebRunnerAdvancedPrefs.readProxyProtocolPref('gopher', true);"/>
+                         onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('gopher', true);"/>
               </hbox>
             </row>
             <row align="center">
@@ -158,10 +174,10 @@
               </hbox>
               <hbox align="center">
                 <textbox id="networkProxySOCKS" flex="1" preference="network.proxy.socks"
-                         onsyncfrompreference="return WebRunnerAdvancedPrefs.readProxyProtocolPref('socks', false);"/>
+                         onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('socks', false);"/>
                 <label value="&port.label;" accesskey="&SOCKSport.accesskey;" control="networkProxySOCKS_Port"/>
                 <textbox id="networkProxySOCKS_Port" type="number" max="65535" size="5" preference="network.proxy.socks_port"
-                         onsyncfrompreference="return WebRunnerAdvancedPrefs.readProxyProtocolPref('socks', true);"/>
+                         onsyncfrompreference="return gConnectionsDialog.readProxyProtocolPref('socks', true);"/>
               </hbox>
             </row>
             <row>
@@ -188,14 +204,14 @@
         <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;"/>
         <hbox class="indent" flex="1" align="center">
           <textbox id="networkProxyAutoconfigURL" flex="1" preference="network.proxy.autoconfig_url"
-                   oninput="WebRunnerAdvancedPrefs.updateReloadButton();"/>
+                   oninput="gConnectionsDialog.updateReloadButton();"/>
           <button id="autoReload" icon="refresh"
                   label="&reload.label;" accesskey="&reload.accesskey;"
-                  oncommand="WebRunnerAdvancedPrefs.reloadPAC();" 
+                  oncommand="gConnectionsDialog.reloadPAC();" 
                   preference="pref.advanced.proxies.disable_button.reload"/>
         </hbox>
       </radiogroup>
     </groupbox>
   </prefpane>
-</overlay>
+</prefwindow>
 

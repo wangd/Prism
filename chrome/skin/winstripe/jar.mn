@@ -1,0 +1,22 @@
+classic.jar:
+% skin browser classic/1.0 %
+  preferences/alwaysAsk.png               (preferences/alwaysAsk.png)
+  preferences/application.png             (preferences/application.png)
+  preferences/mail.png                    (preferences/mail.png)
+  preferences/Options.png                 (preferences/Options.png)
+  preferences/saveFile.png                (preferences/saveFile.png)
+  preferences/preferences.css             (preferences/preferences.css)
+  preferences/applications.css            (preferences/applications.css)
+
+#ifdef XP_WIN
+classic.jar:
+% skin browser classic/1.0 %
+  aero/preferences/alwaysAsk.png          (preferences/alwaysAsk-aero.png)
+  aero/preferences/application.png        (preferences/application-aero.png)
+  aero/preferences/mail.png               (preferences/mail-aero.png)
+  aero/preferences/Options.png            (preferences/Options-aero.png)
+  aero/preferences/plugin.png             (preferences/plugin-aero.png)
+  aero/preferences/saveFile.png           (preferences/saveFile-aero.png)
+  aero/preferences/preferences.css        (preferences/preferences.css)
+  aero/preferences/applications.css       (preferences/applications.css)
+#endif

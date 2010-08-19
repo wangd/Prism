@@ -1,0 +1,10 @@
+classic.jar:
+% skin browser classic/1.0 %
+  preferences/alwaysAsk.png            (preferences/alwaysAsk.png)
+  preferences/application.png          (preferences/application.png)
+  preferences/Options.png              (preferences/Options.png)
+  preferences/saveFile.png             (preferences/saveFile.png)
+  preferences/preferences.css          (preferences/preferences.css)
+  preferences/panebutton-active.png    (preferences/panebutton-active.png)
+  preferences/panebutton-inactive.png  (preferences/panebutton-inactive.png)
+  preferences/applications.css         (preferences/applications.css)
