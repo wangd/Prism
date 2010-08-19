@@ -1079,8 +1079,17 @@ var WebRunner = {
     var back = document.getElementById("cmd_back");
     var forward = document.getElementById("cmd_forward");
 
-    back.setAttribute("disabled", !browser.canGoBack);
-    forward.setAttribute("disabled", !browser.canGoForward);
+    try {
+      var canGoBack = browser.canGoBack;
+      var canGoForward = browser.canGoForward;
+    }
+    catch(e) {
+      canGoBack = false;
+      canGoForward = false;
+    }
+
+    back.setAttribute("disabled", !canGoBack);
+    forward.setAttribute("disabled", !canGoForward);
   },
 
   // This method is called to indicate a status changes for the currently
