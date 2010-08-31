@@ -40,8 +40,8 @@ WebRunnerCloseEvent.prototype = {
   },
   
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIRunnable) ||
-        iid.equals(Components.interfaces.nsISupports)) {
+    if (iid.equals(Ci.nsIRunnable) ||
+        iid.equals(Ci.nsISupports)) {
             return this;
     }
     throw Components.results.NS_ERROR_NO_INTERFACE;
@@ -63,13 +63,13 @@ WebRunnerCommandLineHandler.prototype = {
   handle : function(aCmdLine) {
     if (!aCmdLine)
       return;
-      
+
     Components.utils.import("resource://prism/modules/WebAppProperties.jsm");
 
     var file = null;
 
     if (aCmdLine.handleFlag("close", false)) {
-      var mainThread = Components.classes["@mozilla.org/thread-manager;1"].getService().mainThread;
+      var mainThread = Cc["@mozilla.org/thread-manager;1"].getService().mainThread;
       mainThread.dispatch(new WebRunnerCloseEvent(), Ci.nsIEventTarget.DISPATCH_NORMAL);
       aCmdLine.preventDefault = true;
       return;
@@ -144,15 +144,14 @@ WebRunnerCommandLineHandler.prototype = {
     var callback = {};
 
     // Check for an OSX launch
-    var uriSpec = aCmdLine.handleFlagWithParam("url", false);
-    if (uriSpec) {
+    if (url) {
       // Check whether we were launched as a protocol
       // If so, get the URL to load for the protocol scheme
       var platform = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
-      protocolURI = platform.getProtocolURI(uriSpec, callback);
+      protocolURI = platform.getProtocolURI(url, callback);
 
       if (!protocolURI || protocolURI.length == 0) {
-        var uri = aCmdLine.resolveURI(uriSpec);
+        var uri = aCmdLine.resolveURI(url);
         if (!file && uri.scheme == "file") {
           file = uri.QueryInterface(Ci.nsIFileURL).file;
         }
@@ -187,58 +186,51 @@ WebRunnerCommandLineHandler.prototype = {
       WebAppProperties.uri = protocolURI;
     }
 
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+
     if (callback.value) {
       // Invoke the callback and don't load a new page
-      callback.value.handleURI(uriSpec);
+      callback.value.handleURI(url);
 
       aCmdLine.preventDefault = true;
       return;
     }
 
-    if (!url) {
-      url = WebAppProperties.uri;
-    }
+    if (url) {
+      var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+      newURI = uriFixup.createFixupURI(url, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
 
-    var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
-    newURI = uriFixup.createFixupURI(url, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
 
-    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1']
-                                  .getService(Components.interfaces.nsIWindowMediator);
+      var win;
+      // Check if a window exists with the given url
+      var enumerator = wm.getEnumerator("navigator:browser");  
+      while(enumerator.hasMoreElements()) {  
+        var helpwin = enumerator.getNext();
 
-    var win;
-    // Check if a window exists with the given url
-    var enumerator = windowManager.getEnumerator("navigator:browser");  
-    while(enumerator.hasMoreElements()) {  
-      var helpwin = enumerator.getNext();
-
-      if (helpwin.document.getElementById("browser_content").currentURI.spec == newURI.spec) {
-        win = helpwin;
-        break;
+        if (helpwin.document.getElementById("browser_content").currentURI.spec == newURI.spec) {
+          win = helpwin;
+          break;
+        }
       }
-    } 
+    }
 
     if (!win) {
-      var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-      win = windowMediator.getMostRecentWindow("navigator:browser");
-    
-      if (win && url) {
-        var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"].getService(Components.interfaces.nsIWindowWatcher);
-        win = ww.openWindow(win, url, "_blank", null, null);
-      }
+      win = wm.getMostRecentWindow("navigator:browser");
     }
-
+    
     this.activateWindow(win);
+    
+    if (url) {
+      WebAppProperties.uri = url;
+    }
 
     // Check for an existing window and reuse it if there is one
     if (win) {
-      if (protocolURI) {
+      if (protocolURI || url) {
         win.document.getElementById("browser_content").loadURI(WebAppProperties.uri, null, null);
       }
       aCmdLine.preventDefault = true;
       return;
-    }
-    else if (url) {
-      WebAppProperties.uri = url;
     }
 
     if (WebAppProperties.script.startup)
