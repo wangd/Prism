@@ -102,14 +102,14 @@ NS_METHOD nsPlatformGlueSingleton::OnUnregistration(nsIComponentManager *aCompMg
 NS_IMETHODIMP nsPlatformGlueSingleton::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
 {
   nsresult rv;
-  if (strcmp(aTopic, "app-startup")) {
+  if (strcmp(aTopic, "app-startup") == 0) {
     nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1", &rv));
     NS_ENSURE_SUCCESS(rv, rv);
     
     rv = observerService->AddObserver(this, "profile-after-change", false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  else if (strcmp(aTopic, "profile-after-change")) {
+  else if (strcmp(aTopic, "profile-after-change") == 0) {
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1", &rv));
     NS_ENSURE_SUCCESS(rv, rv);
     
@@ -122,7 +122,7 @@ NS_IMETHODIMP nsPlatformGlueSingleton::Observe(nsISupports* aSubject, const char
     NS_ENSURE_SUCCESS(rv, rv);
     
     for (PRUint32 i=0; i<protocolCount; i++) {
-      rv = platformGlue->RegisterProtocolFactory(NS_ConvertUTF8toUTF16(nsCString(protocols[i])));
+      rv = platformGlue->RegisterProtocolFactory(NS_ConvertUTF8toUTF16(nsCString(protocols[i]+strlen(PRISM_PROTOCOL_PREFIX))));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
