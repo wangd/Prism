@@ -698,18 +698,6 @@ var WebRunner = {
     // Ensure login manager is up and running.
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
-    // Set the 'http' handler
-    var httpHandler = extps.getProtocolHandlerInfo("http");
-    httpHandler.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
-    httpHandler.alwaysAskBeforeHandling = false;
-    hs.store(httpHandler);
-
-    // Set the 'https' handler
-    var httpsHandler = extps.getProtocolHandlerInfo("https");
-    httpsHandler.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
-    httpsHandler.alwaysAskBeforeHandling = false;
-    hs.store(httpsHandler);
-
     this._xulWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIWebNavigation)
         .QueryInterface(Ci.nsIDocShellTreeItem)
