@@ -887,7 +887,8 @@ var WebRunner = {
         this._getBrowser().reload();
         break;
       case "cmd_close":
-        if (this._handleWindowClose())
+        // If there is no XUL window set then this is a child window and we don't have to call handleWindowClose()
+        if (!this._xulWindow || this._handleWindowClose())
           close();
         break;
       case "cmd_quit":
