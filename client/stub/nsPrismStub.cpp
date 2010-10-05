@@ -49,6 +49,7 @@
 #elif defined(XP_MACOSX)
 #include <CFBundle.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #define PATH_SEPARATOR_CHAR '/'
 #elif defined (XP_OS2)
 #define INCL_DOS
@@ -129,25 +130,37 @@ private:
   nsXREAppData* mAppData;
 };
 
+PRBool gEnvSet = PR_FALSE;
+
 PRBool PR_CALLBACK SetEnvironmentVariable(const char* aString, const char* aValue, void* aClosure)
 {
-  if (aClosure) {
-    // Let the caller know that we set something
-    *((PRBool *) aClosure) = PR_TRUE;
-  }
+  gEnvSet = PR_TRUE;
 
-  // Only need this on OS X
-#if defined(XP_MACOSX)
-  setenv(aString, aValue, 1);
-#endif
 #if defined(XP_WIN)
   char buffer[4096];
   sprintf(buffer, "%s=%s", aString, aValue);
   putenv(buffer);
+#else
+  // Check whether we are setting a variable that needs to support relative paths
+  char resolvedPath[MAXPATHLEN];
+  if (aValue[0] != '/' && aClosure &&
+    (!strcmp(aString, "GRE_HOME") || !strcmp(aString, "PRISM_HOME") || !strcmp(aString, "XRE_PROFILE_PATH"))) {
+    char* basePath = (char *) aClosure;
+    char path[MAXPATHLEN];
+    strcpy(path, basePath);
+    // Get the path relative to the parent of the base path, since the base path is the full path of application.ini including the filename component
+    strcat(path, "/../");
+    strcat(path, aValue);
+    if (realpath(path, resolvedPath)) {
+      aValue = resolvedPath;
+    }
+  }
+
+  setenv(aString, aValue, 1);
 #endif
+
   return PR_TRUE;
 }
-
 
 XRE_CreateAppDataType XRE_CreateAppData;
 XRE_FreeAppDataType XRE_FreeAppData;
@@ -368,13 +381,12 @@ main(int argc, char **argv)
   }
   
   // Register any environment variables. This is Prism-specific.
-  PRBool found = PR_FALSE;
-  parser.GetStrings("Environment", SetEnvironmentVariable, &found);
-  if (!found && strlen(overridePath) > 0) {
+  parser.GetStrings("Environment", SetEnvironmentVariable, iniPath);
+  if (!gEnvSet && strlen(overridePath) > 0) {
     // Look in override.ini as well
     nsINIParser overrideParser;
     if (NS_SUCCEEDED(overrideParser.Init(overridePath))) {
-      overrideParser.GetStrings("Environment", SetEnvironmentVariable, nsnull);
+      overrideParser.GetStrings("Environment", SetEnvironmentVariable, iniPath);
     }
   }
 
