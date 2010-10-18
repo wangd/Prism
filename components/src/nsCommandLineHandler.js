@@ -85,7 +85,7 @@ WebRunnerCommandLineHandler.prototype = {
       webapp = aCmdLine.handleFlagWithParam("webapp", false);
     }
 
-	var url = aCmdLine.handleFlagWithParam("url", false);
+    var url = aCmdLine.handleFlagWithParam("url", false);
 
 #ifdef XP_MACOSX
     // On Mac, check for a webapp.ini inside the current app bundle
@@ -150,7 +150,7 @@ WebRunnerCommandLineHandler.prototype = {
       var platform = Cc["@mozilla.org/platform-web-api;1"].createInstance(Ci.nsIPlatformGlue);
       protocolURI = platform.getProtocolURI(url, callback);
 
-      if (!protocolURI || protocolURI.length == 0) {
+      if (protocolURI.length == 0) {
         var uri = aCmdLine.resolveURI(url);
         if (!file && uri.scheme == "file") {
           file = uri.QueryInterface(Ci.nsIFileURL).file;
@@ -182,25 +182,28 @@ WebRunnerCommandLineHandler.prototype = {
         WebAppProperties.setParameter(key, value);
     }
     
-    if (protocolURI && protocolURI.length > 0) {
-      WebAppProperties.uri = protocolURI;
-    }
-
     var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
 
-    if (url) {
-      var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
-      newURI = uriFixup.createFixupURI(url, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
+    if (protocolURI.length > 0) {
+      WebAppProperties.uri = protocolURI;
+    }
+    else {
+      if (url) {
+        WebAppProperties.uri = url;
+      
+        var uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+        newURI = uriFixup.createFixupURI(url, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
 
-      var win;
-      // Check if a window exists with the given url
-      var enumerator = wm.getEnumerator("navigator:browser");  
-      while(enumerator.hasMoreElements()) {  
-        var helpwin = enumerator.getNext();
+        var win;
+        // Check if a window exists with the given url
+        var enumerator = wm.getEnumerator("navigator:browser");  
+        while(enumerator.hasMoreElements()) {  
+          var helpwin = enumerator.getNext();
 
-        if (helpwin.document.getElementById("browser_content").currentURI.spec == newURI.spec) {
-          win = helpwin;
-          break;
+          if (helpwin.document.getElementById("browser_content").currentURI.spec == newURI.spec) {
+            win = helpwin;
+            break;
+          }
         }
       }
     }
@@ -211,16 +214,14 @@ WebRunnerCommandLineHandler.prototype = {
     
     this.activateWindow(win);
     
-    if (callback.value) {
-      // Invoke the callback and don't load a new page
-      callback.value.handleURI(url);
+    if (win) {
+      if (callback.value) {
+        // Invoke the callback and don't load a new page
+        callback.value.handleURI(url);
 
-      aCmdLine.preventDefault = true;
-      return;
-    }
-
-    if (url) {
-      WebAppProperties.uri = url;
+        aCmdLine.preventDefault = true;
+        return;
+      }
     }
 
     // Check for an existing window and reuse it if there is one
