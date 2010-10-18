@@ -26,23 +26,18 @@
 
 Components.utils.import("resource://prism/modules/ImageUtils.jsm");
 Components.utils.import("resource://prism/modules/WebAppProperties.jsm");
+Components.utils.import("resource://prism/modules/consts.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-const PR_WRONLY = 0x02;
-const PR_CREATE_FILE = 0x08;
-const PR_TRUNCATE = 0x20;
+EXPORTED_SYMBOLS = ["WebAppInstall", "ShortcutCreator"];
 
-const PR_PERMS_FILE = 0644;
-const PR_PERMS_DIRECTORY = 0755;
+WebAppInstallFun = function(shortcutCreatorArch) {
+  this.shortcutCreator = shortcutCreatorArch;
+};
 
-const PR_UINT32_MAX = 4294967295;
-
-EXPORTED_SYMBOLS = ["WebAppInstall"];
-
-var WebAppInstall =
-{
+WebAppInstallFun.prototype = {
   getProfileRoot : function() {
     var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
@@ -312,233 +307,9 @@ var WebAppInstall =
     }
 
     arguments += "-webapp " + id;
-
-    return this._createShortcut(target, name, arguments, extensionDir, appSandbox, locations);
+    return this.shortcutCreator._createShortcut(target, name, arguments, extensionDir, appSandbox, locations);
   },
-
-#ifdef XP_MACOSX
-  _createShortcut : function(target, name, arguments, extensionDir, root, locations) {
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-
-    var bundle = null;
-    if (locations.indexOf("desktop") > -1) {
-      var desk = dirSvc.get("Desk", Ci.nsIFile);
-      bundle = this._createBundle(target, name, arguments, extensionDir, desk);
-    }
-    if (locations.indexOf("applications") > -1) {
-      var apps = dirSvc.get("LocApp", Ci.nsIFile);
-      if (!apps.exists())
-        apps.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
-      bundle = this._createBundle(target, name, arguments, extensionDir, apps);
-    }
-
-    // Return the exec script file so it can be spawned (for restart)
-    var scriptFile = bundle.clone();
-    scriptFile.append("Contents");
-    scriptFile.append("MacOS");
-    scriptFile.append("prism");
-
-    return scriptFile;
-  },
-
-  _createBundle : function(target, name, arguments, extensionDir, location) {
-    var contents =
-    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-    "<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
-    "<plist version=\"1.0\">\n" +
-    "<dict>\n" +
-    "<key>CFBundleIdentifier</key>\n" +
-    "<string>org.mozilla.prism." + WebAppProperties.id.substring(0, WebAppProperties.id.indexOf("@")) + "</string>\n" +
-    "<key>CFBundleExecutable</key>\n" +
-    "<string>prism</string>\n" +
-    "<key>CFBundleIconFile</key>\n" +
-    "<string>" + WebAppProperties.icon + ImageUtils.getNativeIconExtension() + "</string>\n" +
-    "</dict>\n" +
-    "</plist>";
-
-    location.append(name + ".app");
-    if (location.exists())
-      location.remove(true);
-    location.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
-
-    var bundle = location.clone();
-
-    location.append("Contents");
-    location.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
-
-    var info = location.clone();
-    info.append("Info.plist");
-    FileIO.stringToFile(contents, info);
-
-    var resources = location.clone();
-    resources.append("Resources");
-    resources.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
-    
-    // On Mac, set the app root to the webapp subdirectory of the app bundle
-    var appRoot = resources.clone();
-    appRoot.append("webapp");
-    appRoot.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
-    WebAppProperties.appRoot = appRoot;
-
-    var macos = location.clone();
-    macos.append("MacOS");
-    macos.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
-
-    // Copy the Prism stub into the bundle
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    var stub = dirSvc.get("XREExeF", Ci.nsIFile);
-    var greHome = stub.parent.parent.clone();
-    var prismRoot;
-    if (extensionDir) {
-      prismRoot = extensionDir;
-    }
-    else {
-      prismRoot = greHome.clone();
-      prismRoot.append("Resources");
-    }
-    
-    // Create the locale file with the app name (for the menu bar)
-    var infoPlistStrings = resources.clone();
-    infoPlistStrings.append("en.lproj");
-    infoPlistStrings.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
-    infoPlistStrings.append("InfoPlist.strings");
-    FileIO.stringToFile("CFBundleName = \"" + name + "\";\n", infoPlistStrings, "UTF-16");
-
-    if (extensionDir) {
-      greHome.append("MacOS");
-
-      // Copy in dependentlibs.list if necessary (see bug 542004)
-      var dependentlibs = greHome.clone();
-      dependentlibs.append("dependentlibs.list");
-      if (!dependentlibs.exists()) {
-        dependentlibs = prismRoot.clone();
-        dependentlibs.append("dependentlibs.list");
-        dependentlibs.copyTo(greHome, null);
-      }
-
-      // Can't use the Firefox stub so we need to use the XR stub supplied with the extension
-      stub = prismRoot.clone();
-      stub.append("prism");
-    }
-    else {
-      greHome.append("Frameworks");
-      greHome.append("XUL.framework");
-    }
-
-    stub.copyTo(macos, "prism");
-    macos.append("prism");
-    macos.permissions = 0755;
-
-    // Copy application.ini into the bundle
-    var applicationIni = prismRoot.clone();
-    applicationIni.append("application.ini");
-
-    var iniString = FileIO.fileToString(applicationIni);
-    
-    applicationIni = resources.clone();
-    applicationIni.append("application.ini");
-    iniString += "\n[Environment]\nGRE_HOME=" + greHome.path + "\nPRISM_HOME=" + prismRoot.path + "\n";
-    FileIO.stringToFile(iniString, applicationIni);
-
-    // Create the branding files and chrome overrides
-    this._createBrandingFiles(resources, name);
-
-    return bundle;
-  },
-
-  _createBrandingFiles : function(resources, name) {
-    var branding = resources.clone();
-    branding.append("branding");
-    branding.create(Ci.nsIFile.DIRECTORY_TYPE, PR_PERMS_DIRECTORY);
-
-    // Create DTD
-    var dtd = "<!ENTITY brandShortName \"" + name + "\">\n<!ENTITY brandFullName \"" + name + "\">\n";
-    var dtdFile = branding.clone();
-    dtdFile.append("brand.dtd");
-    FileIO.stringToFile(dtd, dtdFile);
-
-    // Create properties
-    var properties = "brandShortName=" + name + "\nbrandFullName=" + name + "\n";
-    var propertiesFile = branding.clone();
-    propertiesFile.append("brand.properties");
-    FileIO.stringToFile(properties, propertiesFile);
-  },
-#else
-#ifdef XP_UNIX
-  _createShortcut : function(target, name, arguments, extensionDir, root, locations) {
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-
-    // Locate the webapp resources
-    var appOverride = root.clone();
-    appOverride.append("override.ini");
-
-    arguments = "-override \"" + appOverride.path + "\" " + arguments;
-    if (extensionDir)
-      arguments = "-app \"" + extensionDir.path + "/application.ini\" " + arguments;
-
-    var appIcon = root.clone();
-    appIcon.append("icons");
-    appIcon.append("default");
-    appIcon.append(WebAppProperties.icon + ImageUtils.getNativeIconExtension());
-
-    var file = dirSvc.get("Desk", Ci.nsIFile);
-    file.append(name + ".desktop");
-    if (file.exists())
-      file.remove(false);
-    file.create(Ci.nsIFile.NORMAL_FILE_TYPE, PR_PERMS_FILE);
-
-    var cmd = "[Desktop Entry]\n";
-    cmd += "Name=" + name + "\n";
-    cmd += "Type=Application\n";
-    cmd += "Comment=Web Application\n";
-    cmd += "Exec=\"" + target.path + "\" " + arguments + "\n";
-    cmd += "Icon=" + appIcon.path + "\n";
-
-    FileIO.stringToFile(cmd, file);
-
-    return file;
-  },
-#else
-  _createShortcut : function(target, name, arguments, extensionDir, root, locations) {
-    var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-
-    // Locate the webapp resources
-    var appOverride = root.clone();
-    appOverride.append("override.ini");
-
-    arguments = "-override \"" + appOverride.path + "\" " + arguments;
-    if (extensionDir)
-      arguments = "-app application.ini " + arguments;
-
-    var appIcon = root.clone();
-    appIcon.append("icons");
-    appIcon.append("default");
-    appIcon.append(WebAppProperties.icon + ImageUtils.getNativeIconExtension());
-
-    var directory = null;
-    for (var i=0; i<locations.length; i++)
-    {
-      if (locations[i] == "desktop") {
-        directory = dirSvc.get("Desk", Ci.nsIFile);
-      }
-      else if (locations[i] == "programs") {
-        directory = dirSvc.get("Progs", Ci.nsIFile);
-        directory.append("Web Apps");
-      }
-      else if (locations[i] == "quicklaunch") {
-        directory = dirSvc.get("QuickLaunch", Ci.nsIFile);
-      }
-      else {
-        continue;
-      }
-
-      return desktop.createShortcut(name, target, directory, extensionDir ? extensionDir.path : "", arguments, "", appIcon);
-    }
-  },
-#endif
-#endif
-
+  
   getExtensionDirectory : function(dirSvc)
   {
     var extensionDirs = dirSvc.get("XREExtDL", Ci.nsISimpleEnumerator);
@@ -552,3 +323,18 @@ var WebAppInstall =
     throw Components.results.NS_ERROR_NOT_AVAILABLE;
   },
 };
+
+/* Create shortcuts depending on the OS. 
+ * A ShortcutCreator object is imported according to the OS type. */
+#ifdef XP_MACOSX
+  Components.utils.import("resource://prism/modules/MacOSShortcutCreator.jsm");
+#else 
+#ifdef XP_UNIX
+  Components.utils.import("resource://prism/modules/LinuxShortcutCreator.jsm");
+#else
+  Components.utils.import("resource://prism/modules/WinShortcutCreator.jsm");
+#endif
+#endif
+
+/* Create the application and shortcut using OS-specific ShortcutCreator. */
+var WebAppInstall = new WebAppInstallFun(ShortcutCreator);

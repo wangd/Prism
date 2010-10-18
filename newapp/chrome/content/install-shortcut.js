@@ -114,6 +114,28 @@ var InstallShortcut = {
       this._iframe.removeEventListener("DOMContentLoaded", this._faviconDownloader, false);
     }
   },
+  
+  /**
+   * Get the user-selected locations for the shortcuts.
+   */
+  _determineShortcuts: function IS__determine_shortcuts(doc, bundle) {
+    var shortcuts = "";
+    if (doc.getElementById("desktop").checked)
+      shortcuts += "desktop,";
+    if (doc.getElementById("programs").checked)
+      shortcuts += "programs,";
+    if (doc.getElementById("quicklaunch").checked)
+      shortcuts += "quicklaunch,";
+    if (doc.getElementById("applications").checked)
+      shortcuts += "applications,";
+
+    if (shortcuts.length == 0) {
+      alert(bundle.GetStringFromName("shortcuts.missing"));
+      return null;
+    }
+    
+    return shortcuts;
+  },
 
   accept : function() {
     var bundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
@@ -135,19 +157,9 @@ var InstallShortcut = {
       alert(bundle.GetStringFromName("name.invalid"));
       return false;
     }
-
-    var shortcuts = "";
-    if (document.getElementById("desktop").checked)
-      shortcuts += "desktop,";
-    if (document.getElementById("programs").checked)
-      shortcuts += "programs,";
-    if (document.getElementById("quicklaunch").checked)
-      shortcuts += "quicklaunch,";
-    if (document.getElementById("applications").checked)
-      shortcuts += "applications,";
-
-    if (shortcuts.length == 0) {
-      alert(bundle.GetStringFromName("shortcuts.missing"));
+    
+    var shortcuts = this._determineShortcuts(document, bundle);
+    if (!shortcuts) {
       return false;
     }
 
@@ -187,7 +199,16 @@ var InstallShortcut = {
       }
     }
 
-    var params = {id: idPrefix + "@prism.app", name: name, uri: uri.value, icon: iconData, status: doStatus, location: doLocation, sidebar: "false", navigation: doNavigation, trayicon: doTrayIcon};
+    var params = {
+        id: idPrefix + "@prism.app", 
+        name: name, 
+        uri: uri.value, 
+        icon: iconData, 
+        status: doStatus, 
+        location: doLocation, 
+        sidebar: "false", 
+        navigation: doNavigation, 
+        trayicon: doTrayIcon};
 
     // Use the id from the bundle, if we have one
     if (WebAppProperties.appBundle) {
