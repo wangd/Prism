@@ -65,10 +65,10 @@ interface nsIWebProtocolService : nsISupports
   void unregisterProtocol(in AString uriScheme);
   
   /**
-    * Get the default application for handling the specified URI scheme.
+    * Check whether we are the default application for the specified URI scheme.
     *
     * @param uriScheme URI scheme to check.
-    * @returns the name of the application that handles that URI scheme, or an empty string if none is found.
+    * @returns true if we are the default app, false otherwise
   **/
-  AString getDefaultApplicationForURIScheme(in AString uriScheme);
+  boolean isRegisteredProtocolHandler(in AString uriScheme);
 };

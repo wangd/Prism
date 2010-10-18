@@ -66,6 +66,7 @@ extern "C" {
 #include "nsIProperties.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIWindowMediator.h"
+#include "nsIXULAppInfo.h"
 #include "nsIXULWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringAPI.h"
@@ -119,7 +120,7 @@ extern "C" {
     
     baseWindow->SetVisibility(PR_TRUE);
   }
-  
+
   // Forward to old delegate
   return [mOldDelegate applicationShouldHandleReopen:theApp hasVisibleWindows:flag];
 }
@@ -328,8 +329,9 @@ NS_IMETHODIMP nsDesktopEnvironment::UnregisterProtocol(const nsAString& aScheme)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDesktopEnvironment::GetDefaultApplicationForURIScheme(const nsAString& aScheme, nsAString& _retval)
+NS_IMETHODIMP nsDesktopEnvironment::IsRegisteredProtocolHandler(const nsAString& aScheme, PRBool* _retval)
 {
+  nsresult rv;
   CFURLRef appURL = nil;
   OSStatus err = noErr;
   
@@ -356,14 +358,21 @@ NS_IMETHODIMP nsDesktopEnvironment::GetDefaultApplicationForURIScheme(const nsAS
     PRUnichar* buffer = new PRUnichar[extension.location+1];
     ::CFStringGetCharacters(leafName, CFRangeMake(0, extension.location), buffer);
     buffer[extension.location] = 0;
-    _retval = buffer;
+    nsString currentName(buffer);
     delete [] buffer;
+    
+    nsCOMPtr<nsIXULAppInfo> appInfo(do_GetService("@mozilla.org/xre/app-info;1"));
+    nsCAutoString appName;
+    rv = appInfo->GetName(appName);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    *_retval = (appName == NS_ConvertUTF16toUTF8(currentName));
   }
   else {
-    _retval = EmptyString();
+    *_retval = PR_FALSE;
   }
 
-  return err == noErr ? NS_OK : NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDesktopEnvironment::GetSystemMenu(nsIDOMWindow* aWindow, nsINativeMenu** _retval)

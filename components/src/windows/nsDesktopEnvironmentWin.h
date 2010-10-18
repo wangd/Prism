@@ -93,6 +93,7 @@ protected:
   nsresult RunHelperApp(const nsAString& params);
   nsresult GetAppPath(nsAString& _retval);
   nsresult GetAppName(nsAString& _retval);
+  nsresult GetIconPath(nsAString& _retval);
 
 private:
   ~nsDesktopEnvironment();

@@ -108,6 +108,7 @@ endif
 
 EXTRA_DSO_LDOPTS = \
     $(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+    $(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib) \
     $(XPCOM_FROZEN_LDOPTS) \
     $(NSPR_LIBS) \
     $(NULL)

@@ -66,6 +66,7 @@
 #include "nsNotificationArea.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSystemMenu.h"
+#include "nsUnicharUtils.h"
 
 #include <windows.h>
 #include <shlobj.h>
@@ -344,13 +345,18 @@ NS_IMETHODIMP nsDesktopEnvironment::RegisterProtocol(
   rv = GetAppName(appName);
   NS_ENSURE_SUCCESS(rv, rv);
  
+ 
+  nsAutoString iconPath;
+  rv = GetIconPath(iconPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+   
   nsAutoString params;
   params += NS_LITERAL_STRING(" /Protocol ");
   params += aScheme;
   params += NS_LITERAL_STRING(" /ApplicationPath ");
   params += appPath;
-  params += NS_LITERAL_STRING(" /ApplicationName ");
-  params += appName;
+  params += NS_LITERAL_STRING(" /DefaultIcon ");
+  params += iconPath;
 
   rv = RunHelperApp(params);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -395,7 +401,7 @@ NS_IMETHODIMP nsDesktopEnvironment::UnregisterProtocol(const nsAString& aScheme)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDesktopEnvironment::GetDefaultApplicationForURIScheme(const nsAString& aScheme, nsAString& _retval)
+nsresult nsDesktopEnvironment::IsRegisteredProtocolHandler(const nsAString& aScheme, PRBool* _retval)
 {
   nsresult rv;
   nsCOMPtr<nsIWindowsRegKey> regKey(do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv));
@@ -403,16 +409,23 @@ NS_IMETHODIMP nsDesktopEnvironment::GetDefaultApplicationForURIScheme(const nsAS
   
   nsAutoString keyPath = NS_LITERAL_STRING("SOFTWARE\\Classes\\");
   keyPath += aScheme;
-  keyPath += NS_LITERAL_STRING("\\shell\\open\\ddeexec\\Application");
+  keyPath += NS_LITERAL_STRING("\\DefaultIcon");
     
-  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, keyPath, nsIWindowsRegKey::ACCESS_READ);
+  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER, keyPath, nsIWindowsRegKey::ACCESS_READ);
   if (NS_FAILED(rv)) {
-    // Return an empty string
-    _retval = EmptyString();
+    // Can't access the key so assume we are not the handler
+    *_retval = PR_FALSE;
   }
   else {
-    rv = regKey->ReadStringValue(EmptyString(), _retval);
+    nsAutoString registryPath;
+    rv = regKey->ReadStringValue(EmptyString(), registryPath);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString iconPath;
+    rv = GetIconPath(iconPath);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    *_retval = (registryPath == iconPath);
   }
   
   return NS_OK;
@@ -463,6 +476,47 @@ nsresult nsDesktopEnvironment::GetAppPath(nsAString& _retval)
   ::LocalFree(argv);
 
   _retval = appPath;
+  return NS_OK;
+}
+
+// Get the path to the default app icon
+// We assume there is only one icon in the directory
+nsresult nsDesktopEnvironment::GetIconPath(nsAString& _retval)
+{
+  nsresult rv;
+  nsCOMPtr<nsIProperties> dirSvc(do_GetService("@mozilla.org/file/directory_service;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISimpleEnumerator> dirs;
+  rv = dirSvc->Get("AChromDL", NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(dirs));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsISupports> supports;
+  rv = dirs->GetNext(getter_AddRefs(supports));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIFile> iconDir(do_QueryInterface(supports, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = iconDir->Append(NS_LITERAL_STRING("icons"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = iconDir->Append(NS_LITERAL_STRING("default"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = iconDir->GetDirectoryEntries(getter_AddRefs(dirs));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = dirs->GetNext(getter_AddRefs(supports));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIFile> iconFile(do_QueryInterface(supports, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsAutoString iconPath;
+  rv = iconFile->GetPath(iconPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
