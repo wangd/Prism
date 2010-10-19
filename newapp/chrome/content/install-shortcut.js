@@ -138,6 +138,11 @@ var InstallShortcut = {
   },
 
   accept : function() {
+    var retObj = this._handleAccept();
+    return retObj ? this.shortcutCreated(retObj.shortcut, retObj.params) : false;
+  },
+    
+  _handleAccept : function() { 
     var bundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
     bundle = bundle.createBundle("chrome://@PACKAGE@/locale/install-shortcut.properties");
 
@@ -148,19 +153,19 @@ var InstallShortcut = {
     if (name.length == 0) {
       document.getElementById("name").focus();
       alert(bundle.GetStringFromName("name.missing"));
-      return false;
+      return null;
     }
 
     // Check for invalid characters (mainly Windows)
     if (/([\\*:?<>|\/\"])/.test(name)) {
       document.getElementById("name").focus();
       alert(bundle.GetStringFromName("name.invalid"));
-      return false;
+      return null;
     }
     
     var shortcuts = this._determineShortcuts(document, bundle);
     if (!shortcuts) {
-      return false;
+      return null;
     }
 
     var programs = document.getElementById("programs");
@@ -232,7 +237,11 @@ var InstallShortcut = {
 
     // Make any desired shortcuts
     var shortcut = WebAppInstall.createShortcut(name, WebAppProperties.id, shortcuts.split(","));
-
+    
+    return {shortcut: shortcut, params: params};
+  },
+  
+  shortcutCreated : function(shortcut, params, mode)  {
     if (this._mode == "install") {
       // If a webapp bundle was preinstalled, don't clean the folder. We want to
       // overwrite only some files. For non-webapp bundles, clean the folder.
@@ -241,13 +250,11 @@ var InstallShortcut = {
       // Make the web application in the profile folder
       WebAppInstall.createApplication(params, clean);
     }
-
     if (this._oncomplete) {
-      this._oncomplete(WebAppInstall, WebAppProperties.id, shortcut);
+        return this._oncomplete(WebAppInstall, WebAppProperties.id, shortcut);
     }
-
-    return true;
   },
+  
 
   getIcon : function()
   {
