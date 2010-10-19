@@ -140,7 +140,7 @@ WebRunnerCommandLineHandler.prototype = {
       this.loadPrefs(file);
     }
 
-    var protocolURI = null;
+    var protocolURI = "";
     var callback = {};
 
     // Check for an OSX launch
