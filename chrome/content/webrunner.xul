@@ -91,10 +91,10 @@
     <key id="key_home" class="nav" modifiers="alt" keycode="VK_HOME" command="cmd_home"/>
     <key id="key_reload" class="nav" keycode="VK_F5" command="cmd_reload"/>
     <key id="key_close" modifiers="accel" key="w" command="cmd_close"/>
-    <key id="key_quit" modifiers="accel" key="q" command="cmd_quit"/>
     <key id="key_print" modifiers="accel" key="p" command="cmd_print"/>
     <key id="key_fullScreen" keycode="VK_F11" command="cmd_fullScreen"/>
 #ifdef XP_MACOSX
+    <key id="key_quit" modifiers="accel" key="q" command="cmd_quit"/>
     <key id="key_hideThisApp" key="&hideThisApp.commandkey;" modifiers="&hideThisApp.modifiers;"/>
     <key id="key_hideOtherApps" key="&hideOtherApps.commandkey;" modifiers="&hideOtherApps.modifiers;"/>
     <key id="key_minimizeWindow" command="cmd_minimizeWindow" key="&minimizeWindow.key;" modifiers="accel"/>
