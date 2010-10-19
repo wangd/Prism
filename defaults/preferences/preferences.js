@@ -96,3 +96,4 @@ pref("browser.xul.error_pages.expert_bad_cert", false);
 
 /* Prism-specific prefs */
 pref("prism.shortcut.aboutConfig.enabled", false);
+pref("prism.shortcut.fullScreen.disabled", false);
