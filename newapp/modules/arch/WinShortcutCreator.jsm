@@ -25,6 +25,7 @@ var ShortcutCreator = {
     appIcon.append("default");
     appIcon.append(WebAppProperties.icon + ImageUtils.getNativeIconExtension());
 
+	var shortcut = null;
     var directory = null;
     for (var i=0; i<locations.length; i++)
     {
@@ -42,9 +43,13 @@ var ShortcutCreator = {
         continue;
       }
 
-      var shortcut = desktop.createShortcut(name, target, directory, extensionDir ? extensionDir.path : "", arguments, "", appIcon);
-      dump("Shortcut path: " + shortcut.path);
-      return shortcut;
+      shortcut = desktop.createShortcut(
+      	  name, target, directory, extensionDir ? extensionDir.path : "", 
+          arguments, "", appIcon);
     }
+    // Return one of the created shortcuts so that we can spawn the app when 
+    // everything's finished.
+    return shortcut;
   }
 };
+
