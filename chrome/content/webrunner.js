@@ -914,7 +914,10 @@ var WebRunner = {
         window.openDialog(EMURL, "", EMFEATURES);
         break;
       case "cmd_fullScreen":
-        window.fullScreen = !window.fullScreen;
+        var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+        if (!prefs.getBoolPref("prism.shortcut.fullScreen.disabled")) {
+          window.fullScreen = !window.fullScreen;
+        }
         break;
       case "cmd_zoomIn":
         const max = 2.0;
