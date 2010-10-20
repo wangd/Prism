@@ -183,6 +183,14 @@ NS_IMETHODIMP nsDesktopEnvironment::SetAutoStart(PRBool aAutoStart, PRBool aIcon
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDesktopEnvironment::HideDirectory(const nsAString& aPath)
+{
+	char *path = ToNewUTF8String(aPath);
+	int res = SetFileAttributes(path, FILE_ATTRIBUTE_HIDDEN);
+	NS_Free(path);
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsDesktopEnvironment::CreateShortcut(
   const nsAString& aName,
   nsIFile* aTarget,

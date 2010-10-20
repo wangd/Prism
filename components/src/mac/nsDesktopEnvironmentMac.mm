@@ -292,6 +292,11 @@ NS_IMETHODIMP nsDesktopEnvironment::GetApplicationIcon(nsIDOMWindow* aWindow, ns
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDesktopEnvironment::HideDirectory(const nsAString& aPath)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsDesktopEnvironment::SetZLevel(nsIDOMWindow* aWindow, PRUint16 aLevel)
 {
   return NS_OK;

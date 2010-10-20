@@ -82,6 +82,8 @@ interface nsIDesktopEnvironment : nsISupports
     in AString description,
     in nsIFile icon
   );
+  
+  void hideDirectory(in AString path);
 
   /**
    * Create a new application tile for this desktop.
