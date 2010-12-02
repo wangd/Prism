@@ -46,11 +46,14 @@
 //****************************************************************************//
 // Constants & Enumeration Values
 
+/*
+// This seems to cause problems on Windows and Linux. To be verified.
 #ifndef XP_MACOSX
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cr = Components.results;
 #endif
+*/
 
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const TYPE_MAYBE_VIDEO_FEED = "application/vnd.mozilla.maybe.video.feed";
