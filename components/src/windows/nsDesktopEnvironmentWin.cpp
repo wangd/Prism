@@ -522,7 +522,7 @@ nsresult nsDesktopEnvironment::GetIconPath(nsAString& _retval)
   NS_ENSURE_SUCCESS(rv, rv);
   
   nsAutoString iconPath;
-  rv = iconFile->GetPath(iconPath);
+  rv = iconFile->GetPath(_retval);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
