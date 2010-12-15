@@ -48,7 +48,7 @@ MODULE    = browser
 XPIDL_MODULE = browser
 
 XPIDLSRCS	= \
-    nsIWebContentConverterRegistrar.idl \
-    $(NULL)
+	nsIWebContentConverterRegistrar.idl \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
