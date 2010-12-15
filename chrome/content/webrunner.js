@@ -671,12 +671,6 @@ var WebRunner = {
     // Default the name of the window to the webapp name
     document.title = WebAppProperties.name;
 
-    // Set browser homepage as initial webapp page
-    if (WebAppProperties.uri) {
-      var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-      prefs.setCharPref("browser.startup.homepage", WebAppProperties.uri);
-    }
-
     // Add handlers for the main page
     window.addEventListener("unload", function() { WebRunner.shutdown(); }, false);
 #ifdef XP_WIN

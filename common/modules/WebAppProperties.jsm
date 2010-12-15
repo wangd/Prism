@@ -254,6 +254,12 @@ var WebAppProperties =
     if (appINI.exists())
       this.readINI(appINI);
 
+    // Set browser homepage as initial webapp page
+    if (this.uri) {
+      var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+      prefs.setCharPref("browser.startup.homepage", this.uri);
+    }
+
     // Load the application script (if it isn't already loaded)
     if (!this.scriptLoaded) {
       var appScript = appSandbox.clone();
