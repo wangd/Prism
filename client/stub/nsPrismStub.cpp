@@ -162,6 +162,22 @@ PRBool PR_CALLBACK SetEnvironmentVariable(const char* aString, const char* aValu
   return PR_TRUE;
 }
 
+#if defined(XP_MACOSX)
+void GetPathFromCFURL(CFURLRef url, char *path, size_t length)
+{
+  FSRef fsRef;
+  CFURLGetFSRef(url, &fsRef);
+  if (FSGetCatalogInfo(&fsRef, kFSCatInfoNone, NULL, NULL, NULL, NULL ) == noErr) {
+    CFStringRef pathStr = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
+    if (pathStr) {
+      CFStringGetCString(pathStr, path, length, kCFStringEncodingUTF8);
+      CFRelease(pathStr);
+    }
+  }
+  CFRelease(url);
+}
+#endif
+
 XRE_CreateAppDataType XRE_CreateAppData;
 XRE_FreeAppDataType XRE_FreeAppData;
 XRE_mainType XRE_main;
@@ -172,8 +188,8 @@ main(int argc, char **argv)
   nsresult rv;
   char *lastSlash;
 
-  char iniPath[MAXPATHLEN];
   char tmpPath[MAXPATHLEN];
+  char iniPath[MAXPATHLEN];
   char webappPath[MAXPATHLEN] = { 0 };
   char overridePath[MAXPATHLEN] = { 0 };
   char greDir[MAXPATHLEN];
@@ -278,20 +294,7 @@ main(int argc, char **argv)
   CFRelease(iniPathStr);
   
   if ((strlen(overridePath) == 0) && overrideFileURL) {
-    // Check whether the file exists
-    FSRef fsRef;
-  	CFURLGetFSRef(overrideFileURL, &fsRef);
-    if (FSGetCatalogInfo(&fsRef, kFSCatInfoNone, NULL, NULL, NULL, NULL ) == noErr) {
-      // Add to XRE_main arguments
-      CFStringRef overridePathStr =
-        CFURLCopyFileSystemPath(overrideFileURL, kCFURLPOSIXPathStyle);
-      CFRelease(overrideFileURL);
-      if (overridePathStr) {
-        CFStringGetCString(overridePathStr, overridePath, sizeof(overridePath),
-                           kCFStringEncodingUTF8);
-        CFRelease(overridePathStr);
-      }
-    }
+    GetPathFromCFURL(overrideFileURL, overridePath, sizeof(overridePath));
   }
 
 #else
@@ -380,6 +383,56 @@ main(int argc, char **argv)
     return 1;
   }
   
+    // If we don't have an override.ini path yet, check whether it is specified in the registry (Windows) or
+    // in the user's Library directory (Mac)
+    if (strlen(overridePath) == 0) {
+      char vendor[128];
+      rv = parser.GetString("App", "Vendor", vendor, sizeof(vendor));
+      if (NS_SUCCEEDED(rv)) {
+        char appName[128];
+        rv = parser.GetString("App", "Name", appName, sizeof(appName));
+        if (NS_SUCCEEDED(rv)) {
+#ifdef XP_WIN
+          char regPath[MAXPATHLEN];
+          strcpy(regPath, "Software\\");
+          strcat(regPath, vendor);
+          strcat(regPath, "\\");
+          strcat(regPath, appName);
+          strcat(regPath, "\\Prism");
+          HKEY hKey;
+          if (::RegOpenKeyEx(HKEY_CURRENT_USER, regPath, 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+            DWORD read = sizeof(overridePath);
+            ::RegQueryValueEx(hKey, "OverridePath", 0, NULL, (LPBYTE) overridePath, &read);
+          }
+#endif
+#if defined(XP_MACOSX)
+          FSRef fsRef;
+          CFURLRef overrideFileURL = 0;
+          if (::FSFindFolder(kUserDomain, kDomainTopLevelFolderType, kCreateFolder, &fsRef) == noErr) {
+            CFURLRef homeURL = CFURLCreateFromFSRef(kCFAllocatorDefault, &fsRef);
+            CFURLRef prismURL = CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, homeURL, CFSTR(".prism"), false);
+            CFRelease(homeURL);
+
+            CFStringRef vendorStr = CFStringCreateWithCString(kCFAllocatorDefault, vendor, kCFStringEncodingUTF8);
+            CFURLRef vendorURL = CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, prismURL, vendorStr, false);
+            CFRelease(prismURL);
+            CFRelease(vendorStr);
+
+            CFStringRef appNameStr = CFStringCreateWithCString(kCFAllocatorDefault, appName, kCFStringEncodingUTF8);
+            CFURLRef appNameURL = CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, vendorURL, appNameStr, false);
+            CFRelease(vendorURL);
+            CFRelease(appNameStr);
+
+            overrideFileURL = CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, appNameURL, CFSTR("override.ini"), false);
+            CFRelease(appNameURL);
+
+            GetPathFromCFURL(overrideFileURL, overridePath, sizeof(overridePath));
+          }
+#endif 
+        }
+      }
+    }
+
   // Register any environment variables. This is Prism-specific.
   parser.GetStrings("Environment", SetEnvironmentVariable, iniPath);
   if (!gEnvSet && strlen(overridePath) > 0) {
@@ -506,15 +559,24 @@ main(int argc, char **argv)
     // If we have an override path, copy it into the command-line args
     if (strlen(overridePath) > 0) {
       newArgv = new char*[argc+3];
-      newArgv[0] = argv[0];
-      newArgv[1] = overrideFlag;
-      newArgv[2] = overridePath;
 
-      for (i=1; i<argc; i++) {
-        newArgv[i+2] = argv[i];
+      int j=0;
+      for (i=0; i<argc; i++) {
+        if (strcmp(argv[i], "-override") == 0) {
+          // Don't copy since we'll add the -override parameter manually at the end
+          // We always want it to be last since XRE_main tacks it on last as well after EM restart,
+          // and we want the command lines to be consistent (e.g. for checking whether this is the
+          // registered app for a protocol).
+          i++; // Skip the value as well
+          continue;
+        }
+        newArgv[j++] = argv[i];
       }
       
-      newArgc = argc+2;
+      newArgc = j;
+
+      newArgv[newArgc++] = overrideFlag;
+      newArgv[newArgc++] = overridePath;
       newArgv[newArgc] = nsnull;
     }
 
