@@ -149,11 +149,13 @@ var WebRunner = {
 
       // Show tray icon, if any, and default behavior to hide on minimize
       if (WebAppProperties.trayicon && ("@mozilla.org/desktop-environment;1" in Cc)) {
-        this.showTrayIcon();
-
         var desktop = Cc["@mozilla.org/desktop-environment;1"].getService(Ci.nsIDesktopEnvironment);
         var icon = desktop.getApplicationIcon(this._getBrowser().contentWindow);
-        icon.behavior = Ci.nsIApplicationIcon.HIDE_ON_MINIMIZE;
+
+        if (icon) {
+          this.showTrayIcon();
+          icon.behavior = Ci.nsIApplicationIcon.HIDE_ON_MINIMIZE;
+        }
       }
 
       // Setup the resource:// substitution for the app's root directory

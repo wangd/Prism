@@ -96,6 +96,11 @@ CMSRCS = mac/IconFamily.m
 OS_LIBS += -framework Cocoa
 endif
 
+ifeq ($(OS_ARCH),Linux)
+CPPSRCS += \
+  linux/nsDesktopEnvironmentLinux.cpp
+endif
+
 EXTRA_PP_COMPONENTS = \
   nsCommandLineHandler.js \
   nsPlatformGlue.js \
@@ -124,11 +129,12 @@ ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,ole32 version uuid shell32)
 endif
 
-LOCAL_INCLUDES=-I$(srcdir)/windows -I$(srcdir)/mac
+LOCAL_INCLUDES=-I$(srcdir)/windows -I$(srcdir)/mac -I$(srcdir)/linux
 
 include $(topsrcdir)/config/rules.mk
 
 export::
 	mkdir -p mac
 	mkdir -p windows
+	mkdir -p linux
 

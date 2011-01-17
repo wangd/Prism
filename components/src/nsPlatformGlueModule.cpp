@@ -57,8 +57,15 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsICOEncoder)
 #include "nsICNSEncoder.h"
 #include "nsDesktopEnvironmentMac.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDesktopEnvironment);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDesktopEnvironment)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsICNSEncoder)
+#else
+
+#ifdef XP_UNIX
+#include "nsDesktopEnvironmentLinux.h"
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDesktopEnvironment)
+#endif
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlatformGlueSingleton)
@@ -96,7 +103,15 @@ static const nsModuleComponentInfo components[] =
     NS_ICNSENCODER_CID,
     "@mozilla.org/image/encoder;2?type=image/x-icns",
     nsICNSEncoderConstructor
+  },
+#else
+#ifdef XP_UNIX
+  { "Linux desktop environment",
+    NS_DESKTOPENVIRONMENT_CID,
+    NS_DESKTOPENVIRONMENT_CONTRACTID,
+    nsDesktopEnvironmentConstructor
   }
+#endif
 #endif
 };
 
