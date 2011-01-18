@@ -196,6 +196,7 @@ PlatformProtocolHandler.prototype = {
 }
 
 var protocolCallbacks = {};
+var shutdownCallback = null;
 
 function PlatformGlue() {
   var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
@@ -388,8 +389,13 @@ PlatformGlue.prototype = {
     var contractId = "@mozilla.org/network/protocol;1?name=" + uriScheme;
     // Now what?
 
-    // And remove the pref
-    this._prefs.clearUserPref(PRISM_PROTOCOL_PREFIX + uriScheme);
+    try {
+      // And remove the pref
+      this._prefs.clearUserPref(PRISM_PROTOCOL_PREFIX + uriScheme);
+    }
+    catch (e) {
+      // Presumably the pref is not there so just ignore
+    }
     
     // Remove the callback, if any
     if (uriScheme in protocolCallbacks) {

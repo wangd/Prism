@@ -392,6 +392,13 @@ NS_IMETHODIMP nsDesktopEnvironment::UnregisterProtocol(const nsAString& aScheme)
   helperPath += NS_LITERAL_STRING(" /Protocol ");
   helperPath += aScheme;
   
+  nsAutoString iconPath;
+  rv = GetIconPath(iconPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+   
+  helperPath += NS_LITERAL_STRING(" /DefaultIcon ");
+  helperPath += iconPath;
+
   helperPath += NS_LITERAL_STRING(" /Unregister");
   
   STARTUPINFOW si = {sizeof(si), 0};

@@ -331,6 +331,11 @@ NS_IMETHODIMP nsDesktopEnvironment::RegisterProtocol(
 
 NS_IMETHODIMP nsDesktopEnvironment::UnregisterProtocol(const nsAString& aScheme)
 {
+  NSString* scheme = [NSString stringWithCharacters:nsString(aScheme).get() length:aScheme.Length()];
+  // Pass in a dummy value since there doesn't seem to be a proper API for unregistering the handler
+  LSSetDefaultHandlerForURLScheme((CFStringRef) scheme, CFSTR("dummy"));
+  
+  _LSSaveAndRefresh();
   return NS_OK;
 }
 

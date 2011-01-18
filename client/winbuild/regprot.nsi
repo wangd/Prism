@@ -21,23 +21,30 @@ IfErrors 0 +2
 GoTo autostart
 ${StrTok} $R2 $R1 "/" "0" "0"
 
+${GetOptions} $R0 "/DefaultIcon" $R4
+IfErrors 0 +2
+GoTo finish
+
 ${GetOptions} $R0 "/Unregister" $R3
 IfErrors register +1
-GoTo finish
+GoTo unregister
 
 register:
 ${GetOptions} $R0 "/ApplicationPath" $R1
 ${StrTok} $R3 $R1 "/" "0" "0"
-
-${GetOptions} $R0 "/DefaultIcon" $R4
-IfErrors 0 +2
-GoTo finish
 
 WriteRegStr HKCU "SOFTWARE\Classes\$R2" "EditFlags" 2
 WriteRegStr HKCU "SOFTWARE\Classes\$R2" "URL Protocol" ""
 WriteRegStr HKCU "SOFTWARE\Classes\$R2" "FriendlyTypeName" ""
 WriteRegStr HKCU "SOFTWARE\Classes\$R2\DefaultIcon" "" "$R4"
 WriteRegStr HKCU "SOFTWARE\Classes\$R2\shell\open\command" "" "$\"$R3$\" -url $\"%1$\""
+GoTo finish
+
+unregister:
+ReadRegStr $R5 HKCU "SOFTWARE\Classes\$R2\DefaultIcon" ""
+${If} "$R4" == "$R5"
+  DeleteRegKey HKCU "SOFTWARE\Classes\$R2"
+${EndIf}
 GoTo finish
 
 autostart:
