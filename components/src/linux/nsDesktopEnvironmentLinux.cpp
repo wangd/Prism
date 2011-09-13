@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is WebRunner
+ * The Original Code is Mozilla Prism
  *
  * The Initial Developer of the Original Code is
  * Matthew Gertner.
@@ -43,6 +43,7 @@
 #include "nsIGConfService.h"
 #include "nsIFile.h"
 #include "nsServiceManagerUtils.h"
+#include "nsSystemTray.h"
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -85,7 +86,7 @@ private:
 
 NS_IMPL_ISUPPORTS2(nsDesktopEnvironment, nsIDesktopEnvironment, nsIWebProtocolService)
 
-nsDesktopEnvironment::nsDesktopEnvironment()
+nsDesktopEnvironment::nsDesktopEnvironment(): m_trayArea(NULL)
 {
   //
 }
@@ -121,8 +122,14 @@ NS_IMETHODIMP nsDesktopEnvironment::HideDirectory(const nsAString & path)
 NS_IMETHODIMP nsDesktopEnvironment::GetApplicationIcon(nsIDOMWindow *window,
                                                       nsIApplicationIcon **_retval NS_OUTPARAM)
 {
-  NS_ENSURE_ARG(_retval);
-  *_retval = nsnull;
+  NS_ENSURE_ARG(window);
+
+  if (!m_trayArea) {
+    m_trayArea = new nsSystemTray(window);
+    NS_ENSURE_TRUE(m_trayArea, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  NS_ADDREF(*_retval = m_trayArea);
   return NS_OK;
 }
 

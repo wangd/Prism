@@ -35,41 +35,33 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+#ifndef NSSYSTEMTRAY_H_DEFINED
+#define NSSYSTEMTRAY_H_DEFINED
 
+#include "nsIApplicationIcon.h"
 #include "nsINativeMenu.h"
-
-#include "nsInterfaceHashtable.h"
-#include "nsHashKeys.h"
-#include "nsCOMArray.h"
+#include "nsISecurityCheckedComponent.h"
 #include "nsCOMPtr.h"
 #include "nsStringAPI.h"
-#include "nsTArray.h"
 
-#include <windows.h>
+class nsIDOMWindow;
 
-class nsIDOMDocument;
-class nsIDOMEventListener;
-
-// Encapsulation of system menu on Windows
-class nsSystemMenu : public nsINativeMenu
+class nsSystemTray: public nsIApplicationIcon,
+                    public nsINativeMenu,
+                    public nsISecurityCheckedComponent
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIAPPLICATIONICON
   NS_DECL_NSINATIVEMENU
+  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
-  nsSystemMenu(HWND hWnd, nsIDOMDocument* aDocument);
-  ~nsSystemMenu();
-
-  static nsresult GetSystemMenu(HWND hWnd, nsIDOMDocument* aDocument, nsINativeMenu** _retval);
-  static LRESULT APIENTRY WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
+  nsSystemTray(nsIDOMWindow* aWindow);
+  virtual ~nsSystemTray();
 private:
-
-protected:
-  HWND mWnd;
-  nsCOMPtr<nsIDOMDocument> mDocument;
-  WNDPROC mWndProc;
-  PRUint32 mItemCount;
-
-  static nsInterfaceHashtable<nsUint32HashKey, nsSystemMenu> mSystemMenuMap;
+  nsCOMPtr<nsIDOMWindow>  m_window;
+  nsCOMPtr<nsINativeMenu> m_menu;
 };
+
+#endif //NSSYSTEMTRAY_H_DEFINED

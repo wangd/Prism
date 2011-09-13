@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is WebRunner
+ * The Original Code is Mozilla Prism
  *
  * The Initial Developer of the Original Code is
  * Matthew Gertner.
@@ -38,7 +38,7 @@
 
 #include "nsIDesktopEnvironment.h"
 #include "nsIWebProtocolService.h"
-
+#include "nsCOMPtr.h"
 #include "nsStringAPI.h"
 #include "nsClassHashtable.h"
 
@@ -50,6 +50,8 @@
     {0x95, 0xff, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66} \
 }
 #define NS_DESKTOPENVIRONMENT_CONTRACTID "@mozilla.org/desktop-environment;1"
+
+class nsIApplicationIcon;
 
 typedef nsClassHashtable<nsCStringHashKey, nsCString> ArgMap;
 
@@ -70,6 +72,7 @@ private:
   nsresult ParseAppCmdLine(nsCString const &appCmdLine, nsCString &outAppName,
                            ArgMap &outArgs) const;
 private:
-  nsCAutoString m_regApp;
+  nsCAutoString                 m_regApp;
+  nsCOMPtr<nsIApplicationIcon>  m_trayArea;
 };
 

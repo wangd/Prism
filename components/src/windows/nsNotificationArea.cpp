@@ -81,10 +81,10 @@ ATOM nsNotificationArea::s_wndClass = NULL;
 
 #define MK_ERROR_OFFSET       (0xE0000000 + (__LINE__ * 0x10000))
 
-#define MK_ENSURE_NATIVE(res)                              \
-  PR_BEGIN_MACRO                                           \
-    NS_ENSURE_TRUE(0 != res || 0 == ::GetLastError(),      \
-      ::GetLastError() + MK_ERROR_OFFSET);                 \
+#define MK_ENSURE_NATIVE(res)                               \
+  PR_BEGIN_MACRO                                            \
+    NS_ENSURE_TRUE(0 != res || 0 == ::GetLastError(),       \
+      ::GetLastError() + MK_ERROR_OFFSET);                  \
   PR_END_MACRO
 
 // this can be WM_USER + anything
@@ -97,7 +97,7 @@ nsNotificationArea::nsNotificationArea(nsIDOMWindow* aWindow) : mMenu(NULL)
 {
   memset(&mIconData, 0, sizeof(NOTIFYICONDATAW));
   mWindow = aWindow;
-  
+
   nsCOMPtr<nsIPrefService> prefService(do_GetService("@mozilla.org/preferences-service;1"));
   if (prefService) {
     prefService->GetBranch("notificationarea.", getter_AddRefs(mPrefs));
@@ -131,6 +131,9 @@ nsNotificationArea::Show()
 
   if (mIconData.cbSize)
   {
+    // Free the existing icon
+    ::DestroyIcon(mIconData.hIcon);
+
     HICON hicon;
     rv = GetIconForURI(imageURI, hicon);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -158,6 +161,8 @@ nsNotificationArea::Hide()
   if (mIconData.hWnd) {
     ::DestroyWindow(mIconData.hWnd);
   }
+
+  ::DestroyIcon(mIconData.hIcon);
 
   Shell_NotifyIconW(NIM_DELETE, &mIconData);
 
@@ -242,7 +247,7 @@ nsNotificationArea::SetImageSpec(const nsAString& aImageSpec)
     rv = Show();
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  
+
   return NS_OK;
 }
 
@@ -268,7 +273,7 @@ nsNotificationArea::GetBadgeText(nsAString& aBadgeText)
 NS_IMETHODIMP nsNotificationArea::GetHandle(void** _retval)
 {
   NS_ENSURE_STATE(mMenu);
-  
+
   return mMenu->GetHandle(_retval);
 }
 
@@ -280,14 +285,14 @@ nsNotificationArea::AddMenuItem(const nsAString& aId, const nsAString& aLabel, n
     mMenu = new nsNativeMenu(hMenu);
     NS_ENSURE_TRUE(mMenu, NS_ERROR_OUT_OF_MEMORY);
   }
-  
+
   return mMenu->AddMenuItem(aId, aLabel, aListener);
 }
 
 nsresult nsNotificationArea::AddSubmenu(const nsAString& aId, const nsAString& aLabel, nsINativeMenu** _retval)
 {
   NS_ENSURE_STATE(mMenu);
-  
+
   return mMenu->AddSubmenu(aId, aLabel, _retval);
 }
 
@@ -303,7 +308,7 @@ NS_IMETHODIMP
 nsNotificationArea::RemoveAllMenuItems()
 {
   NS_ENSURE_STATE(mMenu);
-  
+
   return mMenu->RemoveAllMenuItems();
 }
 
@@ -319,14 +324,14 @@ NS_IMETHODIMP
 nsNotificationArea::GetBehavior(PRUint32* aBehavior)
 {
   NS_ENSURE_STATE(mWindow);
-  
+
   nsresult rv;
   HWND hwnd;
   rv = nsDesktopEnvironment::GetHWNDForDOMWindow(mWindow, (void *) &hwnd);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   *aBehavior = (PRUint32) GetProp(hwnd, S_PROPBEHAVIOR);
-  
+
   return NS_OK;
 }
 
@@ -334,12 +339,12 @@ NS_IMETHODIMP
 nsNotificationArea::SetBehavior(PRUint32 aBehavior)
 {
   NS_ENSURE_STATE(mWindow);
-  
+
   nsresult rv;
   HWND hwnd;
   rv = nsDesktopEnvironment::GetHWNDForDOMWindow(mWindow, (void *) &hwnd);
   NS_ENSURE_SUCCESS(rv, rv);
- 
+
   if (aBehavior) {
     if (!GetProp(hwnd, S_PROPBEHAVIOR)) {
       // Window isn't hooked yet
@@ -355,9 +360,9 @@ nsNotificationArea::SetBehavior(PRUint32 aBehavior)
       ::SetWindowLong(hwnd, GWL_WNDPROC, (DWORD) oldProc);
     }
   }
-  
+
   SetProp(hwnd, S_PROPBEHAVIOR, (HANDLE) aBehavior);
-  
+
   return NS_OK;
 }
 
@@ -365,7 +370,7 @@ NS_IMETHODIMP
 nsNotificationArea::Minimize()
 {
   NS_ENSURE_STATE(mWindow);
-  
+
   nsresult rv;
   rv = DispatchEvent(mWindow, nsnull, NS_LITERAL_STRING("minimizing"), PR_TRUE, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -381,16 +386,16 @@ nsNotificationArea::ShowNotification(const nsAString& aTitle,
                                    nsIObserver* aAlertListener)
 {
   NS_ENSURE_STATE(mIconData.cbSize);
-  
+
   nsresult rv;
   mIconData.uFlags = NIF_INFO;
   mIconData.uTimeout = aTimeout;
   rv = CopyStringWithMaxLength(aTitle, mIconData.szInfoTitle, 64);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   rv = CopyStringWithMaxLength(aText, mIconData.szInfo, 256);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   MK_ENSURE_NATIVE(Shell_NotifyIconW(NIM_MODIFY, &mIconData));
 
   return NS_OK;
@@ -466,7 +471,7 @@ nsNotificationArea::GetElementById(const nsAString& aId, nsIDOMElement** _retval
   nsCOMPtr<nsIDOMDocument> document;
   rv = mWindow->GetDocument(getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   return document->GetElementById(aId, _retval);
 }
 
@@ -496,7 +501,7 @@ nsNotificationArea::CreateEvent(nsIDOMWindow* aDOMWindow, const nsAString& aType
   nsCOMPtr<nsIDOMDocument> document;
   rv = aDOMWindow->GetDocument(getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   nsCOMPtr<nsIDOMDocumentEvent> documentEvent(do_QueryInterface(document, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -506,17 +511,17 @@ nsNotificationArea::CreateEvent(nsIDOMWindow* aDOMWindow, const nsAString& aType
 
   rv = event->InitEvent(aType, canBubble, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   // Need to make event trusted so content can cause it to be dispatched (e.g. minimizing the window via the API)
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   rv = privateEvent->SetTrusted(PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *_retval = event;
   NS_ADDREF(*_retval);
-  
+
   return NS_OK;
 }
 
@@ -545,10 +550,10 @@ nsNotificationArea::DispatchEvent(
   PRBool ret;
   rv = eventTarget->DispatchEvent(event, &ret);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   if (aPreventDefault)
     *aPreventDefault = !ret;
-    
+
   return NS_OK;
 }
 
@@ -586,10 +591,10 @@ nsNotificationArea::CreateListenerWindow(
     CW_USEDEFAULT ,                       //x
     CW_USEDEFAULT ,                       //y
     CW_USEDEFAULT,                        //width
-    CW_USEDEFAULT,                        //height
-    ::GetDesktopWindow(),                 //parent
+    CW_USEDEFAULT,                        //heigh
+    ::GetDesktopWindow(),                 //paren
     NULL,                                 //menu
-    hInst,                                //hInst
+    hInst,                                //hIns
     NULL);                                //param
 
   if (!*listenerWindow) {
@@ -611,7 +616,7 @@ nsNotificationArea::ListenerWindowProc(HWND hwnd,
 {
   nsRefPtr<nsNotificationArea> notificationArea;
   notificationArea = (nsNotificationArea *)  GetProp(hwnd, S_PROPINST);
-  
+
   if (!notificationArea)
     return TRUE;
 
@@ -637,7 +642,7 @@ nsNotificationArea::ListenerWindowProc(HWND hwnd,
         itemInfo.fMask = MIIM_DATA;
         if (!::GetMenuItemInfo(hMenu, LOWORD(wParam), FALSE, &itemInfo))
           return TRUE;
-          
+
         nsCOMPtr<nsIDOMEventListener> listener = (nsIDOMEventListener *) itemInfo.dwItemData;
         nsCOMPtr<nsIDOMEvent> event;
         CreateEvent(notificationArea->mWindow, NS_LITERAL_STRING("DOMActivate"), PR_FALSE, getter_AddRefs(event));
@@ -732,9 +737,9 @@ nsNotificationArea::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
       ::SetWindowLong(hwnd, GWL_WNDPROC, (DWORD) proc);
       break;
   }
- 
+
   if (!typeArg.IsEmpty()) {
-    // dispatch the event
+    // dispatch the event q
     PRBool preventDefault;
     nsresult rv;
     rv = DispatchEvent(domWindow, nsnull, typeArg, PR_TRUE, &preventDefault);
@@ -744,14 +749,14 @@ nsNotificationArea::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
       // event was hooked
       return FALSE;
   }
-  
+
   return CallWindowProc(proc, hwnd, uMsg, wParam, lParam);
 }
 
 void nsNotificationArea::ShowPopupMenu(HWND hwnd, HMENU hmenu) {
   // Set window to foregroup so the menu goes away when we lose focus
   ::SetForegroundWindow(hwnd);
-  
+
   POINT pos;
   ::GetCursorPos(&pos);
 

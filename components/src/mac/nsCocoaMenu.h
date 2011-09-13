@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is WebRunner
+ * The Original Code is Mozilla Prism
  *
  * The Initial Developer of the Original Code is
  * Matthew Gertner.

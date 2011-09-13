@@ -451,6 +451,16 @@ PlatformGlue.prototype = {
   showAbout : function showAbout()
   {
     this._chromeWindow.openDialog("chrome://webrunner/content/about.xul", "about", "centerscreen,modal");
+  },
+  
+  registerShutdownCallback : function registerShutdownCallback(callback)
+  {
+    shutdownCallback = callback;
+  },
+  
+  invokeShutdownCallback : function invokeShutdownCallback()
+  {
+    return shutdownCallback ? shutdownCallback.canShutdown() : true;
   }
 }
 

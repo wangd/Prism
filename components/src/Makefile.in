@@ -98,7 +98,8 @@ endif
 
 ifeq ($(OS_ARCH),Linux)
 CPPSRCS += \
-  linux/nsDesktopEnvironmentLinux.cpp
+  linux/nsDesktopEnvironmentLinux.cpp \
+  linux/nsSystemTray.cpp
 endif
 
 EXTRA_PP_COMPONENTS = \

@@ -89,6 +89,20 @@ interface nsIPlatformNotificationListener : nsISupports
 };
 
 /**
+ * Interface that web content can use to prevent shutdown
+ */
+[scriptable, function, uuid(c609b327-e889-4560-9bcd-04d502436288)]
+interface nsIPlatformShutdownCallback : nsISupports
+{
+  /**
+   * Callback executed before shutdown.
+   *
+   * @returns True if the app can shutdown, false to prevent
+   */
+  boolean canShutdown();
+};
+
+/**
  * Interface that gives simplified access to platform functionality
  */
 [scriptable, uuid(64ef7c50-ec69-11dc-95ff-0800200c9a66)]
@@ -219,4 +233,18 @@ interface nsIPlatformGlue : nsISupports
    * Clear private data (cache, history, etc.).
    */
   void clearPrivateData();
+
+  /**
+   * Register a callback from web content that can prevent app shutdown.
+   *
+   * @param Callback interface (function) returns true to allow shutdown, false to prevent
+   */
+  void registerShutdownCallback(in nsIPlatformShutdownCallback callback);
+  
+  /**
+   * Invokes the shutdown callback, if any.
+   *
+   * @returns True if it is okay to shutdown (including if there is no callback), false otherwise
+  */
+  boolean invokeShutdownCallback();
 };
